@@ -102,6 +102,22 @@ export const translations = {
     logoRemoved: 'Logo removed successfully',
     appNameUpdated: 'App name updated successfully',
     fileTooLarge: 'File is too large. Maximum size is 5MB.',
+    
+    // Overlay Ads
+    overlayAds: 'Overlay Ads',
+    overlayAdsDesc: 'Manage overlay advertisements shown during streams',
+    createNewAd: 'Create New Ad',
+    adName: 'Ad Name',
+    adLinkUrl: 'Link URL (optional)',
+    adPosition: 'Position',
+    displayDuration: 'Close Button Delay (seconds)',
+    durationHint: 'Time before the close button becomes active',
+    adImage: 'Ad Image',
+    uploadImage: 'Upload Image',
+    adImageRequirements: 'PNG, JPG, GIF, or WebP. Max 2MB. Recommended: 280x180px',
+    createAd: 'Create Ad',
+    existingAds: 'Existing Ads',
+    noAdsYet: 'No overlay ads created yet',
   },
   my: {
     // Header
@@ -204,6 +220,22 @@ export const translations = {
     logoRemoved: 'Logo အောင်မြင်စွာ ဖယ်ရှားပြီးပါပြီ',
     appNameUpdated: 'အက်ပ်အမည် အောင်မြင်စွာ ပြင်ဆင်ပြီးပါပြီ',
     fileTooLarge: 'ဖိုင်အရွယ်အစား ကြီးလွန်းသည်။ အများဆုံး 5MB။',
+    
+    // Overlay Ads
+    overlayAds: 'Overlay ကြော်ငြာများ',
+    overlayAdsDesc: 'လိုင်းများတွင် ပြသမည့် overlay ကြော်ငြာများကို စီမံပါ',
+    createNewAd: 'ကြော်ငြာအသစ် ဖန်တီးရန်',
+    adName: 'ကြော်ငြာအမည်',
+    adLinkUrl: 'လင့် URL (ရွေးချယ်နိုင်)',
+    adPosition: 'တည်နေရာ',
+    displayDuration: 'ပိတ်ခလုတ် နှောင့်နှေးချိန် (စက္ကန့်)',
+    durationHint: 'ပိတ်ခလုတ် အသက်ဝင်မည့် အချိန်',
+    adImage: 'ကြော်ငြာပုံ',
+    uploadImage: 'ပုံတင်ရန်',
+    adImageRequirements: 'PNG, JPG, GIF, သို့မဟုတ် WebP။ အများဆုံး 2MB။ အကြံပြု: 280x180px',
+    createAd: 'ကြော်ငြာဖန်တီးရန်',
+    existingAds: 'ရှိပြီးသား ကြော်ငြာများ',
+    noAdsYet: 'Overlay ကြော်ငြာ မရှိသေးပါ',
   },
 };
 

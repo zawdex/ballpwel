@@ -5,6 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAppSettings } from '@/contexts/AppSettingsContext';
 import { isValidStreamUrl } from '@/lib/urlValidation';
 import HLSPlayer from './HLSPlayer';
+import OverlayAd from './OverlayAd';
 import { Button } from '@/components/ui/button';
 
 interface VideoPlayerProps {
@@ -83,12 +84,13 @@ const VideoPlayer = ({ stream, matchTitle }: VideoPlayerProps) => {
   if (isHLSStream && useEmbedded && !playerError) {
     return (
       <div className="space-y-4">
-        <div className="rounded-2xl overflow-hidden border border-border shadow-2xl shadow-primary/5">
+        <div className="relative rounded-2xl overflow-hidden border border-border shadow-2xl shadow-primary/5">
           <HLSPlayer
             src={stream.url}
             title={matchTitle || `${stream.name} Stream`}
             onError={handlePlayerError}
           />
+          <OverlayAd />
         </div>
         <StreamInfo stream={stream} onExternalClick={handleExternalClick} />
       </div>
@@ -109,6 +111,7 @@ const VideoPlayer = ({ stream, matchTitle }: VideoPlayerProps) => {
             sandbox="allow-scripts allow-same-origin allow-presentation allow-fullscreen"
             referrerPolicy="no-referrer"
           />
+          <OverlayAd />
         </div>
         <StreamInfo stream={stream} onExternalClick={handleExternalClick} />
       </div>
