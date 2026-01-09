@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Play, ExternalLink, AlertTriangle, Tv, Signal, Wifi } from 'lucide-react';
+import { Play, ExternalLink, AlertTriangle, Tv, Signal, Wifi, ShieldAlert } from 'lucide-react';
 import { Author } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAppSettings } from '@/contexts/AppSettingsContext';
+import { isValidStreamUrl } from '@/lib/urlValidation';
 import HLSPlayer from './HLSPlayer';
 import { Button } from '@/components/ui/button';
 
@@ -46,12 +47,36 @@ const VideoPlayer = ({ stream, matchTitle }: VideoPlayerProps) => {
     );
   }
 
+  // Validate stream URL before rendering
+  if (!isValidStreamUrl(stream.url)) {
+    return (
+      <div className="aspect-video bg-gradient-to-br from-destructive/10 via-card to-secondary/30 rounded-2xl border border-destructive/30 overflow-hidden relative">
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
+          <div className="w-16 h-16 rounded-2xl bg-destructive/20 flex items-center justify-center mb-4">
+            <ShieldAlert className="w-8 h-8 text-destructive" />
+          </div>
+          <h3 className="text-lg font-bold mb-2 text-foreground">Invalid Stream URL</h3>
+          <p className="text-muted-foreground text-sm text-center max-w-xs">
+            This stream URL could not be validated. Please select a different stream.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const isHLSStream = stream.url?.includes('.m3u8');
   const isEmbeddable = stream.url?.includes('embed') || isHLSStream;
 
   const handlePlayerError = (error: string) => {
     setPlayerError(error);
     console.error('Player error:', error);
+  };
+
+  const handleExternalClick = () => {
+    // Validate URL before opening
+    if (isValidStreamUrl(stream.url)) {
+      window.open(stream.url, '_blank', 'noopener,noreferrer');
+    }
   };
 
   // If HLS stream and embedded mode is enabled
@@ -65,7 +90,7 @@ const VideoPlayer = ({ stream, matchTitle }: VideoPlayerProps) => {
             onError={handlePlayerError}
           />
         </div>
-        <StreamInfo stream={stream} onExternalClick={() => window.open(stream.url, '_blank')} />
+        <StreamInfo stream={stream} onExternalClick={handleExternalClick} />
       </div>
     );
   }
@@ -81,9 +106,11 @@ const VideoPlayer = ({ stream, matchTitle }: VideoPlayerProps) => {
             allowFullScreen
             allow="autoplay; encrypted-media; picture-in-picture"
             title={`${stream.name} Stream`}
+            sandbox="allow-scripts allow-same-origin allow-presentation allow-fullscreen"
+            referrerPolicy="no-referrer"
           />
         </div>
-        <StreamInfo stream={stream} onExternalClick={() => window.open(stream.url, '_blank')} />
+        <StreamInfo stream={stream} onExternalClick={handleExternalClick} />
       </div>
     );
   }
@@ -106,10 +133,8 @@ const VideoPlayer = ({ stream, matchTitle }: VideoPlayerProps) => {
             </div>
           )}
           
-          <a
-            href={stream.url}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={handleExternalClick}
             className="flex flex-col items-center gap-4 group-hover:scale-105 transition-transform duration-300"
           >
             <div className="relative">
@@ -124,7 +149,7 @@ const VideoPlayer = ({ stream, matchTitle }: VideoPlayerProps) => {
               <p className="font-bold text-lg">{t('watchOn')} {stream.name}</p>
               <p className="text-muted-foreground text-sm">{t('clickToOpen')}</p>
             </div>
-          </a>
+          </button>
 
           {playerError && (
             <Button
@@ -141,7 +166,7 @@ const VideoPlayer = ({ stream, matchTitle }: VideoPlayerProps) => {
         </div>
       </div>
 
-      <StreamInfo stream={stream} onExternalClick={() => window.open(stream.url, '_blank')} />
+      <StreamInfo stream={stream} onExternalClick={handleExternalClick} />
     </div>
   );
 };
