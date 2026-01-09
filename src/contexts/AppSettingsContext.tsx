@@ -5,6 +5,8 @@ interface AppSettings {
   appName: string;
   appLogoUrl: string;
   streamDialogLogoUrl: string;
+  websiteTitle: string;
+  faviconUrl: string;
 }
 
 interface AppSettingsContextType {
@@ -18,9 +20,31 @@ const defaultSettings: AppSettings = {
   appName: 'Live Sports TV',
   appLogoUrl: '',
   streamDialogLogoUrl: '',
+  websiteTitle: 'Live Sports TV',
+  faviconUrl: '',
 };
 
 const AppSettingsContext = createContext<AppSettingsContextType | undefined>(undefined);
+
+// Update document title dynamically
+const updateDocumentTitle = (title: string) => {
+  document.title = title || 'Live Sports TV';
+};
+
+// Update favicon dynamically
+const updateFavicon = (url: string) => {
+  let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+  if (!link) {
+    link = document.createElement('link');
+    link.rel = 'icon';
+    document.head.appendChild(link);
+  }
+  if (url) {
+    link.href = url;
+  } else {
+    link.href = '/favicon.ico';
+  }
+};
 
 export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
@@ -43,9 +67,17 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
             newSettings.appLogoUrl = item.setting_value || '';
           } else if (item.setting_key === 'stream_dialog_logo_url') {
             newSettings.streamDialogLogoUrl = item.setting_value || '';
+          } else if (item.setting_key === 'website_title') {
+            newSettings.websiteTitle = item.setting_value || defaultSettings.websiteTitle;
+          } else if (item.setting_key === 'favicon_url') {
+            newSettings.faviconUrl = item.setting_value || '';
           }
         });
         setSettings(newSettings);
+        
+        // Apply dynamic updates
+        updateDocumentTitle(newSettings.websiteTitle);
+        updateFavicon(newSettings.faviconUrl);
       }
     } catch (error) {
       console.error('Error fetching app settings:', error);

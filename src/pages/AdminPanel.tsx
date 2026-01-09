@@ -23,11 +23,14 @@ import {
   Film,
   Check,
   ShieldAlert,
-  LogOut
+  LogOut,
+  Globe,
+  Star
 } from 'lucide-react';
 
 // Allowed file types for upload
 const ALLOWED_FILE_TYPES = ['image/png', 'image/jpeg', 'image/svg+xml', 'image/webp'];
+const ALLOWED_FAVICON_TYPES = ['image/png', 'image/x-icon', 'image/svg+xml', 'image/webp'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 const AdminPanel = () => {
@@ -37,17 +40,22 @@ const AdminPanel = () => {
   const navigate = useNavigate();
   
   const [appName, setAppName] = useState(settings.appName);
+  const [websiteTitle, setWebsiteTitle] = useState(settings.websiteTitle);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isUploadingStreamLogo, setIsUploadingStreamLogo] = useState(false);
+  const [isUploadingFavicon, setIsUploadingFavicon] = useState(false);
   const [isSavingName, setIsSavingName] = useState(false);
+  const [isSavingTitle, setIsSavingTitle] = useState(false);
   
   const logoInputRef = useRef<HTMLInputElement>(null);
   const streamLogoInputRef = useRef<HTMLInputElement>(null);
+  const faviconInputRef = useRef<HTMLInputElement>(null);
 
-  // Update appName when settings load
+  // Update appName and websiteTitle when settings load
   useEffect(() => {
     setAppName(settings.appName);
-  }, [settings.appName]);
+    setWebsiteTitle(settings.websiteTitle);
+  }, [settings.appName, settings.websiteTitle]);
 
   // Redirect if not authenticated or not admin
   useEffect(() => {
@@ -56,8 +64,8 @@ const AdminPanel = () => {
     }
   }, [user, authLoading, navigate]);
 
-  const validateFile = (file: File): string | null => {
-    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+  const validateFile = (file: File, allowedTypes: string[] = ALLOWED_FILE_TYPES): string | null => {
+    if (!allowedTypes.includes(file.type)) {
       return 'Invalid file type. Please upload PNG, JPG, SVG, or WebP.';
     }
     if (file.size > MAX_FILE_SIZE) {
@@ -66,9 +74,10 @@ const AdminPanel = () => {
     return null;
   };
 
-  const handleUploadLogo = async (file: File, type: 'app_logo_url' | 'stream_dialog_logo_url') => {
+  const handleUploadLogo = async (file: File, type: 'app_logo_url' | 'stream_dialog_logo_url' | 'favicon_url') => {
     const isAppLogo = type === 'app_logo_url';
-    const setUploading = isAppLogo ? setIsUploadingLogo : setIsUploadingStreamLogo;
+    const isFavicon = type === 'favicon_url';
+    const setUploading = isAppLogo ? setIsUploadingLogo : isFavicon ? setIsUploadingFavicon : setIsUploadingStreamLogo;
     
     setUploading(true);
     
@@ -91,7 +100,7 @@ const AdminPanel = () => {
       if (success) {
         toast({
           title: t('success'),
-          description: isAppLogo ? t('logoUpdated') : t('streamLogoUpdated'),
+          description: isAppLogo ? t('logoUpdated') : isFavicon ? t('faviconUpdated') : t('streamLogoUpdated'),
         });
       }
     } catch (error) {
@@ -106,12 +115,13 @@ const AdminPanel = () => {
     }
   };
 
-  const handleRemoveLogo = async (type: 'app_logo_url' | 'stream_dialog_logo_url') => {
+  const handleRemoveLogo = async (type: 'app_logo_url' | 'stream_dialog_logo_url' | 'favicon_url') => {
     const success = await updateSetting(type, '');
     if (success) {
+      const isFavicon = type === 'favicon_url';
       toast({
         title: t('success'),
-        description: t('logoRemoved'),
+        description: isFavicon ? t('faviconRemoved') : t('logoRemoved'),
       });
     }
   };
@@ -140,10 +150,34 @@ const AdminPanel = () => {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'app_logo_url' | 'stream_dialog_logo_url') => {
+  const handleSaveWebsiteTitle = async () => {
+    const trimmedTitle = websiteTitle.trim();
+    if (!trimmedTitle || trimmedTitle.length > 60) {
+      toast({
+        title: t('error'),
+        description: 'Website title must be between 1 and 60 characters.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsSavingTitle(true);
+    const success = await updateSetting('website_title', trimmedTitle);
+    setIsSavingTitle(false);
+    
+    if (success) {
+      toast({
+        title: t('success'),
+        description: t('websiteTitleUpdated'),
+      });
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'app_logo_url' | 'stream_dialog_logo_url' | 'favicon_url') => {
     const file = e.target.files?.[0];
     if (file) {
-      const error = validateFile(file);
+      const allowedTypes = type === 'favicon_url' ? ALLOWED_FAVICON_TYPES : ALLOWED_FILE_TYPES;
+      const error = validateFile(file, allowedTypes);
       if (error) {
         toast({
           title: t('error'),
@@ -271,6 +305,115 @@ const AdminPanel = () => {
                   )}
                   {t('save')}
                 </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Website Title Setting */}
+          <Card className="border-border/50 bg-card/50 backdrop-blur">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-orange-500/10">
+                  <Globe className="w-5 h-5 text-orange-500" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">{t('websiteTitle')}</CardTitle>
+                  <CardDescription>{t('websiteTitleDesc')}</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-3">
+                <Input
+                  value={websiteTitle}
+                  onChange={(e) => setWebsiteTitle(e.target.value)}
+                  placeholder={t('enterWebsiteTitle')}
+                  className="flex-1"
+                  maxLength={60}
+                />
+                <Button 
+                  onClick={handleSaveWebsiteTitle}
+                  disabled={isSavingTitle || websiteTitle.trim() === settings.websiteTitle}
+                  className="gap-2"
+                >
+                  {isSavingTitle ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4" />
+                  )}
+                  {t('save')}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Favicon Setting */}
+          <Card className="border-border/50 bg-card/50 backdrop-blur">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-yellow-500/10">
+                  <Star className="w-5 h-5 text-yellow-500" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">{t('favicon')}</CardTitle>
+                  <CardDescription>{t('faviconDesc')}</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col sm:flex-row gap-4 items-start">
+                {/* Favicon Preview */}
+                <div className="w-16 h-16 rounded-xl border-2 border-dashed border-border flex items-center justify-center bg-muted/50 overflow-hidden">
+                  {settings.faviconUrl ? (
+                    <img 
+                      src={settings.faviconUrl} 
+                      alt="Favicon" 
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <Star className="w-6 h-6 text-muted-foreground" />
+                  )}
+                </div>
+                
+                <div className="flex-1 space-y-3">
+                  <input
+                    ref={faviconInputRef}
+                    type="file"
+                    accept="image/png,image/x-icon,image/svg+xml,image/webp"
+                    className="hidden"
+                    onChange={(e) => handleFileChange(e, 'favicon_url')}
+                  />
+                  
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => faviconInputRef.current?.click()}
+                      disabled={isUploadingFavicon}
+                      className="gap-2"
+                    >
+                      {isUploadingFavicon ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Upload className="w-4 h-4" />
+                      )}
+                      {t('uploadLogo')}
+                    </Button>
+                    
+                    {settings.faviconUrl && (
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => handleRemoveLogo('favicon_url')}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                  
+                  <p className="text-xs text-muted-foreground">
+                    PNG, ICO, SVG, or WebP. Max 5MB. Recommended: 32x32px or 64x64px
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -434,7 +577,17 @@ const AdminPanel = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div className="p-4 rounded-lg bg-background/50 border border-border/50">
+                  <Label className="text-xs text-muted-foreground">{t('websiteTitle')}</Label>
+                  <p className="font-medium mt-1 truncate">{settings.websiteTitle}</p>
+                </div>
+                <div className="p-4 rounded-lg bg-background/50 border border-border/50">
+                  <Label className="text-xs text-muted-foreground">{t('favicon')}</Label>
+                  <p className="font-medium mt-1 truncate">
+                    {settings.faviconUrl ? t('uploaded') : t('notSet')}
+                  </p>
+                </div>
                 <div className="p-4 rounded-lg bg-background/50 border border-border/50">
                   <Label className="text-xs text-muted-foreground">{t('appName')}</Label>
                   <p className="font-medium mt-1">{settings.appName}</p>
