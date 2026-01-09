@@ -103,6 +103,15 @@ export const translations = {
     appNameUpdated: 'App name updated successfully',
     fileTooLarge: 'File is too large. Maximum size is 5MB.',
     
+    // Favicon & Theme
+    favicon: 'Favicon',
+    faviconDesc: 'Browser tab icon (recommended: 32x32px ICO, PNG)',
+    faviconUpdated: 'Favicon updated successfully',
+    themeColor: 'Theme Color',
+    themeColorDesc: 'Primary color used throughout the app',
+    themeColorUpdated: 'Theme color updated successfully',
+    selectColor: 'Select Color',
+    
     // Overlay Ads
     overlayAds: 'Overlay Ads',
     overlayAdsDesc: 'Manage overlay advertisements shown during streams',
@@ -220,6 +229,15 @@ export const translations = {
     logoRemoved: 'Logo အောင်မြင်စွာ ဖယ်ရှားပြီးပါပြီ',
     appNameUpdated: 'အက်ပ်အမည် အောင်မြင်စွာ ပြင်ဆင်ပြီးပါပြီ',
     fileTooLarge: 'ဖိုင်အရွယ်အစား ကြီးလွန်းသည်။ အများဆုံး 5MB။',
+    
+    // Favicon & Theme
+    favicon: 'Favicon',
+    faviconDesc: 'Browser tab icon (အကြံပြု: 32x32px ICO, PNG)',
+    faviconUpdated: 'Favicon အောင်မြင်စွာ ပြင်ဆင်ပြီးပါပြီ',
+    themeColor: 'အရောင်',
+    themeColorDesc: 'အက်ပ်တစ်ခုလုံးတွင် သုံးသည့် အဓိကအရောင်',
+    themeColorUpdated: 'အရောင် အောင်မြင်စွာ ပြင်ဆင်ပြီးပါပြီ',
+    selectColor: 'အရောင်ရွေးပါ',
     
     // Overlay Ads
     overlayAds: 'Overlay ကြော်ငြာများ',

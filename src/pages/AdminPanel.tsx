@@ -23,7 +23,9 @@ import {
   Film,
   Check,
   ShieldAlert,
-  LogOut
+  LogOut,
+  Globe,
+  Palette
 } from 'lucide-react';
 
 // Allowed file types for upload
@@ -37,17 +39,33 @@ const AdminPanel = () => {
   const navigate = useNavigate();
   
   const [appName, setAppName] = useState(settings.appName);
+  const [primaryColor, setPrimaryColor] = useState(settings.primaryColor);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isUploadingStreamLogo, setIsUploadingStreamLogo] = useState(false);
+  const [isUploadingFavicon, setIsUploadingFavicon] = useState(false);
   const [isSavingName, setIsSavingName] = useState(false);
+  const [isSavingColor, setIsSavingColor] = useState(false);
   
   const logoInputRef = useRef<HTMLInputElement>(null);
   const streamLogoInputRef = useRef<HTMLInputElement>(null);
+  const faviconInputRef = useRef<HTMLInputElement>(null);
 
-  // Update appName when settings load
+  // Preset theme colors (HSL format)
+  const presetColors = [
+    { name: 'Green', value: '142 71% 45%' },
+    { name: 'Blue', value: '217 91% 60%' },
+    { name: 'Purple', value: '271 91% 65%' },
+    { name: 'Red', value: '0 84% 60%' },
+    { name: 'Orange', value: '25 95% 53%' },
+    { name: 'Pink', value: '330 81% 60%' },
+    { name: 'Cyan', value: '189 94% 43%' },
+    { name: 'Yellow', value: '48 96% 53%' },
+  ];
+
   useEffect(() => {
     setAppName(settings.appName);
-  }, [settings.appName]);
+    setPrimaryColor(settings.primaryColor);
+  }, [settings.appName, settings.primaryColor]);
 
   // Redirect if not authenticated or not admin
   useEffect(() => {
@@ -66,9 +84,10 @@ const AdminPanel = () => {
     return null;
   };
 
-  const handleUploadLogo = async (file: File, type: 'app_logo_url' | 'stream_dialog_logo_url') => {
+  const handleUploadLogo = async (file: File, type: 'app_logo_url' | 'stream_dialog_logo_url' | 'favicon_url') => {
     const isAppLogo = type === 'app_logo_url';
-    const setUploading = isAppLogo ? setIsUploadingLogo : setIsUploadingStreamLogo;
+    const isFavicon = type === 'favicon_url';
+    const setUploading = isAppLogo ? setIsUploadingLogo : isFavicon ? setIsUploadingFavicon : setIsUploadingStreamLogo;
     
     setUploading(true);
     
@@ -91,7 +110,7 @@ const AdminPanel = () => {
       if (success) {
         toast({
           title: t('success'),
-          description: isAppLogo ? t('logoUpdated') : t('streamLogoUpdated'),
+          description: isFavicon ? t('faviconUpdated') : isAppLogo ? t('logoUpdated') : t('streamLogoUpdated'),
         });
       }
     } catch (error) {
@@ -106,12 +125,25 @@ const AdminPanel = () => {
     }
   };
 
-  const handleRemoveLogo = async (type: 'app_logo_url' | 'stream_dialog_logo_url') => {
+  const handleRemoveLogo = async (type: 'app_logo_url' | 'stream_dialog_logo_url' | 'favicon_url') => {
     const success = await updateSetting(type, '');
     if (success) {
       toast({
         title: t('success'),
         description: t('logoRemoved'),
+      });
+    }
+  };
+
+  const handleSaveColor = async () => {
+    setIsSavingColor(true);
+    const success = await updateSetting('primary_color', primaryColor);
+    setIsSavingColor(false);
+    
+    if (success) {
+      toast({
+        title: t('success'),
+        description: t('themeColorUpdated'),
       });
     }
   };
@@ -140,7 +172,7 @@ const AdminPanel = () => {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'app_logo_url' | 'stream_dialog_logo_url') => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'app_logo_url' | 'stream_dialog_logo_url' | 'favicon_url') => {
     const file = e.target.files?.[0];
     if (file) {
       const error = validateFile(file);
@@ -417,6 +449,140 @@ const AdminPanel = () => {
             </CardContent>
           </Card>
 
+          {/* Favicon Setting */}
+          <Card className="border-border/50 bg-card/50 backdrop-blur">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-orange-500/10">
+                  <Globe className="w-5 h-5 text-orange-500" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">{t('favicon')}</CardTitle>
+                  <CardDescription>{t('faviconDesc')}</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col sm:flex-row gap-4 items-start">
+                {/* Favicon Preview */}
+                <div className="w-16 h-16 rounded-xl border-2 border-dashed border-border flex items-center justify-center bg-muted/50 overflow-hidden">
+                  {settings.faviconUrl ? (
+                    <img 
+                      src={settings.faviconUrl} 
+                      alt="Favicon" 
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <Globe className="w-6 h-6 text-muted-foreground" />
+                  )}
+                </div>
+                
+                <div className="flex-1 space-y-3">
+                  <input
+                    ref={faviconInputRef}
+                    type="file"
+                    accept="image/png,image/x-icon,image/svg+xml,image/webp"
+                    className="hidden"
+                    onChange={(e) => handleFileChange(e, 'favicon_url')}
+                  />
+                  
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => faviconInputRef.current?.click()}
+                      disabled={isUploadingFavicon}
+                      className="gap-2"
+                    >
+                      {isUploadingFavicon ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Upload className="w-4 h-4" />
+                      )}
+                      {t('uploadLogo')}
+                    </Button>
+                    
+                    {settings.faviconUrl && (
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => handleRemoveLogo('favicon_url')}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                  
+                  <p className="text-xs text-muted-foreground">
+                    PNG, ICO, or SVG. Recommended: 32x32px.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Theme Color Setting */}
+          <Card className="border-border/50 bg-card/50 backdrop-blur">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-pink-500/10">
+                  <Palette className="w-5 h-5 text-pink-500" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">{t('themeColor')}</CardTitle>
+                  <CardDescription>{t('themeColorDesc')}</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex flex-wrap gap-2">
+                  {presetColors.map((color) => (
+                    <button
+                      key={color.value}
+                      onClick={() => setPrimaryColor(color.value)}
+                      className={`w-10 h-10 rounded-lg border-2 transition-all ${
+                        primaryColor === color.value
+                          ? 'border-foreground scale-110'
+                          : 'border-transparent hover:scale-105'
+                      }`}
+                      style={{ backgroundColor: `hsl(${color.value})` }}
+                      title={color.name}
+                    />
+                  ))}
+                </div>
+                
+                <div className="flex gap-3 items-center">
+                  <div 
+                    className="w-12 h-12 rounded-lg border border-border"
+                    style={{ backgroundColor: `hsl(${primaryColor})` }}
+                  />
+                  <Input
+                    value={primaryColor}
+                    onChange={(e) => setPrimaryColor(e.target.value)}
+                    placeholder="142 71% 45%"
+                    className="flex-1 font-mono text-sm"
+                  />
+                  <Button 
+                    onClick={handleSaveColor}
+                    disabled={isSavingColor || primaryColor === settings.primaryColor}
+                    className="gap-2"
+                  >
+                    {isSavingColor ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4" />
+                    )}
+                    {t('save')}
+                  </Button>
+                </div>
+                
+                <p className="text-xs text-muted-foreground">
+                  HSL format: hue saturation% lightness% (e.g., 142 71% 45%)
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Overlay Ads Manager */}
           <OverlayAdsManager />
 
@@ -434,7 +600,7 @@ const AdminPanel = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="p-4 rounded-lg bg-background/50 border border-border/50">
                   <Label className="text-xs text-muted-foreground">{t('appName')}</Label>
                   <p className="font-medium mt-1">{settings.appName}</p>
@@ -446,10 +612,20 @@ const AdminPanel = () => {
                   </p>
                 </div>
                 <div className="p-4 rounded-lg bg-background/50 border border-border/50">
-                  <Label className="text-xs text-muted-foreground">{t('streamDialogLogo')}</Label>
+                  <Label className="text-xs text-muted-foreground">{t('favicon')}</Label>
                   <p className="font-medium mt-1 truncate">
-                    {settings.streamDialogLogoUrl ? t('uploaded') : t('notSet')}
+                    {settings.faviconUrl ? t('uploaded') : t('notSet')}
                   </p>
+                </div>
+                <div className="p-4 rounded-lg bg-background/50 border border-border/50">
+                  <Label className="text-xs text-muted-foreground">{t('themeColor')}</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div 
+                      className="w-4 h-4 rounded-full border border-border"
+                      style={{ backgroundColor: `hsl(${settings.primaryColor})` }}
+                    />
+                    <p className="font-mono text-sm truncate">{settings.primaryColor}</p>
+                  </div>
                 </div>
               </div>
             </CardContent>
