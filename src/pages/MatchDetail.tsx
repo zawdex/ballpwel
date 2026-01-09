@@ -134,7 +134,7 @@ const MatchDetail = () => {
       </div>
 
       {/* Video Player */}
-      <VideoPlayer stream={selectedStream} />
+      <VideoPlayer stream={selectedStream} matchTitle={`${match.home_name} vs ${match.away_name}`} />
 
       {/* Stream Selector */}
       <StreamSelector
