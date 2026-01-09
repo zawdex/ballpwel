@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { MatchFilters } from "@/types";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import Layout from "@/components/layout/Layout";
 import Dashboard from "@/pages/Dashboard";
 import MatchDetail from "@/pages/MatchDetail";
@@ -39,21 +40,23 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route element={<Layout onSearch={handleSearch} searchQuery={filters.searchQuery} />}>
-              <Route path="/" element={<Dashboard filters={filters} onFilterChange={handleFilterChange} />} />
-              <Route path="/matches/:matchId" element={<MatchDetail />} />
-              <Route path="/live" element={<LiveMatches />} />
-              <Route path="/upcoming" element={<UpcomingMatches />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <LanguageProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route element={<Layout onSearch={handleSearch} searchQuery={filters.searchQuery} />}>
+                <Route path="/" element={<Dashboard filters={filters} onFilterChange={handleFilterChange} />} />
+                <Route path="/matches/:matchId" element={<MatchDetail />} />
+                <Route path="/live" element={<LiveMatches />} />
+                <Route path="/upcoming" element={<UpcomingMatches />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 };

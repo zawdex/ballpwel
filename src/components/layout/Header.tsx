@@ -3,6 +3,9 @@ import { Link, useLocation } from 'react-router-dom';
 import { Search, Menu, X, Tv, Zap, Calendar, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useLanguage } from '@/contexts/LanguageContext';
+import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
+import TelegramLink from '@/components/ui/TelegramLink';
 
 interface HeaderProps {
   onSearch: (query: string) => void;
@@ -12,11 +15,12 @@ interface HeaderProps {
 const Header = ({ onSearch, searchQuery }: HeaderProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { t } = useLanguage();
 
   const navLinks = [
-    { path: '/', label: 'All Matches', icon: Trophy },
-    { path: '/live', label: 'Live', icon: Zap },
-    { path: '/upcoming', label: 'Upcoming', icon: Calendar },
+    { path: '/', label: t('allMatches'), icon: Trophy },
+    { path: '/live', label: t('live'), icon: Zap },
+    { path: '/upcoming', label: t('upcoming'), icon: Calendar },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -31,7 +35,7 @@ const Header = ({ onSearch, searchQuery }: HeaderProps) => {
               <Tv className="w-5 h-5 text-primary-foreground" />
             </div>
             <span className="font-display text-xl font-bold text-gradient hidden sm:block">
-              FOOTSTREAM
+              {t('appName')}
             </span>
           </Link>
 
@@ -53,45 +57,55 @@ const Header = ({ onSearch, searchQuery }: HeaderProps) => {
             ))}
           </nav>
 
-          {/* Search Bar */}
-          <div className="hidden sm:flex items-center gap-2 flex-1 max-w-xs ml-6">
-            <div className="relative w-full">
+          {/* Right Section */}
+          <div className="hidden sm:flex items-center gap-3">
+            {/* Search Bar */}
+            <div className="relative w-48 lg:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder="Search teams..."
+                placeholder={t('searchTeams')}
                 value={searchQuery}
                 onChange={(e) => onSearch(e.target.value)}
-                className="pl-10 bg-secondary border-border focus:border-primary"
+                className="pl-10 bg-secondary border-border focus:border-primary h-9"
               />
             </div>
+            
+            {/* Telegram Link */}
+            <TelegramLink />
+            
+            {/* Language Switcher */}
+            <LanguageSwitcher />
           </div>
 
           {/* Mobile Menu Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </Button>
+          <div className="flex items-center gap-2 md:hidden">
+            <LanguageSwitcher />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </Button>
+          </div>
         </div>
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-border animate-fade-in">
-            <div className="mb-4">
+            <div className="mb-4 flex flex-col gap-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Search teams..."
+                  placeholder={t('searchTeams')}
                   value={searchQuery}
                   onChange={(e) => onSearch(e.target.value)}
                   className="pl-10 bg-secondary border-border"
                 />
               </div>
+              <TelegramLink />
             </div>
             <nav className="flex flex-col gap-1">
               {navLinks.map(({ path, label, icon: Icon }) => (

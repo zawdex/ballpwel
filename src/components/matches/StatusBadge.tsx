@@ -1,24 +1,27 @@
 import { MatchStatus } from '@/types';
 import { Circle } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface StatusBadgeProps {
   status: MatchStatus;
 }
 
 const StatusBadge = ({ status }: StatusBadgeProps) => {
+  const { t } = useLanguage();
+
   const statusConfig = {
     live: {
-      label: 'LIVE',
+      label: t('statusLive'),
       className: 'status-live',
       showDot: true,
     },
     upcoming: {
-      label: 'UPCOMING',
+      label: t('statusUpcoming'),
       className: 'status-upcoming',
       showDot: false,
     },
     finished: {
-      label: 'FINISHED',
+      label: t('statusFinished'),
       className: 'status-finished',
       showDot: false,
     },
