@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
-import { ArrowLeft, Loader2, Lock, Mail, LogIn, UserPlus } from 'lucide-react';
+import { ArrowLeft, Loader2, Lock, Mail, LogIn } from 'lucide-react';
 import { z } from 'zod';
 
 const authSchema = z.object({
@@ -17,13 +17,12 @@ const authSchema = z.object({
 
 const Login = () => {
   const { t } = useLanguage();
-  const { signIn, signUp, isLoading: authLoading } = useAuth();
+  const { signIn, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
   const validateForm = () => {
@@ -52,36 +51,19 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      if (isSignUp) {
-        const { error } = await signUp(email.trim(), password);
-        if (error) {
-          toast({
-            title: t('error'),
-            description: error.message,
-            variant: 'destructive',
-          });
-        } else {
-          toast({
-            title: t('success'),
-            description: 'Account created! You can now sign in.',
-          });
-          setIsSignUp(false);
-        }
+      const { error } = await signIn(email.trim(), password);
+      if (error) {
+        toast({
+          title: t('error'),
+          description: error.message,
+          variant: 'destructive',
+        });
       } else {
-        const { error } = await signIn(email.trim(), password);
-        if (error) {
-          toast({
-            title: t('error'),
-            description: error.message,
-            variant: 'destructive',
-          });
-        } else {
-          toast({
-            title: t('success'),
-            description: 'Signed in successfully!',
-          });
-          navigate('/admin');
-        }
+        toast({
+          title: t('success'),
+          description: 'Signed in successfully!',
+        });
+        navigate('/admin');
       }
     } finally {
       setIsLoading(false);
@@ -105,13 +87,9 @@ const Login = () => {
             <div className="mx-auto mb-4 p-3 rounded-xl bg-primary/10 w-fit">
               <Lock className="w-8 h-8 text-primary" />
             </div>
-            <CardTitle className="text-2xl">
-              {isSignUp ? 'Create Account' : 'Admin Login'}
-            </CardTitle>
+            <CardTitle className="text-2xl">Admin Login</CardTitle>
             <CardDescription>
-              {isSignUp 
-                ? 'Create an account to access admin features' 
-                : 'Sign in to access the admin panel'}
+              Sign in to access the admin panel
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -123,7 +101,7 @@ const Login = () => {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="admin@example.com"
+                    placeholder="zawmyo@admin.local"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
@@ -161,26 +139,12 @@ const Login = () => {
               >
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
-                ) : isSignUp ? (
-                  <UserPlus className="w-4 h-4" />
                 ) : (
                   <LogIn className="w-4 h-4" />
                 )}
-                {isSignUp ? 'Create Account' : 'Sign In'}
+                Sign In
               </Button>
             </form>
-
-            <div className="mt-6 text-center">
-              <button
-                type="button"
-                onClick={() => setIsSignUp(!isSignUp)}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {isSignUp 
-                  ? 'Already have an account? Sign in' 
-                  : "Don't have an account? Sign up"}
-              </button>
-            </div>
           </CardContent>
         </Card>
       </div>
