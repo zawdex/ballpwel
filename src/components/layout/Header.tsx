@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, Menu, X, Tv, Zap, Calendar, Trophy } from 'lucide-react';
+import { Search, Menu, X, Tv, Zap, Calendar, Trophy, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAppSettings } from '@/contexts/AppSettingsContext';
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
 import TelegramLink from '@/components/ui/TelegramLink';
 
@@ -16,6 +17,7 @@ const Header = ({ onSearch, searchQuery }: HeaderProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { t } = useLanguage();
+  const { settings } = useAppSettings();
 
   const navLinks = [
     { path: '/', label: t('allMatches'), icon: Trophy },
@@ -31,11 +33,15 @@ const Header = ({ onSearch, searchQuery }: HeaderProps) => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="p-2 rounded-lg gradient-pitch group-hover:shadow-lg group-hover:shadow-primary/20 transition-shadow">
-              <Tv className="w-5 h-5 text-primary-foreground" />
+            <div className="p-2 rounded-lg gradient-pitch group-hover:shadow-lg group-hover:shadow-primary/20 transition-shadow overflow-hidden">
+              {settings.appLogoUrl ? (
+                <img src={settings.appLogoUrl} alt="Logo" className="w-5 h-5 object-contain" />
+              ) : (
+                <Tv className="w-5 h-5 text-primary-foreground" />
+              )}
             </div>
             <span className="font-display text-xl font-bold text-gradient hidden sm:block">
-              {t('appName')}
+              {settings.appName || t('appName')}
             </span>
           </Link>
 
@@ -76,6 +82,13 @@ const Header = ({ onSearch, searchQuery }: HeaderProps) => {
             
             {/* Language Switcher */}
             <LanguageSwitcher />
+            
+            {/* Admin Panel Link */}
+            <Link to="/admin">
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                <Settings className="w-5 h-5" />
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
