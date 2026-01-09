@@ -5,6 +5,8 @@ interface AppSettings {
   appName: string;
   appLogoUrl: string;
   streamDialogLogoUrl: string;
+  faviconUrl: string;
+  primaryColor: string;
 }
 
 interface AppSettingsContextType {
@@ -18,6 +20,8 @@ const defaultSettings: AppSettings = {
   appName: 'Live Sports TV',
   appLogoUrl: '',
   streamDialogLogoUrl: '',
+  faviconUrl: '',
+  primaryColor: '142 71% 45%',
 };
 
 const AppSettingsContext = createContext<AppSettingsContextType | undefined>(undefined);
@@ -43,6 +47,10 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
             newSettings.appLogoUrl = item.setting_value || '';
           } else if (item.setting_key === 'stream_dialog_logo_url') {
             newSettings.streamDialogLogoUrl = item.setting_value || '';
+          } else if (item.setting_key === 'favicon_url') {
+            newSettings.faviconUrl = item.setting_value || '';
+          } else if (item.setting_key === 'primary_color') {
+            newSettings.primaryColor = item.setting_value || defaultSettings.primaryColor;
           }
         });
         setSettings(newSettings);
@@ -74,6 +82,37 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     fetchSettings();
   }, []);
+
+  // Apply dynamic theme colors
+  useEffect(() => {
+    const root = document.documentElement;
+    
+    // Apply primary color to CSS variables
+    root.style.setProperty('--primary', settings.primaryColor);
+    root.style.setProperty('--accent', settings.primaryColor);
+    root.style.setProperty('--ring', settings.primaryColor);
+    root.style.setProperty('--pitch', settings.primaryColor);
+    root.style.setProperty('--sidebar-primary', settings.primaryColor);
+    root.style.setProperty('--sidebar-ring', settings.primaryColor);
+  }, [settings.primaryColor]);
+
+  // Apply dynamic favicon
+  useEffect(() => {
+    if (settings.faviconUrl) {
+      let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.appendChild(link);
+      }
+      link.href = settings.faviconUrl;
+    }
+  }, [settings.faviconUrl]);
+
+  // Apply dynamic document title
+  useEffect(() => {
+    document.title = settings.appName;
+  }, [settings.appName]);
 
   return (
     <AppSettingsContext.Provider value={{ settings, isLoading, refreshSettings: fetchSettings, updateSetting }}>
