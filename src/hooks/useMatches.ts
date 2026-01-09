@@ -16,8 +16,8 @@ export const getMatchStatus = (score: string, time: string): MatchStatus => {
     return 'live';
   }
   
-  // Score pattern like "0-1", "2-3", etc. means finished
-  const scorePattern = /^\d+-\d+$/;
+  // Score pattern like "0-1", "2-3", "0 - 1", "2 - 3" etc. means finished
+  const scorePattern = /^\d+\s*-\s*\d+$/;
   if (scorePattern.test(scoreTrimmed)) {
     return 'finished';
   }
