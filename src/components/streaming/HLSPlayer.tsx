@@ -10,10 +10,13 @@ import {
   Settings,
   Loader2,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  Tv,
+  Check
 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,6 +42,7 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const { t } = useLanguage();
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -50,7 +54,7 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [qualityLevels, setQualityLevels] = useState<QualityLevel[]>([]);
-  const [currentQuality, setCurrentQuality] = useState(-1); // -1 = auto
+  const [currentQuality, setCurrentQuality] = useState(-1);
   const [isBuffering, setIsBuffering] = useState(false);
 
   const initializePlayer = useCallback(() => {
@@ -59,12 +63,10 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
     setError(null);
     setIsLoading(true);
 
-    // Clean up previous instance
     if (hlsRef.current) {
       hlsRef.current.destroy();
     }
 
-    // Check if it's an HLS stream
     if (src.includes('.m3u8')) {
       if (Hls.isSupported()) {
         const hls = new Hls({
@@ -95,15 +97,15 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
           if (data.fatal) {
             switch (data.type) {
               case Hls.ErrorTypes.NETWORK_ERROR:
-                setError('Network error. Trying to recover...');
+                setError(t('networkError'));
                 hls.startLoad();
                 break;
               case Hls.ErrorTypes.MEDIA_ERROR:
-                setError('Media error. Trying to recover...');
+                setError(t('mediaError'));
                 hls.recoverMediaError();
                 break;
               default:
-                setError('Stream unavailable');
+                setError(t('streamUnavailable'));
                 hls.destroy();
                 onError?.('Fatal streaming error');
                 break;
@@ -111,19 +113,17 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
           }
         });
       } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
-        // Native HLS support (Safari)
         videoRef.current.src = src;
         setIsLoading(false);
       } else {
-        setError('HLS is not supported in this browser');
+        setError(t('hlsNotSupported'));
         onError?.('HLS not supported');
       }
     } else {
-      // Regular video source
       videoRef.current.src = src;
       setIsLoading(false);
     }
-  }, [src, onError]);
+  }, [src, onError, t]);
 
   useEffect(() => {
     initializePlayer();
@@ -135,7 +135,6 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
     };
   }, [initializePlayer]);
 
-  // Video event handlers
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -148,7 +147,7 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
     const handlePlaying = () => setIsBuffering(false);
     const handleCanPlay = () => setIsLoading(false);
     const handleError = () => {
-      setError('Failed to load video');
+      setError(t('failedToLoad'));
       setIsLoading(false);
     };
 
@@ -171,9 +170,8 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
       video.removeEventListener('canplay', handleCanPlay);
       video.removeEventListener('error', handleError);
     };
-  }, []);
+  }, [t]);
 
-  // Fullscreen change handler
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
@@ -183,7 +181,6 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  // Auto-hide controls
   const showControlsTemporarily = useCallback(() => {
     setShowControls(true);
     if (controlsTimeoutRef.current) {
@@ -263,7 +260,7 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
   return (
     <div
       ref={containerRef}
-      className="relative aspect-video bg-black rounded-xl overflow-hidden group"
+      className="relative aspect-video bg-gradient-to-br from-black via-zinc-900 to-black rounded-xl overflow-hidden group"
       onMouseMove={showControlsTemporarily}
       onMouseLeave={() => isPlaying && setShowControls(false)}
     >
@@ -277,41 +274,58 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
 
       {/* Loading Overlay */}
       {(isLoading || isBuffering) && !error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-          <Loader2 className="w-12 h-12 text-primary animate-spin" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="relative">
+            <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center">
+              <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            </div>
+          </div>
+          <p className="mt-4 text-sm text-muted-foreground">{t('loading')}</p>
         </div>
       )}
 
       {/* Error Overlay */}
       {error && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-center p-6">
-          <AlertCircle className="w-12 h-12 text-destructive mb-4" />
-          <p className="text-lg font-medium mb-2">{error}</p>
-          <Button onClick={initializePlayer} variant="outline" className="gap-2">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-black/90 to-black/80 text-center p-6 backdrop-blur-sm">
+          <div className="w-16 h-16 rounded-2xl bg-destructive/20 flex items-center justify-center mb-4">
+            <AlertCircle className="w-8 h-8 text-destructive" />
+          </div>
+          <p className="text-lg font-bold mb-2">{error}</p>
+          <Button onClick={initializePlayer} variant="outline" className="gap-2 mt-2">
             <RefreshCw className="w-4 h-4" />
-            Retry
+            {t('retry')}
           </Button>
         </div>
       )}
 
       {/* Play Button Overlay (when paused) */}
       {!isPlaying && !isLoading && !error && (
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
           <button
             onClick={togglePlay}
-            className="w-20 h-20 rounded-full bg-primary/90 hover:bg-primary flex items-center justify-center transition-transform hover:scale-110"
+            className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-2xl shadow-primary/30"
           >
-            <Play className="w-10 h-10 text-primary-foreground fill-primary-foreground ml-1" />
+            <Play className="w-12 h-12 text-primary-foreground fill-primary-foreground ml-1" />
           </button>
         </div>
       )}
 
       {/* Controls */}
       <div
-        className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 transition-opacity duration-300 ${
+        className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent p-4 pt-16 transition-opacity duration-300 ${
           showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
       >
+        {/* Title Bar */}
+        {title && showControls && (
+          <div className="absolute top-4 left-4 right-4 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center backdrop-blur-sm border border-primary/20">
+              <Tv className="w-4 h-4 text-primary" />
+            </div>
+            <span className="text-sm font-medium text-white/90 truncate">{title}</span>
+          </div>
+        )}
+
         {/* Progress Bar */}
         <div className="mb-4">
           <Slider
@@ -321,7 +335,7 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
             onValueChange={handleSeek}
             className="cursor-pointer"
           />
-          <div className="flex justify-between text-xs text-white/70 mt-1">
+          <div className="flex justify-between text-xs text-white/60 mt-1.5 font-medium">
             <span>{formatTime(currentTime)}</span>
             <span>{formatTime(duration)}</span>
           </div>
@@ -333,7 +347,7 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
             {/* Play/Pause */}
             <button
               onClick={togglePlay}
-              className="p-2 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
+              className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-sm border border-white/10"
             >
               {isPlaying ? (
                 <Pause className="w-5 h-5 text-white" />
@@ -346,7 +360,7 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
             <div className="flex items-center gap-2">
               <button
                 onClick={toggleMute}
-                className="p-2 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
+                className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-sm border border-white/10"
               >
                 {isMuted || volume === 0 ? (
                   <VolumeX className="w-5 h-5 text-white" />
@@ -363,13 +377,6 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
                 />
               </div>
             </div>
-
-            {/* Title */}
-            {title && (
-              <span className="text-sm text-white/70 ml-4 hidden md:block truncate max-w-xs">
-                {title}
-              </span>
-            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -377,20 +384,20 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
             {qualityLevels.length > 0 && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="p-2 rounded-lg bg-white/20 hover:bg-white/30 transition-colors flex items-center gap-1">
+                  <button className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors flex items-center gap-1.5 backdrop-blur-sm border border-white/10">
                     <Settings className="w-5 h-5 text-white" />
-                    <span className="text-xs text-white hidden sm:inline">
-                      {currentQuality === -1 ? 'Auto' : getQualityLabel(qualityLevels[currentQuality])}
+                    <span className="text-xs text-white font-medium hidden sm:inline">
+                      {currentQuality === -1 ? t('auto') : getQualityLabel(qualityLevels[currentQuality])}
                     </span>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-background/95 backdrop-blur">
-                  <DropdownMenuItem onClick={() => setQuality(-1)}>
-                    Auto {currentQuality === -1 && '✓'}
+                <DropdownMenuContent align="end" className="bg-card/95 backdrop-blur-xl border-border">
+                  <DropdownMenuItem onClick={() => setQuality(-1)} className="gap-2">
+                    {t('auto')} {currentQuality === -1 && <Check className="w-4 h-4 text-primary ml-auto" />}
                   </DropdownMenuItem>
                   {qualityLevels.map((level) => (
-                    <DropdownMenuItem key={level.index} onClick={() => setQuality(level.index)}>
-                      {getQualityLabel(level)} {currentQuality === level.index && '✓'}
+                    <DropdownMenuItem key={level.index} onClick={() => setQuality(level.index)} className="gap-2">
+                      {getQualityLabel(level)} {currentQuality === level.index && <Check className="w-4 h-4 text-primary ml-auto" />}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
@@ -400,7 +407,7 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
             {/* Fullscreen */}
             <button
               onClick={toggleFullscreen}
-              className="p-2 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
+              className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-sm border border-white/10"
             >
               {isFullscreen ? (
                 <Minimize className="w-5 h-5 text-white" />
