@@ -1,11 +1,19 @@
 import { Match } from '@/types';
 
-const API_BASE = 'https://yalatt.playstoreapp.sbs/api';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 export const footballAPI = {
   getMatches: async (): Promise<Match[]> => {
     try {
-      const response = await fetch(`${API_BASE}/matches.php`);
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/matches-proxy`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
       if (!response.ok) {
         throw new Error('Failed to fetch matches');
       }
