@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Play, ExternalLink, AlertTriangle, Tv, Signal, Wifi } from 'lucide-react';
 import { Author } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAppSettings } from '@/contexts/AppSettingsContext';
 import HLSPlayer from './HLSPlayer';
 import { Button } from '@/components/ui/button';
 
@@ -14,6 +15,7 @@ const VideoPlayer = ({ stream, matchTitle }: VideoPlayerProps) => {
   const [playerError, setPlayerError] = useState<string | null>(null);
   const [useEmbedded, setUseEmbedded] = useState(true);
   const { t } = useLanguage();
+  const { settings } = useAppSettings();
 
   if (!stream) {
     return (
@@ -26,8 +28,12 @@ const VideoPlayer = ({ stream, matchTitle }: VideoPlayerProps) => {
         
         <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
           <div className="relative mb-6">
-            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center backdrop-blur-sm">
-              <Tv className="w-10 h-10 text-primary" />
+            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center backdrop-blur-sm overflow-hidden">
+              {settings.streamDialogLogoUrl ? (
+                <img src={settings.streamDialogLogoUrl} alt="Stream Logo" className="w-16 h-16 object-contain" />
+              ) : (
+                <Tv className="w-10 h-10 text-primary" />
+              )}
             </div>
             <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-primary/30 flex items-center justify-center animate-ping">
               <Signal className="w-3 h-3 text-primary" />
