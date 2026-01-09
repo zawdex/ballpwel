@@ -1,11 +1,10 @@
 import { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Clock, Trophy, CalendarClock } from 'lucide-react';
+import { ArrowLeft, Clock, Trophy } from 'lucide-react';
 import { footballAPI } from '@/services/api';
 import { Author, Match } from '@/types';
 import { getMatchStatus } from '@/hooks/useMatches';
-import { useCountdown } from '@/hooks/useCountdown';
 import StatusBadge from '@/components/matches/StatusBadge';
 import VideoPlayer from '@/components/streaming/VideoPlayer';
 import StreamSelector from '@/components/streaming/StreamSelector';
@@ -57,8 +56,6 @@ const MatchDetail = () => {
   }
 
   const status = getMatchStatus(match.score, match.time);
-  const isUpcoming = status === 'upcoming';
-  const countdown = useCountdown(match.time);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -136,54 +133,15 @@ const MatchDetail = () => {
         </div>
       </div>
 
-      {/* Countdown for Upcoming Matches */}
-      {isUpcoming && !countdown.isExpired && (
-        <div className="bg-card rounded-2xl border border-border p-6 md:p-8">
-          <div className="flex flex-col items-center justify-center text-center">
-            <div className="flex items-center gap-2 text-upcoming mb-4">
-              <CalendarClock className="w-6 h-6" />
-              <span className="text-lg font-semibold">Match starts in</span>
-            </div>
-            <div className="flex items-center gap-3 md:gap-4">
-              <div className="flex flex-col items-center">
-                <div className="bg-upcoming/20 text-upcoming font-mono text-3xl md:text-5xl font-bold px-4 py-3 rounded-xl min-w-[70px] md:min-w-[100px]">
-                  {countdown.hours.toString().padStart(2, '0')}
-                </div>
-                <span className="text-xs md:text-sm text-muted-foreground mt-2">Hours</span>
-              </div>
-              <span className="text-upcoming text-3xl md:text-5xl font-bold">:</span>
-              <div className="flex flex-col items-center">
-                <div className="bg-upcoming/20 text-upcoming font-mono text-3xl md:text-5xl font-bold px-4 py-3 rounded-xl min-w-[70px] md:min-w-[100px]">
-                  {countdown.minutes.toString().padStart(2, '0')}
-                </div>
-                <span className="text-xs md:text-sm text-muted-foreground mt-2">Minutes</span>
-              </div>
-              <span className="text-upcoming text-3xl md:text-5xl font-bold">:</span>
-              <div className="flex flex-col items-center">
-                <div className="bg-upcoming/20 text-upcoming font-mono text-3xl md:text-5xl font-bold px-4 py-3 rounded-xl min-w-[70px] md:min-w-[100px]">
-                  {countdown.seconds.toString().padStart(2, '0')}
-                </div>
-                <span className="text-xs md:text-sm text-muted-foreground mt-2">Seconds</span>
-              </div>
-            </div>
-            <p className="text-muted-foreground mt-6 text-sm md:text-base">
-              Streaming will be available when the match starts
-            </p>
-          </div>
-        </div>
-      )}
+      {/* Video Player */}
+      <VideoPlayer stream={selectedStream} matchTitle={`${match.home_name} vs ${match.away_name}`} />
 
-      {/* Video Player - Only show for live/finished matches */}
-      {!isUpcoming && (
-        <>
-          <VideoPlayer stream={selectedStream} matchTitle={`${match.home_name} vs ${match.away_name}`} />
-          <StreamSelector
-            streams={match.authors}
-            selectedStream={selectedStream}
-            onSelectStream={setSelectedStream}
-          />
-        </>
-      )}
+      {/* Stream Selector */}
+      <StreamSelector
+        streams={match.authors}
+        selectedStream={selectedStream}
+        onSelectStream={setSelectedStream}
+      />
     </div>
   );
 };

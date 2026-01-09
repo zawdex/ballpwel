@@ -118,16 +118,6 @@ export const translations = {
     createAd: 'Create Ad',
     existingAds: 'Existing Ads',
     noAdsYet: 'No overlay ads created yet',
-    
-    // Website Settings
-    websiteTitle: 'Website Title',
-    websiteTitleDesc: 'Title displayed in browser tab',
-    enterWebsiteTitle: 'Enter website title...',
-    websiteTitleUpdated: 'Website title updated successfully',
-    favicon: 'Website Favicon',
-    faviconDesc: 'Icon displayed in browser tab (recommended: 32x32px or 64x64px)',
-    faviconUpdated: 'Favicon updated successfully',
-    faviconRemoved: 'Favicon removed successfully',
   },
   my: {
     // Header
@@ -246,16 +236,6 @@ export const translations = {
     createAd: 'ကြော်ငြာဖန်တီးရန်',
     existingAds: 'ရှိပြီးသား ကြော်ငြာများ',
     noAdsYet: 'Overlay ကြော်ငြာ မရှိသေးပါ',
-    
-    // Website Settings
-    websiteTitle: 'ဝဘ်ဆိုက်ခေါင်းစဉ်',
-    websiteTitleDesc: 'Browser tab တွင် ပြသမည့်ခေါင်းစဉ်',
-    enterWebsiteTitle: 'ဝဘ်ဆိုက်ခေါင်းစဉ် ထည့်ပါ...',
-    websiteTitleUpdated: 'ဝဘ်ဆိုက်ခေါင်းစဉ် အောင်မြင်စွာ ပြင်ဆင်ပြီးပါပြီ',
-    favicon: 'ဝဘ်ဆိုက် Favicon',
-    faviconDesc: 'Browser tab တွင် ပြသမည့် icon (အကြံပြု: 32x32px သို့မဟုတ် 64x64px)',
-    faviconUpdated: 'Favicon အောင်မြင်စွာ ပြင်ဆင်ပြီးပါပြီ',
-    faviconRemoved: 'Favicon အောင်မြင်စွာ ဖယ်ရှားပြီးပါပြီ',
   },
 };
 

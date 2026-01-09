@@ -4,7 +4,6 @@ import { Play, Radio } from 'lucide-react';
 import { Match } from '@/types';
 import { getMatchStatus } from '@/hooks/useMatches';
 import StatusBadge from './StatusBadge';
-import MatchCountdown from './MatchCountdown';
 import { Button } from '@/components/ui/button';
 
 interface MatchCardProps {
@@ -15,7 +14,6 @@ const MatchCard = memo(({ match }: MatchCardProps) => {
   const status = getMatchStatus(match.score, match.time);
   const hasStreams = match.authors && match.authors.length > 0;
   const encodedId = encodeURIComponent(match.id);
-  const isUpcoming = status === 'upcoming';
 
   return (
     <Link to={`/matches/${encodedId}`} className="block">
@@ -31,13 +29,9 @@ const MatchCard = memo(({ match }: MatchCardProps) => {
               </span>
             )}
           </div>
-          {isUpcoming ? (
-            <MatchCountdown time={match.time} />
-          ) : (
-            <span className="text-xs text-muted-foreground font-medium">
-              {match.time}
-            </span>
-          )}
+          <span className="text-xs text-muted-foreground font-medium">
+            {match.time}
+          </span>
         </div>
 
         {/* Competition Label */}
