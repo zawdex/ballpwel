@@ -13,6 +13,7 @@ import MatchDetail from "@/pages/MatchDetail";
 import LiveMatches from "@/pages/LiveMatches";
 import UpcomingMatches from "@/pages/UpcomingMatches";
 import AdminPanel from "@/pages/AdminPanel";
+import Login from "@/pages/Login";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -56,6 +57,7 @@ const App = () => {
                   <Route path="/upcoming" element={<UpcomingMatches />} />
                 </Route>
                 <Route path="/admin" element={<AdminPanel />} />
+                <Route path="/login" element={<Login />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

@@ -1,13 +1,13 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAppSettings } from '@/contexts/AppSettingsContext';
+import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { 
   Settings, 
@@ -20,12 +20,19 @@ import {
   Trash2,
   Monitor,
   Film,
-  Check
+  Check,
+  ShieldAlert,
+  LogOut
 } from 'lucide-react';
+
+// Allowed file types for upload
+const ALLOWED_FILE_TYPES = ['image/png', 'image/jpeg', 'image/svg+xml', 'image/webp'];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 const AdminPanel = () => {
   const { t } = useLanguage();
-  const { settings, updateSetting, refreshSettings } = useAppSettings();
+  const { settings, updateSetting } = useAppSettings();
+  const { user, isLoading: authLoading, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   
   const [appName, setAppName] = useState(settings.appName);
@@ -36,6 +43,28 @@ const AdminPanel = () => {
   const logoInputRef = useRef<HTMLInputElement>(null);
   const streamLogoInputRef = useRef<HTMLInputElement>(null);
 
+  // Update appName when settings load
+  useEffect(() => {
+    setAppName(settings.appName);
+  }, [settings.appName]);
+
+  // Redirect if not authenticated or not admin
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/login');
+    }
+  }, [user, authLoading, navigate]);
+
+  const validateFile = (file: File): string | null => {
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      return 'Invalid file type. Please upload PNG, JPG, SVG, or WebP.';
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      return t('fileTooLarge');
+    }
+    return null;
+  };
+
   const handleUploadLogo = async (file: File, type: 'app_logo_url' | 'stream_dialog_logo_url') => {
     const isAppLogo = type === 'app_logo_url';
     const setUploading = isAppLogo ? setIsUploadingLogo : setIsUploadingStreamLogo;
@@ -43,7 +72,7 @@ const AdminPanel = () => {
     setUploading(true);
     
     try {
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split('.').pop()?.toLowerCase();
       const fileName = `${type.replace('_url', '')}_${Date.now()}.${fileExt}`;
       
       const { error: uploadError } = await supabase.storage
@@ -87,8 +116,19 @@ const AdminPanel = () => {
   };
 
   const handleSaveAppName = async () => {
+    // Validate app name
+    const trimmedName = appName.trim();
+    if (!trimmedName || trimmedName.length > 50) {
+      toast({
+        title: t('error'),
+        description: 'App name must be between 1 and 50 characters.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsSavingName(true);
-    const success = await updateSetting('app_name', appName);
+    const success = await updateSetting('app_name', trimmedName);
     setIsSavingName(false);
     
     if (success) {
@@ -102,40 +142,97 @@ const AdminPanel = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'app_logo_url' | 'stream_dialog_logo_url') => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
+      const error = validateFile(file);
+      if (error) {
         toast({
           title: t('error'),
-          description: t('fileTooLarge'),
+          description: error,
           variant: 'destructive',
         });
         return;
       }
       handleUploadLogo(file, type);
     }
+    // Reset input
+    e.target.value = '';
   };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
+  // Show loading state
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Show access denied for non-admin users
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="max-w-md w-full border-destructive/50">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 p-3 rounded-xl bg-destructive/10 w-fit">
+              <ShieldAlert className="w-8 h-8 text-destructive" />
+            </div>
+            <CardTitle>Access Denied</CardTitle>
+            <CardDescription>
+              You don't have admin privileges to access this panel.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground text-center">
+              Contact an administrator to request access.
+            </p>
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => navigate('/')}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Go Back
+              </Button>
+              <Button variant="destructive" className="flex-1" onClick={handleSignOut}>
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => navigate('/')}
-            className="shrink-0"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-primary/10">
-              <Settings className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">{t('adminPanel')}</h1>
-              <p className="text-sm text-muted-foreground">{t('adminPanelDesc')}</p>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => navigate('/')}
+              className="shrink-0"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-primary/10">
+                <Settings className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">{t('adminPanel')}</h1>
+                <p className="text-sm text-muted-foreground">{t('adminPanelDesc')}</p>
+              </div>
             </div>
           </div>
+          <Button variant="outline" onClick={handleSignOut} className="gap-2">
+            <LogOut className="w-4 h-4" />
+            Sign Out
+          </Button>
         </div>
 
         <div className="space-y-6">
@@ -159,10 +256,11 @@ const AdminPanel = () => {
                   onChange={(e) => setAppName(e.target.value)}
                   placeholder={t('enterAppName')}
                   className="flex-1"
+                  maxLength={50}
                 />
                 <Button 
                   onClick={handleSaveAppName}
-                  disabled={isSavingName || appName === settings.appName}
+                  disabled={isSavingName || appName.trim() === settings.appName}
                   className="gap-2"
                 >
                   {isSavingName ? (
@@ -208,7 +306,7 @@ const AdminPanel = () => {
                   <input
                     ref={logoInputRef}
                     type="file"
-                    accept="image/*"
+                    accept="image/png,image/jpeg,image/svg+xml,image/webp"
                     className="hidden"
                     onChange={(e) => handleFileChange(e, 'app_logo_url')}
                   />
@@ -279,7 +377,7 @@ const AdminPanel = () => {
                   <input
                     ref={streamLogoInputRef}
                     type="file"
-                    accept="image/*"
+                    accept="image/png,image/jpeg,image/svg+xml,image/webp"
                     className="hidden"
                     onChange={(e) => handleFileChange(e, 'stream_dialog_logo_url')}
                   />
