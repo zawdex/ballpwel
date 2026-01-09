@@ -3,19 +3,22 @@ import { footballAPI } from '@/services/api';
 import { Match, MatchStatus, MatchFilters } from '@/types';
 
 export const getMatchStatus = (score: string, time: string): MatchStatus => {
-  if (!score || score === '-' || score === 'vs') {
+  const scoreTrimmed = score?.trim() || '';
+  const timeLower = time?.toLowerCase() || '';
+  
+  // "vs" or empty/dash means upcoming
+  if (!scoreTrimmed || scoreTrimmed === '-' || scoreTrimmed.toLowerCase() === 'vs') {
     return 'upcoming';
   }
   
-  // Check if match contains live indicators
-  const timeLower = time.toLowerCase();
-  if (timeLower.includes('live') || timeLower.includes("'") || timeLower.includes('ht')) {
+  // Check if match is live - time contains live indicators
+  if (timeLower.includes('live') || timeLower.includes("'") || timeLower.includes('ht') || timeLower.includes('half')) {
     return 'live';
   }
   
-  // Check if score exists and match is finished
+  // Score pattern like "0-1", "2-3", etc. means finished
   const scorePattern = /^\d+-\d+$/;
-  if (scorePattern.test(score.trim())) {
+  if (scorePattern.test(scoreTrimmed)) {
     return 'finished';
   }
   
