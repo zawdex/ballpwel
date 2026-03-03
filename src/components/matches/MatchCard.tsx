@@ -29,9 +29,9 @@ const MatchCard = memo(({ match }: MatchCardProps) => {
 
   const hasStreams = match.authors && match.authors.length > 0;
   const encodedId = encodeURIComponent(match.id);
-  const { data: prediction, isLoading: predLoading } = usePrediction(
-    match.home_name, match.away_name, match.label, match.score, match.time
-  );
+  // Disable predictions on card list to save AI credits - only show on detail page
+  const prediction = undefined;
+  const predLoading = false;
 
   return (
     <Link to={`/matches/${encodedId}`} className="block group">
