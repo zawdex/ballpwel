@@ -24,9 +24,13 @@ const MatchDetail = () => {
 
   const match = useMemo(() => {
     if (!matches || !matchId) return null;
-    const decodedId = decodeURIComponent(matchId);
-    return matches.find((m: Match) => m.id === decodedId);
+    return matches.find((m: Match) => m.id === matchId);
   }, [matches, matchId]);
+
+  const status = match ? getMatchStatus(match.score, match.time) : 'upcoming';
+  const { data: prediction, isLoading: predLoading, error: predError, refetch: retryPrediction } = usePrediction(
+    match?.home_name || '', match?.away_name || '', match?.label || '', match?.score || '', match?.time || ''
+  );
 
   if (isLoading) {
     return (
@@ -57,11 +61,6 @@ const MatchDetail = () => {
     );
   }
 
-  const status = getMatchStatus(match.score, match.time);
-  const { data: prediction, isLoading: predLoading, error: predError, refetch: retryPrediction } = usePrediction(
-    match.home_name, match.away_name, match.label, match.score, match.time
-  );
-
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Back Button */}
@@ -90,15 +89,9 @@ const MatchDetail = () => {
           <div className="flex flex-col items-center text-center">
             <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-secondary flex items-center justify-center overflow-hidden mb-3">
               {match.home_logo ? (
-                <img
-                  src={match.home_logo}
-                  alt={match.home_name}
-                  className="w-16 h-16 md:w-20 md:h-20 object-contain"
-                />
+                <img src={match.home_logo} alt={match.home_name} className="w-16 h-16 md:w-20 md:h-20 object-contain" />
               ) : (
-                <span className="text-2xl font-bold text-muted-foreground">
-                  {match.home_name.charAt(0)}
-                </span>
+                <span className="text-2xl font-bold text-muted-foreground">{match.home_name.charAt(0)}</span>
               )}
             </div>
             <h2 className="font-display text-xl md:text-2xl font-bold">{match.home_name}</h2>
@@ -121,15 +114,9 @@ const MatchDetail = () => {
           <div className="flex flex-col items-center text-center">
             <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-secondary flex items-center justify-center overflow-hidden mb-3">
               {match.away_logo ? (
-                <img
-                  src={match.away_logo}
-                  alt={match.away_name}
-                  className="w-16 h-16 md:w-20 md:h-20 object-contain"
-                />
+                <img src={match.away_logo} alt={match.away_name} className="w-16 h-16 md:w-20 md:h-20 object-contain" />
               ) : (
-                <span className="text-2xl font-bold text-muted-foreground">
-                  {match.away_name.charAt(0)}
-                </span>
+                <span className="text-2xl font-bold text-muted-foreground">{match.away_name.charAt(0)}</span>
               )}
             </div>
             <h2 className="font-display text-xl md:text-2xl font-bold">{match.away_name}</h2>
