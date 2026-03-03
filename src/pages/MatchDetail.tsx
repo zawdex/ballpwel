@@ -86,55 +86,70 @@ const MatchDetail = () => {
 
         {/* Teams Display */}
         <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12">
-          {/* Home Team */}
-          <div className="flex flex-col items-center text-center">
-            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-secondary flex items-center justify-center overflow-hidden mb-3">
-              {match.home_logo ? (
-                <img src={match.home_logo} alt={match.home_name} className="w-16 h-16 md:w-20 md:h-20 object-contain" />
-              ) : (
-                <span className="text-2xl font-bold text-muted-foreground">{match.home_name.charAt(0)}</span>
-              )}
-            </div>
-            <h2 className="font-display text-xl md:text-2xl font-bold">{match.home_name}</h2>
-            <span className="text-sm text-muted-foreground">Home</span>
-          </div>
+          {(() => {
+            const scoreParts = match.score?.trim().match(/^(\d+)\s*-\s*(\d+)$/);
+            const homeScore = scoreParts ? scoreParts[1] : null;
+            const awayScore = scoreParts ? scoreParts[2] : null;
 
-          {/* Score */}
-          <div className="text-center">
-            {(() => {
-              const scoreParts = match.score?.trim().match(/^(\d+)\s*-\s*(\d+)$/);
-              if (scoreParts) {
-                return (
-                  <div className={`font-display text-5xl md:text-6xl font-bold flex items-center gap-4 ${status === 'live' ? 'text-live' : ''}`}>
-                    <span>{scoreParts[1]}</span>
-                    <span className="text-2xl text-muted-foreground">-</span>
-                    <span>{scoreParts[2]}</span>
+            return (
+              <>
+                {/* Home Team */}
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-secondary flex items-center justify-center overflow-hidden mb-3">
+                    {match.home_logo ? (
+                      <img src={match.home_logo} alt={match.home_name} className="w-16 h-16 md:w-20 md:h-20 object-contain" />
+                    ) : (
+                      <span className="text-2xl font-bold text-muted-foreground">{match.home_name.charAt(0)}</span>
+                    )}
                   </div>
-                );
-              }
-              return (
-                <div className="font-display text-5xl md:text-6xl font-bold">vs</div>
-              );
-            })()}
-            {status === 'live' && (
-              <span className="inline-block mt-2 px-3 py-1 rounded-full bg-live/20 text-live text-sm font-medium animate-pulse">
-                ● LIVE
-              </span>
-            )}
-          </div>
+                  <h2 className="font-display text-xl md:text-2xl font-bold">{match.home_name}</h2>
+                  <span className="text-sm text-muted-foreground">Home</span>
+                  {homeScore !== null && (
+                    <span className={`font-display text-4xl md:text-5xl font-bold mt-2 ${status === 'live' ? 'text-live' : ''}`}>{homeScore}</span>
+                  )}
+                </div>
 
-          {/* Away Team */}
-          <div className="flex flex-col items-center text-center">
-            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-secondary flex items-center justify-center overflow-hidden mb-3">
-              {match.away_logo ? (
-                <img src={match.away_logo} alt={match.away_name} className="w-16 h-16 md:w-20 md:h-20 object-contain" />
-              ) : (
-                <span className="text-2xl font-bold text-muted-foreground">{match.away_name.charAt(0)}</span>
-              )}
-            </div>
-            <h2 className="font-display text-xl md:text-2xl font-bold">{match.away_name}</h2>
-            <span className="text-sm text-muted-foreground">Away</span>
-          </div>
+                {/* VS / Separator */}
+                <div className="text-center">
+                  {homeScore !== null ? (
+                    <>
+                      <span className="text-2xl text-muted-foreground font-bold">-</span>
+                      {status === 'live' && (
+                        <span className="block mt-2 px-3 py-1 rounded-full bg-live/20 text-live text-sm font-medium animate-pulse">
+                          ● LIVE
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <div className="font-display text-5xl md:text-6xl font-bold">vs</div>
+                      {status === 'live' && (
+                        <span className="inline-block mt-2 px-3 py-1 rounded-full bg-live/20 text-live text-sm font-medium animate-pulse">
+                          ● LIVE
+                        </span>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                {/* Away Team */}
+                <div className="flex flex-col items-center text-center">
+                  {awayScore !== null && (
+                    <span className={`font-display text-4xl md:text-5xl font-bold mb-2 ${status === 'live' ? 'text-live' : ''}`}>{awayScore}</span>
+                  )}
+                  <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-secondary flex items-center justify-center overflow-hidden mb-3">
+                    {match.away_logo ? (
+                      <img src={match.away_logo} alt={match.away_name} className="w-16 h-16 md:w-20 md:h-20 object-contain" />
+                    ) : (
+                      <span className="text-2xl font-bold text-muted-foreground">{match.away_name.charAt(0)}</span>
+                    )}
+                  </div>
+                  <h2 className="font-display text-xl md:text-2xl font-bold">{match.away_name}</h2>
+                  <span className="text-sm text-muted-foreground">Away</span>
+                </div>
+              </>
+            );
+          })()}
         </div>
       </div>
 
