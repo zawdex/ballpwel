@@ -3,6 +3,18 @@ import { Match } from '@/types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
+// Generate a stable ID from match data (team names + time)
+const generateStableId = (match: Match): string => {
+  const raw = `${match.home_name.trim()}-${match.away_name.trim()}-${match.time.trim()}`;
+  let hash = 0;
+  for (let i = 0; i < raw.length; i++) {
+    const char = raw.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0;
+  }
+  return `m${Math.abs(hash).toString(36)}`;
+};
+
 export const footballAPI = {
   getMatches: async (): Promise<Match[]> => {
     try {
@@ -19,10 +31,10 @@ export const footballAPI = {
       }
       const data = await response.json();
       
-      // Add unique IDs to matches if not present
-      return (data || []).map((match: Match, index: number) => ({
+      // Add stable unique IDs based on team names + time
+      return (data || []).map((match: Match) => ({
         ...match,
-        id: `match-${index}`,
+        id: generateStableId(match),
       }));
     } catch (error) {
       console.error('API Error:', error);
