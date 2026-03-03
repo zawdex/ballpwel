@@ -88,8 +88,8 @@ const MatchDetail = () => {
         <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12">
           {(() => {
             const scoreParts = match.score?.trim().match(/^(\d+)\s*-\s*(\d+)$/);
-            const homeScore = scoreParts ? scoreParts[1] : null;
-            const awayScore = scoreParts ? scoreParts[2] : null;
+            const homeScore = scoreParts ? scoreParts[2] : null;
+            const awayScore = scoreParts ? scoreParts[1] : null;
 
             return (
               <>
