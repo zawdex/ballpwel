@@ -97,9 +97,9 @@ const MatchCard = memo(({ match }: MatchCardProps) => {
                 if (scoreParts) {
                   return (
                     <div className={`font-display text-xl font-bold tracking-wider flex items-center gap-2 ${status === 'live' ? 'text-live' : 'text-foreground'}`}>
-                      <span>{scoreParts[2]}</span>
-                      <span className="text-muted-foreground text-sm">-</span>
                       <span>{scoreParts[1]}</span>
+                      <span className="text-muted-foreground text-sm">-</span>
+                      <span>{scoreParts[2]}</span>
                     </div>
                   );
                 }
