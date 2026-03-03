@@ -8,10 +8,29 @@ interface StreamSelectorProps {
   streams: Author[];
   selectedStream: Author | null;
   onSelectStream: (stream: Author) => void;
+  isLive?: boolean;
 }
 
-const StreamSelector = ({ streams, selectedStream, onSelectStream }: StreamSelectorProps) => {
+const StreamSelector = ({ streams, selectedStream, onSelectStream, isLive = true }: StreamSelectorProps) => {
   const { t } = useLanguage();
+
+  // Show unavailable state when match is not live
+  if (!isLive) {
+    return (
+      <div className="text-center py-12 bg-gradient-to-br from-card via-card to-secondary/20 rounded-2xl border border-border relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-muted-foreground/20 rounded-full blur-3xl" />
+        </div>
+        <div className="relative">
+          <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-muted/50 flex items-center justify-center border border-border">
+            <Radio className="w-10 h-10 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-bold mb-2 text-muted-foreground">{t('streamsUnavailableTitle')}</h3>
+          <p className="text-muted-foreground/70 text-sm">{t('streamsUnavailableDesc')}</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!streams || streams.length === 0) {
     return (

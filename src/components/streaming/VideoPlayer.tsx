@@ -11,13 +11,33 @@ import { Button } from '@/components/ui/button';
 interface VideoPlayerProps {
   stream: Author | null;
   matchTitle?: string;
+  isLive?: boolean;
 }
 
-const VideoPlayer = ({ stream, matchTitle }: VideoPlayerProps) => {
+const VideoPlayer = ({ stream, matchTitle, isLive = true }: VideoPlayerProps) => {
   const [playerError, setPlayerError] = useState<string | null>(null);
   const [useEmbedded, setUseEmbedded] = useState(true);
   const { t } = useLanguage();
   const { settings } = useAppSettings();
+
+  // Show unavailable state when match is not live
+  if (!isLive) {
+    return (
+      <div className="aspect-video bg-gradient-to-br from-card via-card to-secondary/30 rounded-2xl border border-border overflow-hidden relative">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-muted-foreground/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/4 w-40 h-40 bg-muted-foreground/10 rounded-full blur-3xl" />
+        </div>
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
+          <div className="w-24 h-24 rounded-2xl bg-muted/50 border border-border flex items-center justify-center mb-6">
+            <Tv className="w-10 h-10 text-muted-foreground" />
+          </div>
+          <h3 className="text-xl font-bold mb-2 text-muted-foreground">{t('streamsUnavailableTitle')}</h3>
+          <p className="text-muted-foreground/70 text-sm text-center max-w-xs">{t('streamsUnavailableDesc')}</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!stream) {
     return (

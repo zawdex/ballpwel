@@ -149,13 +149,14 @@ const MatchDetail = () => {
       />
 
       {/* Video Player */}
-      <VideoPlayer stream={selectedStream} matchTitle={`${match.home_name} vs ${match.away_name}`} />
+      <VideoPlayer stream={selectedStream} matchTitle={`${match.home_name} vs ${match.away_name}`} isLive={status === 'live'} />
 
       {/* Stream Selector */}
       <StreamSelector
         streams={match.authors}
         selectedStream={selectedStream}
         onSelectStream={setSelectedStream}
+        isLive={status === 'live'}
       />
     </div>
   );
