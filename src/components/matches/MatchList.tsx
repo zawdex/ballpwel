@@ -45,8 +45,8 @@ const MatchList = ({ matches, isLoading, error }: MatchListProps) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 stagger-children">
-      {matches.map((match) => (
-        <MatchCard key={match.id} match={match} />
+      {matches.map((match, index) => (
+        <MatchCard key={match.id} match={match} index={index} />
       ))}
     </div>
   );
