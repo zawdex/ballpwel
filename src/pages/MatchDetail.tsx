@@ -101,9 +101,21 @@ const MatchDetail = () => {
 
           {/* Score */}
           <div className="text-center">
-            <div className={`font-display text-5xl md:text-6xl font-bold ${status === 'live' ? 'text-live' : ''}`}>
-              {match.score || 'vs'}
-            </div>
+            {(() => {
+              const scoreParts = match.score?.match(/^(\d+)\s*-\s*(\d+)$/);
+              if (scoreParts) {
+                return (
+                  <div className={`font-display text-5xl md:text-6xl font-bold flex items-center gap-4 ${status === 'live' ? 'text-live' : ''}`}>
+                    <span>{scoreParts[1]}</span>
+                    <span className="text-2xl text-muted-foreground">-</span>
+                    <span>{scoreParts[2]}</span>
+                  </div>
+                );
+              }
+              return (
+                <div className="font-display text-5xl md:text-6xl font-bold">vs</div>
+              );
+            })()}
             {status === 'live' && (
               <span className="inline-block mt-2 px-3 py-1 rounded-full bg-live/20 text-live text-sm font-medium animate-pulse">
                 ● LIVE
