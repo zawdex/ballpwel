@@ -3,23 +3,47 @@ import { footballAPI } from '@/services/api';
 import { Match, MatchStatus, MatchFilters } from '@/types';
 
 export const getMatchStatus = (score: string, time: string): MatchStatus => {
+  // Check for explicit live indicators first
+  const timeLower = time.toLowerCase().trim();
+  if (timeLower.includes('live') || timeLower.includes("'") || timeLower.includes('ht') || timeLower.includes('half')) {
+    return 'live';
+  }
+
+  // Parse match time in format "HH:MM DD/MM/YYYY"
+  const timeMatch = time.trim().match(/^(\d{1,2}):(\d{2})\s+(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (timeMatch) {
+    const [, hours, minutes, day, month, year] = timeMatch;
+    const matchDate = new Date(
+      parseInt(year),
+      parseInt(month) - 1,
+      parseInt(day),
+      parseInt(hours),
+      parseInt(minutes)
+    );
+    const now = new Date();
+    const diffMs = now.getTime() - matchDate.getTime();
+    const diffMinutes = diffMs / (1000 * 60);
+
+    // Match hasn't started yet
+    if (diffMinutes < 0) {
+      return 'upcoming';
+    }
+
+    // Match is within ~120 minutes of start time (normal match duration)
+    if (diffMinutes >= 0 && diffMinutes <= 120) {
+      return 'live';
+    }
+
+    // Match ended (more than 120 minutes since start)
+    return 'finished';
+  }
+
+  // Fallback: if there's a score with numbers, consider it based on whether score exists
   if (!score || score === '-' || score === 'vs') {
     return 'upcoming';
   }
-  
-  // Check if match contains live indicators
-  const timeLower = time.toLowerCase();
-  if (timeLower.includes('live') || timeLower.includes("'") || timeLower.includes('ht')) {
-    return 'live';
-  }
-  
-  // Check if score exists and match is finished
-  const scorePattern = /^\d+-\d+$/;
-  if (scorePattern.test(score.trim())) {
-    return 'finished';
-  }
-  
-  return 'upcoming';
+
+  return 'finished';
 };
 
 export const useMatches = (filters?: Partial<MatchFilters>) => {
