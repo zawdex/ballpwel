@@ -1,7 +1,7 @@
-import { memo } from 'react';
+import { memo, useRef, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Play, Radio } from 'lucide-react';
-import { Match } from '@/types';
+import { Match, MatchStatus } from '@/types';
 import { getMatchStatus } from '@/hooks/useMatches';
 import { usePrediction } from '@/hooks/usePrediction';
 import StatusBadge from './StatusBadge';
@@ -16,6 +16,17 @@ interface MatchCardProps {
 
 const MatchCard = memo(({ match }: MatchCardProps) => {
   const status = getMatchStatus(match.score, match.time);
+  const prevStatusRef = useRef<MatchStatus>(status);
+  const [justWentLive, setJustWentLive] = useState(false);
+
+  useEffect(() => {
+    if (prevStatusRef.current === 'upcoming' && status === 'live') {
+      setJustWentLive(true);
+      const timer = setTimeout(() => setJustWentLive(false), 3000);
+      return () => clearTimeout(timer);
+    }
+    prevStatusRef.current = status;
+  }, [status]);
   const hasStreams = match.authors && match.authors.length > 0;
   const encodedId = encodeURIComponent(match.id);
   const { data: prediction, isLoading: predLoading } = usePrediction(
@@ -24,7 +35,7 @@ const MatchCard = memo(({ match }: MatchCardProps) => {
 
   return (
     <Link to={`/matches/${encodedId}`} className="block">
-      <div className="match-card group">
+      <div className={`match-card group transition-all duration-500 ${justWentLive ? 'animate-scale-in ring-2 ring-live ring-offset-2 ring-offset-background' : ''} ${status === 'live' ? 'border-live/30' : ''}`}>
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
