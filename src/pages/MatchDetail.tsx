@@ -5,9 +5,11 @@ import { ArrowLeft, Clock, Trophy } from 'lucide-react';
 import { footballAPI } from '@/services/api';
 import { Author, Match } from '@/types';
 import { getMatchStatus } from '@/hooks/useMatches';
+import { usePrediction } from '@/hooks/usePrediction';
 import StatusBadge from '@/components/matches/StatusBadge';
 import VideoPlayer from '@/components/streaming/VideoPlayer';
 import StreamSelector from '@/components/streaming/StreamSelector';
+import PredictionPanel from '@/components/predictions/PredictionPanel';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -56,6 +58,9 @@ const MatchDetail = () => {
   }
 
   const status = getMatchStatus(match.score, match.time);
+  const { data: prediction, isLoading: predLoading, error: predError, refetch: retryPrediction } = usePrediction(
+    match.home_name, match.away_name, match.label, match.score, match.time
+  );
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -132,6 +137,16 @@ const MatchDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Prediction Panel */}
+      <PredictionPanel
+        prediction={prediction}
+        isLoading={predLoading}
+        error={predError}
+        homeName={match.home_name}
+        awayName={match.away_name}
+        onRetry={() => retryPrediction()}
+      />
 
       {/* Video Player */}
       <VideoPlayer stream={selectedStream} matchTitle={`${match.home_name} vs ${match.away_name}`} />
