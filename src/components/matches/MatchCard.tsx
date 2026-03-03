@@ -6,6 +6,7 @@ import { getMatchStatus } from '@/hooks/useMatches';
 import { usePrediction } from '@/hooks/usePrediction';
 import StatusBadge from './StatusBadge';
 import PredictionBadge from '@/components/predictions/PredictionBadge';
+import CountdownTimer from './CountdownTimer';
 import { Button } from '@/components/ui/button';
 
 interface MatchCardProps {
@@ -104,6 +105,9 @@ const MatchCard = memo(({ match }: MatchCardProps) => {
             </div>
           </div>
         </div>
+
+        {/* Countdown Timer for upcoming matches */}
+        {status === 'upcoming' && <CountdownTimer time={match.time} />}
 
         {/* Watch Button */}
         {hasStreams && (
