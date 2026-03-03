@@ -9,6 +9,9 @@ export const getMatchStatus = (score: string, time: string): MatchStatus => {
     return 'live';
   }
 
+  // Check if there's a real score (e.g. "2 - 0", "1 - 1") vs placeholder "vs"
+  const hasRealScore = score && score !== 'vs' && score !== '-' && /\d+\s*-\s*\d+/.test(score);
+
   // Parse match time in format "HH:MM DD/MM/YYYY"
   const timeMatch = time.trim().match(/^(\d{1,2}):(\d{2})\s+(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (timeMatch) {
@@ -24,26 +27,32 @@ export const getMatchStatus = (score: string, time: string): MatchStatus => {
     const diffMs = now.getTime() - matchDate.getTime();
     const diffMinutes = diffMs / (1000 * 60);
 
-    // Match hasn't started yet
-    if (diffMinutes < 0) {
-      return 'upcoming';
-    }
-
-    // Match is within ~120 minutes of start time (normal match duration)
-    if (diffMinutes >= 0 && diffMinutes <= 120) {
+    // If there's a real score, the match is either live or finished
+    if (hasRealScore) {
+      // If more than 150 minutes since start, it's finished
+      if (diffMinutes > 150) {
+        return 'finished';
+      }
+      // Otherwise it's live (score exists = match has started)
       return 'live';
     }
 
-    // Match ended (more than 120 minutes since start)
+    // No real score - use time-based logic
+    if (diffMinutes < 0) {
+      return 'upcoming';
+    }
+    if (diffMinutes >= 0 && diffMinutes <= 120) {
+      return 'live';
+    }
     return 'finished';
   }
 
-  // Fallback: if there's a score with numbers, consider it based on whether score exists
-  if (!score || score === '-' || score === 'vs') {
-    return 'upcoming';
+  // Fallback: if there's a real score, it's live; otherwise upcoming
+  if (hasRealScore) {
+    return 'live';
   }
 
-  return 'finished';
+  return 'upcoming';
 };
 
 export const useMatches = (filters?: Partial<MatchFilters>) => {
