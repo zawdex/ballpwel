@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import { Play, Radio } from 'lucide-react';
 import { Match } from '@/types';
 import { getMatchStatus } from '@/hooks/useMatches';
+import { usePrediction } from '@/hooks/usePrediction';
 import StatusBadge from './StatusBadge';
+import PredictionBadge from '@/components/predictions/PredictionBadge';
 import { Button } from '@/components/ui/button';
 
 interface MatchCardProps {
@@ -14,6 +16,9 @@ const MatchCard = memo(({ match }: MatchCardProps) => {
   const status = getMatchStatus(match.score, match.time);
   const hasStreams = match.authors && match.authors.length > 0;
   const encodedId = encodeURIComponent(match.id);
+  const { data: prediction, isLoading: predLoading } = usePrediction(
+    match.home_name, match.away_name, match.label, match.score, match.time
+  );
 
   return (
     <Link to={`/matches/${encodedId}`} className="block">
@@ -29,9 +34,12 @@ const MatchCard = memo(({ match }: MatchCardProps) => {
               </span>
             )}
           </div>
-          <span className="text-xs text-muted-foreground font-medium">
-            {match.time}
-          </span>
+          <div className="flex items-center gap-2">
+            <PredictionBadge prediction={prediction} isLoading={predLoading} homeName={match.home_name} awayName={match.away_name} />
+            <span className="text-xs text-muted-foreground font-medium">
+              {match.time}
+            </span>
+          </div>
         </div>
 
         {/* Competition Label */}
