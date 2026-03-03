@@ -1,6 +1,6 @@
 import { memo, useRef, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Play, Radio } from 'lucide-react';
+import { Play, Radio, ArrowRight } from 'lucide-react';
 import { Match, MatchStatus } from '@/types';
 import { getMatchStatus } from '@/hooks/useMatches';
 import { usePrediction } from '@/hooks/usePrediction';
@@ -8,7 +8,6 @@ import StatusBadge from './StatusBadge';
 import PredictionBadge from '@/components/predictions/PredictionBadge';
 import CountdownTimer from './CountdownTimer';
 import ElapsedTime from './ElapsedTime';
-import { Button } from '@/components/ui/button';
 
 interface MatchCardProps {
   match: Match;
@@ -27,6 +26,7 @@ const MatchCard = memo(({ match }: MatchCardProps) => {
     }
     prevStatusRef.current = status;
   }, [status]);
+
   const hasStreams = match.authors && match.authors.length > 0;
   const encodedId = encodeURIComponent(match.id);
   const { data: prediction, isLoading: predLoading } = usePrediction(
@@ -34,107 +34,102 @@ const MatchCard = memo(({ match }: MatchCardProps) => {
   );
 
   return (
-    <Link to={`/matches/${encodedId}`} className="block">
-      <div className={`match-card group transition-all duration-500 ${justWentLive ? 'animate-scale-in ring-2 ring-live ring-offset-2 ring-offset-background' : ''} ${status === 'live' ? 'border-live/30' : ''}`}>
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <StatusBadge status={status} />
-            {hasStreams && (
-              <span className="stream-badge">
-                <Radio className="w-3 h-3" />
-                {match.authors.length} streams
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <PredictionBadge prediction={prediction} isLoading={predLoading} homeName={match.home_name} awayName={match.away_name} />
-            {status === 'live' ? (
-              <ElapsedTime time={match.time} />
-            ) : (
-              <span className="text-xs text-muted-foreground font-medium">
-                {match.time}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Competition Label */}
-        <p className="text-xs text-primary font-medium mb-4 truncate">
-          {match.label}
-        </p>
-
-        {/* Teams */}
-        <div className="flex items-center justify-between gap-4">
-          {/* Home Team */}
-          <div className="flex-1 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center overflow-hidden flex-shrink-0">
-              {match.home_logo ? (
-                <img
-                  src={match.home_logo}
-                  alt={match.home_name}
-                  className="w-8 h-8 object-contain"
-                  loading="lazy"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
-                />
-              ) : (
-                <span className="text-xs font-bold text-muted-foreground">
-                  {match.home_name.charAt(0)}
-                </span>
-              )}
-            </div>
-            <span className="text-sm font-semibold truncate">
-              {match.home_name}
-            </span>
-          </div>
-
-          {/* Score */}
-          <div className="flex-shrink-0 text-center">
-            <div className={`font-display text-2xl font-bold ${status === 'live' ? 'text-live' : ''}`}>
-              {match.score || 'vs'}
-            </div>
-          </div>
-
-          {/* Away Team */}
-          <div className="flex-1 flex items-center gap-3 justify-end">
-            <span className="text-sm font-semibold truncate text-right">
-              {match.away_name}
-            </span>
-            <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center overflow-hidden flex-shrink-0">
-              {match.away_logo ? (
-                <img
-                  src={match.away_logo}
-                  alt={match.away_name}
-                  className="w-8 h-8 object-contain"
-                  loading="lazy"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
-                />
-              ) : (
-                <span className="text-xs font-bold text-muted-foreground">
-                  {match.away_name.charAt(0)}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Countdown Timer for upcoming matches */}
-        {status === 'upcoming' && <CountdownTimer time={match.time} />}
-
-        {/* Watch Button */}
-        {hasStreams && (
-          <Button
-            className="w-full mt-4 gap-2 bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground border border-primary/30 transition-all"
-            variant="ghost"
-          >
-            <Play className="w-4 h-4" />
-            Watch Now
-          </Button>
+    <Link to={`/matches/${encodedId}`} className="block group">
+      <div className={`match-card transition-all duration-500 ${justWentLive ? 'animate-scale-in ring-2 ring-live ring-offset-2 ring-offset-background' : ''} ${status === 'live' ? 'border-live/30' : ''}`}>
+        {/* Live glow effect */}
+        {status === 'live' && (
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-live/5 to-transparent pointer-events-none" />
         )}
+
+        <div className="relative z-10">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <StatusBadge status={status} />
+              {hasStreams && (
+                <span className="stream-badge">
+                  <Radio className="w-3 h-3" />
+                  {match.authors.length}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <PredictionBadge prediction={prediction} isLoading={predLoading} homeName={match.home_name} awayName={match.away_name} />
+              {status === 'live' ? (
+                <ElapsedTime time={match.time} />
+              ) : (
+                <span className="text-xs text-muted-foreground font-medium">
+                  {match.time}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Competition */}
+          <p className="text-[11px] text-primary/80 font-semibold mb-5 truncate uppercase tracking-wider">
+            {match.label}
+          </p>
+
+          {/* Teams & Score */}
+          <div className="flex items-center gap-3">
+            {/* Home */}
+            <div className="flex-1 flex items-center gap-3 min-w-0">
+              <div className="w-11 h-11 rounded-xl bg-secondary/80 flex items-center justify-center overflow-hidden flex-shrink-0 border border-border/50 transition-transform duration-300 group-hover:scale-110">
+                {match.home_logo ? (
+                  <img
+                    src={match.home_logo}
+                    alt={match.home_name}
+                    className="w-8 h-8 object-contain"
+                    loading="lazy"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                ) : (
+                  <span className="text-sm font-bold text-muted-foreground">{match.home_name.charAt(0)}</span>
+                )}
+              </div>
+              <span className="text-sm font-semibold truncate">{match.home_name}</span>
+            </div>
+
+            {/* Score */}
+            <div className="flex-shrink-0 px-3 py-1.5 rounded-xl bg-secondary/60 border border-border/50">
+              <div className={`font-display text-xl font-bold tracking-wider ${status === 'live' ? 'text-live' : 'text-foreground'}`}>
+                {match.score || 'vs'}
+              </div>
+            </div>
+
+            {/* Away */}
+            <div className="flex-1 flex items-center gap-3 justify-end min-w-0">
+              <span className="text-sm font-semibold truncate text-right">{match.away_name}</span>
+              <div className="w-11 h-11 rounded-xl bg-secondary/80 flex items-center justify-center overflow-hidden flex-shrink-0 border border-border/50 transition-transform duration-300 group-hover:scale-110">
+                {match.away_logo ? (
+                  <img
+                    src={match.away_logo}
+                    alt={match.away_name}
+                    className="w-8 h-8 object-contain"
+                    loading="lazy"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                ) : (
+                  <span className="text-sm font-bold text-muted-foreground">{match.away_name.charAt(0)}</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Countdown */}
+          {status === 'upcoming' && <CountdownTimer time={match.time} />}
+
+          {/* Action row */}
+          {hasStreams && (
+            <div className="mt-4 flex items-center justify-between px-4 py-2.5 rounded-xl bg-primary/8 border border-primary/20 transition-all duration-300 group-hover:bg-primary/15 group-hover:border-primary/40">
+              <div className="flex items-center gap-2">
+                <Play className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold text-primary">Watch Now</span>
+              </div>
+              <ArrowRight className="w-4 h-4 text-primary transition-transform duration-300 group-hover:translate-x-1" />
+            </div>
+          )}
+        </div>
       </div>
     </Link>
   );

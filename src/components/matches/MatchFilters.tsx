@@ -26,10 +26,10 @@ const MatchFiltersComponent = ({ filters, onFilterChange, competitions }: MatchF
             variant={filters.status === value ? 'default' : 'outline'}
             size="sm"
             onClick={() => onFilterChange({ status: value })}
-            className={`gap-2 ${
+            className={`gap-2 rounded-xl transition-all duration-300 ${
               filters.status === value
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-secondary hover:bg-secondary/80'
+                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105'
+                : 'bg-secondary/50 border-border/50 hover:bg-secondary/80 hover:scale-105'
             }`}
           >
             {icon}
@@ -45,7 +45,11 @@ const MatchFiltersComponent = ({ filters, onFilterChange, competitions }: MatchF
             variant={filters.competition === 'all' ? 'default' : 'outline'}
             size="sm"
             onClick={() => onFilterChange({ competition: 'all' })}
-            className={filters.competition === 'all' ? 'bg-primary text-primary-foreground' : 'bg-secondary'}
+            className={`rounded-xl transition-all duration-300 ${
+              filters.competition === 'all'
+                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                : 'bg-secondary/50 border-border/50'
+            }`}
           >
             All Competitions
           </Button>
@@ -55,11 +59,11 @@ const MatchFiltersComponent = ({ filters, onFilterChange, competitions }: MatchF
               variant={filters.competition === competition ? 'default' : 'outline'}
               size="sm"
               onClick={() => onFilterChange({ competition })}
-              className={`${
+              className={`truncate max-w-[150px] rounded-xl transition-all duration-300 ${
                 filters.competition === competition
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-secondary hover:bg-secondary/80'
-              } truncate max-w-[150px]`}
+                  ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                  : 'bg-secondary/50 border-border/50 hover:bg-secondary/80'
+              }`}
             >
               {competition}
             </Button>
