@@ -62,94 +62,108 @@ const MatchDetail = () => {
     );
   }
 
+  const scoreParts = match.score?.trim().match(/^(\d+)\s*-\s*(\d+)$/);
+  const homeScore = scoreParts ? scoreParts[1] : null;
+  const awayScore = scoreParts ? scoreParts[2] : null;
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-4 animate-fade-in">
       {/* Back Button */}
-      <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+      <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm">
         <ArrowLeft className="w-4 h-4" />
-        <span>Back to matches</span>
+        <span>Back</span>
       </Link>
 
-      {/* Match Header */}
-      <div className="bg-card rounded-2xl border border-border p-6 md:p-8">
-        <div className="flex flex-wrap items-center gap-3 mb-6">
-          <StatusBadge status={status} />
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Trophy className="w-4 h-4" />
-            <span className="text-sm">{match.label}</span>
+      {/* Match Header Card */}
+      <div className="relative rounded-2xl border border-border/60 overflow-hidden">
+        {/* Gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-card to-live/5" />
+        {status === 'live' && (
+          <div className="absolute inset-0 bg-gradient-to-t from-live/5 to-transparent" />
+        )}
+
+        <div className="relative p-5">
+          {/* Top info bar */}
+          <div className="flex items-center justify-between mb-5">
+            <StatusBadge status={status} />
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Clock className="w-3.5 h-3.5" />
+              <span className="text-xs">{match.time}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Clock className="w-4 h-4" />
-            <span className="text-sm">{match.time}</span>
+
+          {/* Competition */}
+          <div className="flex items-center gap-1.5 mb-5">
+            <Trophy className="w-3.5 h-3.5 text-primary" />
+            <span className="text-xs text-primary font-semibold uppercase tracking-wider truncate">{match.label}</span>
           </div>
-        </div>
 
-        {/* Teams Display */}
-        <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12">
-          {(() => {
-            const scoreParts = match.score?.trim().match(/^(\d+)\s*-\s*(\d+)$/);
-            const homeScore = scoreParts ? scoreParts[1] : null;
-            const awayScore = scoreParts ? scoreParts[2] : null;
+          {/* Teams & Score - Horizontal Layout */}
+          <div className="flex items-center justify-between gap-3">
+            {/* Home Team */}
+            <div className="flex-1 flex flex-col items-center text-center min-w-0">
+              <div className="w-16 h-16 rounded-2xl bg-secondary/80 border border-border/50 flex items-center justify-center overflow-hidden mb-2">
+                {match.home_logo ? (
+                  <img src={match.home_logo} alt={match.home_name} className="w-12 h-12 object-contain" />
+                ) : (
+                  <span className="text-lg font-bold text-muted-foreground">{match.home_name.charAt(0)}</span>
+                )}
+              </div>
+              <h2 className="font-display text-sm font-bold truncate w-full">{match.home_name}</h2>
+              <span className="text-[10px] text-primary/70 font-medium uppercase tracking-wider">Home</span>
+            </div>
 
-            return (
-              <>
-                {/* Home Team */}
-                <div className="flex flex-col items-center text-center">
-                  <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-secondary flex items-center justify-center overflow-hidden mb-3">
-                    {match.home_logo ? (
-                      <img src={match.home_logo} alt={match.home_name} className="w-16 h-16 md:w-20 md:h-20 object-contain" />
-                    ) : (
-                      <span className="text-2xl font-bold text-muted-foreground">{match.home_name.charAt(0)}</span>
-                    )}
+            {/* Score Center */}
+            <div className="flex flex-col items-center flex-shrink-0 px-2">
+              {homeScore !== null ? (
+                <>
+                  <div className="flex items-center gap-3">
+                    <span className={`font-display text-4xl font-black ${status === 'live' ? 'text-primary' : 'text-foreground'}`}>
+                      {homeScore}
+                    </span>
+                    {/* Spinning ball */}
+                    <div className="relative w-8 h-8">
+                      <span className="absolute inset-0 flex items-center justify-center text-2xl animate-spin-ball">⚽</span>
+                    </div>
+                    <span className={`font-display text-4xl font-black ${status === 'live' ? 'text-primary' : 'text-foreground'}`}>
+                      {awayScore}
+                    </span>
                   </div>
-                  <h2 className="font-display text-xl md:text-2xl font-bold">{match.home_name}</h2>
-                  <span className="text-sm text-muted-foreground">Home</span>
-                  {homeScore !== null && (
-                    <span className={`font-display text-4xl md:text-5xl font-bold mt-2 ${status === 'live' ? 'text-live' : ''}`}>{homeScore}</span>
+                  {status === 'live' && (
+                    <span className="mt-2 px-3 py-0.5 rounded-full bg-live/20 text-live text-[10px] font-bold animate-pulse tracking-wider">
+                      ● LIVE
+                    </span>
                   )}
-                </div>
-
-                {/* VS / Separator */}
-                <div className="text-center">
-                  {homeScore !== null ? (
-                    <>
-                      <span className="text-2xl text-muted-foreground font-bold">-</span>
-                      {status === 'live' && (
-                        <span className="block mt-2 px-3 py-1 rounded-full bg-live/20 text-live text-sm font-medium animate-pulse">
-                          ● LIVE
-                        </span>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <div className="font-display text-5xl md:text-6xl font-bold">vs</div>
-                      {status === 'live' && (
-                        <span className="inline-block mt-2 px-3 py-1 rounded-full bg-live/20 text-live text-sm font-medium animate-pulse">
-                          ● LIVE
-                        </span>
-                      )}
-                    </>
-                  )}
-                </div>
-
-                {/* Away Team */}
-                <div className="flex flex-col items-center text-center">
-                  {awayScore !== null && (
-                    <span className={`font-display text-4xl md:text-5xl font-bold mb-2 ${status === 'live' ? 'text-live' : ''}`}>{awayScore}</span>
-                  )}
-                  <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-secondary flex items-center justify-center overflow-hidden mb-3">
-                    {match.away_logo ? (
-                      <img src={match.away_logo} alt={match.away_name} className="w-16 h-16 md:w-20 md:h-20 object-contain" />
-                    ) : (
-                      <span className="text-2xl font-bold text-muted-foreground">{match.away_name.charAt(0)}</span>
-                    )}
+                </>
+              ) : (
+                <>
+                  {/* Spinning ball for VS */}
+                  <div className="relative w-10 h-10 mb-1">
+                    <span className="absolute inset-0 flex items-center justify-center text-3xl animate-spin-ball">⚽</span>
                   </div>
-                  <h2 className="font-display text-xl md:text-2xl font-bold">{match.away_name}</h2>
-                  <span className="text-sm text-muted-foreground">Away</span>
-                </div>
-              </>
-            );
-          })()}
+                  <span className="font-display text-lg font-bold text-muted-foreground">VS</span>
+                  {status === 'live' && (
+                    <span className="mt-1 px-3 py-0.5 rounded-full bg-live/20 text-live text-[10px] font-bold animate-pulse tracking-wider">
+                      ● LIVE
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Away Team */}
+            <div className="flex-1 flex flex-col items-center text-center min-w-0">
+              <div className="w-16 h-16 rounded-2xl bg-secondary/80 border border-border/50 flex items-center justify-center overflow-hidden mb-2">
+                {match.away_logo ? (
+                  <img src={match.away_logo} alt={match.away_name} className="w-12 h-12 object-contain" />
+                ) : (
+                  <span className="text-lg font-bold text-muted-foreground">{match.away_name.charAt(0)}</span>
+                )}
+              </div>
+              <h2 className="font-display text-sm font-bold truncate w-full">{match.away_name}</h2>
+              <span className="text-[10px] text-live/70 font-medium uppercase tracking-wider">Away</span>
+            </div>
+          </div>
         </div>
       </div>
 
