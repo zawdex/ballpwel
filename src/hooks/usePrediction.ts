@@ -36,13 +36,14 @@ export const usePrediction = (
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get prediction');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to get prediction');
       }
 
       return response.json();
     },
     enabled: enabled && !!home_name && !!away_name,
-    staleTime: 10 * 60 * 1000, // Cache for 10 minutes
-    retry: 1,
+    staleTime: 30 * 60 * 1000, // Cache for 30 minutes to reduce API calls
+    retry: false, // Don't retry on failure to avoid rate limits
   });
 };
