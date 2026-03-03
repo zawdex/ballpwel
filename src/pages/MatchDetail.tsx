@@ -20,6 +20,7 @@ const MatchDetail = () => {
   const { data: matches, isLoading } = useQuery({
     queryKey: ['matches'],
     queryFn: footballAPI.getMatches,
+    refetchInterval: 30000,
   });
 
   const match = useMemo(() => {
