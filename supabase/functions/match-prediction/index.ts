@@ -25,7 +25,7 @@ serve(async (req) => {
       throw new Error("GROQ_API_KEY is not configured");
     }
 
-    const systemPrompt = `You are a professional football betting analyst. You provide specific actionable betting tips with exact market selections. Respond with ONLY valid JSON, no markdown.`;
+    const systemPrompt = `You are a professional football betting analyst. You MUST be logically consistent. If predicted_score is "2-1", winner MUST be "home". If score is "1-2", winner MUST be "away". If scores are equal like "1-1", winner MUST be "draw". NEVER contradict yourself. Your tips must also be consistent with your prediction. Respond with ONLY valid JSON, no markdown.`;
 
     const userPrompt = `Analyze this football match and provide 5 specific betting tips:
 - Home: ${home_name}
@@ -34,19 +34,26 @@ serve(async (req) => {
 - Current Score: ${score || "Not started"}
 - Time: ${time || "Unknown"}
 
-Each tip MUST use real betting market formats like these examples:
+CRITICAL RULES:
+1. predicted_score format is "HomeGoals-AwayGoals" (home team score first)
+2. If HomeGoals > AwayGoals → winner MUST be "home"
+3. If HomeGoals < AwayGoals → winner MUST be "away"  
+4. If HomeGoals = AwayGoals → winner MUST be "draw"
+5. Your tips must logically align with your predicted winner and score
+6. Each tip must use a real betting market format
+
+Tip format examples:
 - "Handicap ${home_name} -1.5" or "Handicap ${away_name} +0.5"
 - "Over 2.5 Goals" or "Under 1.5 Goals"
-- "Both Teams To Score - Yes"
+- "Both Teams To Score - Yes" or "Both Teams To Score - No"
 - "1X2: ${home_name} Win" or "1X2: Draw"
-- "Correct Score 2-1"
+- "Correct Score ${home_name} 2-1 ${away_name}"
 - "First Half Over 0.5"
 - "Double Chance: ${home_name} or Draw"
-- "HT/FT: Draw/${away_name}"
 
 Respond with ONLY this JSON:
 {"winner":"home or away or draw","confidence":number 0-100,"predicted_score":"X-Y","tips":[{"tip":"exact betting market name","confidence":"high or medium or low","description":"why this bet is good, under 25 words"}],"analysis":"match analysis under 50 words"}
-Provide exactly 5 tips with different bet types.`;
+Provide exactly 5 tips. All tips must be consistent with your winner and score prediction.`;
 
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
@@ -86,6 +93,17 @@ Provide exactly 5 tips with different bet types.`;
     }
 
     const prediction = JSON.parse(content);
+
+    // Server-side consistency fix: ensure winner matches predicted_score
+    if (prediction.predicted_score) {
+      const parts = prediction.predicted_score.split("-").map(Number);
+      if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+        const [homeGoals, awayGoals] = parts;
+        if (homeGoals > awayGoals) prediction.winner = "home";
+        else if (homeGoals < awayGoals) prediction.winner = "away";
+        else prediction.winner = "draw";
+      }
+    }
 
     return new Response(JSON.stringify(prediction), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
