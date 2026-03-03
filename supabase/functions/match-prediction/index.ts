@@ -20,76 +20,83 @@ serve(async (req) => {
       });
     }
 
-    const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
-    if (!GROQ_API_KEY) {
-      throw new Error("GROQ_API_KEY is not configured");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY is not configured");
     }
 
-    const systemPrompt = `You are a professional football betting analyst. You MUST be logically consistent. If predicted_score is "2-1", winner MUST be "home". If score is "1-2", winner MUST be "away". If scores are equal like "1-1", winner MUST be "draw". NEVER contradict yourself. Your tips must also be consistent with your prediction. Respond with ONLY valid JSON, no markdown.`;
+    const homeName = home_name.trim();
+    const awayName = away_name.trim();
+    const comp = (competition || "Unknown").trim();
+    const matchScore = (score || "Not started").trim();
+    const matchTime = (time || "Unknown").trim();
 
-    const userPrompt = `Analyze this football match and provide 5 specific betting tips:
-- Home: ${home_name}
-- Away: ${away_name}
-- Competition: ${competition || "Unknown"}
-- Current Score: ${score || "Not started"}
-- Time: ${time || "Unknown"}
+    const prompt = `You are an elite professional football betting analyst with deep knowledge of team form, head-to-head records, league trends, and tactical analysis.
 
-CRITICAL RULES:
-1. predicted_score format is "HomeGoals-AwayGoals" (home team score first)
-2. If HomeGoals > AwayGoals → winner MUST be "home"
-3. If HomeGoals < AwayGoals → winner MUST be "away"  
-4. If HomeGoals = AwayGoals → winner MUST be "draw"
-5. Your tips must logically align with your predicted winner and score
-6. Each tip must use a real betting market format
+Analyze this football match and provide 5 high-quality betting tips:
 
-Tip format examples:
-- "Handicap ${home_name} -1.5" or "Handicap ${away_name} +0.5"
+Match: ${homeName} vs ${awayName}
+Competition: ${comp}
+Current Score: ${matchScore}
+Time: ${matchTime}
+
+CRITICAL CONSISTENCY RULES:
+1. predicted_score format: "HomeGoals-AwayGoals" (home team score FIRST)
+2. If home goals > away goals → winner MUST be "home"
+3. If home goals < away goals → winner MUST be "away"
+4. If home goals = away goals → winner MUST be "draw"
+5. Tips must logically align with your predicted winner and score
+6. If match is live and score is given, factor in current momentum
+
+Required betting market formats for tips (use these exact formats):
+- "Handicap ${homeName} -1.5" or "Handicap ${awayName} +0.5"
 - "Over 2.5 Goals" or "Under 1.5 Goals"
 - "Both Teams To Score - Yes" or "Both Teams To Score - No"
-- "1X2: ${home_name} Win" or "1X2: Draw"
-- "Correct Score ${home_name} 2-1 ${away_name}"
-- "First Half Over 0.5"
-- "Double Chance: ${home_name} or Draw"
+- "1X2: ${homeName} Win" or "1X2: Draw" or "1X2: ${awayName} Win"
+- "Correct Score ${homeName} 2-1 ${awayName}"
+- "First Half Over 0.5" or "First Half Under 0.5"
+- "Double Chance: ${homeName} or Draw"
+- "HT/FT: Draw/${awayName}"
 
-Respond with ONLY this JSON:
-{"winner":"home or away or draw","confidence":number 0-100,"predicted_score":"X-Y","tips":[{"tip":"exact betting market name","confidence":"high or medium or low","description":"why this bet is good, under 25 words"}],"analysis":"match analysis under 50 words"}
-Provide exactly 5 tips. All tips must be consistent with your winner and score prediction.`;
+Respond with ONLY this JSON (no markdown, no code blocks):
+{"winner":"home or away or draw","confidence":number 0-100,"predicted_score":"X-Y","tips":[{"tip":"exact betting market name","confidence":"high or medium or low","description":"clear reasoning in under 25 words"}],"analysis":"detailed match analysis under 60 words"}
 
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${GROQ_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "llama-3.1-8b-instant",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        temperature: 0.7,
-        max_tokens: 500,
-        response_format: { type: "json_object" },
-      }),
-    });
+Provide exactly 5 tips using different bet types. Make each tip specific and actionable with clear reasoning.`;
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.4,
+            maxOutputTokens: 2048,
+            responseMimeType: "application/json",
+          },
+        }),
+      }
+    );
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error("Groq API error:", response.status, errText);
+      console.error("Gemini API error:", response.status, errText);
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limited, please try again later." }), {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      throw new Error("Groq API error");
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!content) {
-      throw new Error("No content in Groq response");
+      console.error("No content in Gemini response:", JSON.stringify(data));
+      throw new Error("No content in Gemini response");
     }
 
     const prediction = JSON.parse(content);
