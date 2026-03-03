@@ -22,7 +22,7 @@ export const footballAPI = {
       // Add unique IDs to matches if not present
       return (data || []).map((match: Match, index: number) => ({
         ...match,
-        id: match.view_url || `match-${index}`,
+        id: `match-${index}`,
       }));
     } catch (error) {
       console.error('API Error:', error);
