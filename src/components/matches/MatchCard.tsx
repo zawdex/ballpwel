@@ -11,12 +11,14 @@ import ElapsedTime from './ElapsedTime';
 
 interface MatchCardProps {
   match: Match;
+  index?: number;
 }
 
-const MatchCard = memo(({ match }: MatchCardProps) => {
+const MatchCard = memo(({ match, index = 0 }: MatchCardProps) => {
   const status = getMatchStatus(match.score, match.time);
   const prevStatusRef = useRef<MatchStatus>(status);
   const [justWentLive, setJustWentLive] = useState(false);
+  const [enablePrediction, setEnablePrediction] = useState(false);
 
   useEffect(() => {
     if (prevStatusRef.current === 'upcoming' && status === 'live') {
@@ -27,11 +29,23 @@ const MatchCard = memo(({ match }: MatchCardProps) => {
     prevStatusRef.current = status;
   }, [status]);
 
+  // Stagger prediction calls by 3 seconds per card to avoid rate limits
+  useEffect(() => {
+    const timer = setTimeout(() => setEnablePrediction(true), index * 3000);
+    return () => clearTimeout(timer);
+  }, [index]);
+
   const hasStreams = match.authors && match.authors.length > 0;
   const encodedId = encodeURIComponent(match.id);
-  // Disable predictions on card list to save AI credits - only show on detail page
-  const prediction = undefined;
-  const predLoading = false;
+
+  const { data: prediction, isLoading: predLoading } = usePrediction(
+    match.home_name,
+    match.away_name,
+    match.label || '',
+    match.score || '',
+    match.time || '',
+    enablePrediction
+  );
 
   return (
     <Link to={`/matches/${encodedId}`} className="block group">
