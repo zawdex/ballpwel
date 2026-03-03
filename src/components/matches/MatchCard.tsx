@@ -7,6 +7,7 @@ import { usePrediction } from '@/hooks/usePrediction';
 import StatusBadge from './StatusBadge';
 import PredictionBadge from '@/components/predictions/PredictionBadge';
 import CountdownTimer from './CountdownTimer';
+import ElapsedTime from './ElapsedTime';
 import { Button } from '@/components/ui/button';
 
 interface MatchCardProps {
@@ -37,9 +38,13 @@ const MatchCard = memo(({ match }: MatchCardProps) => {
           </div>
           <div className="flex items-center gap-2">
             <PredictionBadge prediction={prediction} isLoading={predLoading} homeName={match.home_name} awayName={match.away_name} />
-            <span className="text-xs text-muted-foreground font-medium">
-              {match.time}
-            </span>
+            {status === 'live' ? (
+              <ElapsedTime time={match.time} />
+            ) : (
+              <span className="text-xs text-muted-foreground font-medium">
+                {match.time}
+              </span>
+            )}
           </div>
         </div>
 
