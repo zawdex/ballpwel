@@ -25,18 +25,28 @@ serve(async (req) => {
       throw new Error("GROQ_API_KEY is not configured");
     }
 
-    const systemPrompt = `You are a professional football/soccer match analyst and betting tips expert. You MUST respond with ONLY a valid JSON object, no markdown, no code blocks, no extra text.`;
+    const systemPrompt = `You are a professional football betting analyst. You provide specific actionable betting tips with exact market selections. Respond with ONLY valid JSON, no markdown.`;
 
-    const userPrompt = `Analyze this football match:
+    const userPrompt = `Analyze this football match and provide 5 specific betting tips:
 - Home: ${home_name}
 - Away: ${away_name}
 - Competition: ${competition || "Unknown"}
 - Current Score: ${score || "Not started"}
 - Time: ${time || "Unknown"}
 
-Respond with ONLY this JSON structure:
-{"winner":"home or away or draw","confidence":number 0-100,"predicted_score":"X-Y","tips":[{"tip":"short label","confidence":"high or medium or low","description":"under 20 words"}],"analysis":"under 40 words"}
-Provide exactly 3 tips.`;
+Each tip MUST use real betting market formats like these examples:
+- "Handicap ${home_name} -1.5" or "Handicap ${away_name} +0.5"
+- "Over 2.5 Goals" or "Under 1.5 Goals"
+- "Both Teams To Score - Yes"
+- "1X2: ${home_name} Win" or "1X2: Draw"
+- "Correct Score 2-1"
+- "First Half Over 0.5"
+- "Double Chance: ${home_name} or Draw"
+- "HT/FT: Draw/${away_name}"
+
+Respond with ONLY this JSON:
+{"winner":"home or away or draw","confidence":number 0-100,"predicted_score":"X-Y","tips":[{"tip":"exact betting market name","confidence":"high or medium or low","description":"why this bet is good, under 25 words"}],"analysis":"match analysis under 50 words"}
+Provide exactly 5 tips with different bet types.`;
 
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
