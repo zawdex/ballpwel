@@ -93,7 +93,7 @@ const MatchCard = memo(({ match }: MatchCardProps) => {
             {/* Score */}
             <div className="flex-shrink-0 px-3 py-1.5 rounded-xl bg-secondary/60 border border-border/50">
               {(() => {
-                const scoreParts = match.score?.match(/^(\d+)\s*-\s*(\d+)$/);
+                const scoreParts = match.score?.trim().match(/^(\d+)\s*-\s*(\d+)$/);
                 if (scoreParts) {
                   return (
                     <div className={`font-display text-xl font-bold tracking-wider flex items-center gap-2 ${status === 'live' ? 'text-live' : 'text-foreground'}`}>

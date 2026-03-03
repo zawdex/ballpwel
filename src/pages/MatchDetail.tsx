@@ -102,7 +102,7 @@ const MatchDetail = () => {
           {/* Score */}
           <div className="text-center">
             {(() => {
-              const scoreParts = match.score?.match(/^(\d+)\s*-\s*(\d+)$/);
+              const scoreParts = match.score?.trim().match(/^(\d+)\s*-\s*(\d+)$/);
               if (scoreParts) {
                 return (
                   <div className={`font-display text-5xl md:text-6xl font-bold flex items-center gap-4 ${status === 'live' ? 'text-live' : ''}`}>
