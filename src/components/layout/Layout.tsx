@@ -12,7 +12,7 @@ const Layout = ({ onSearch, searchQuery }: LayoutProps) => {
   const { t } = useLanguage();
 
   return (
-    <div className="min-h-screen bg-background flex flex-col relative">
+    <div className="min-h-screen bg-background flex flex-col relative overflow-x-hidden">
       {/* Ambient background orbs */}
       <div className="orb w-96 h-96 bg-primary/5 top-0 -left-48" />
       <div className="orb w-72 h-72 bg-live/5 top-1/3 -right-36" style={{ animationDelay: '3s' }} />
