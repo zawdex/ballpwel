@@ -9,47 +9,6 @@ const corsHeaders = {
 const cache = new Map<string, { data: unknown; expiry: number }>();
 const CACHE_TTL = 30 * 60 * 1000;
 
-const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
-
-async function callGemini(prompt: string, apiKey: string, retries = 2): Promise<string> {
-  for (let i = 0; i <= retries; i++) {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.4,
-            maxOutputTokens: 2048,
-            responseMimeType: "application/json",
-          },
-        }),
-      }
-    );
-
-    if (response.ok) {
-      const data = await response.json();
-      const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (content) return content;
-      throw new Error("No content in response");
-    }
-
-    const errText = await response.text();
-    
-    if (response.status === 429 && i < retries) {
-      console.log(`Rate limited, retrying in ${(i + 1) * 15}s...`);
-      await sleep((i + 1) * 15000);
-      continue;
-    }
-
-    console.error("Gemini API error:", response.status, errText);
-    throw new Error(`API error: ${response.status}`);
-  }
-  throw new Error("Max retries exceeded");
-}
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -80,9 +39,9 @@ serve(async (req) => {
       });
     }
 
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-    if (!GEMINI_API_KEY) {
-      throw new Error("GEMINI_API_KEY is not configured");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY is not configured");
     }
 
     const prompt = `You are an elite football betting analyst. Analyze this match and provide 5 betting tips.
@@ -105,7 +64,44 @@ Respond with ONLY valid JSON:
 
 Exactly 5 tips, different bet types.`;
 
-    const content = await callGemini(prompt, GEMINI_API_KEY);
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash-lite",
+        messages: [
+          { role: "system", content: "You are a football betting analyst. Always respond with valid JSON only, no markdown." },
+          { role: "user", content: prompt },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("Lovable AI error:", response.status, errText);
+      
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "Rate limited, please try again later." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "AI credits exhausted." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      throw new Error(`AI error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) throw new Error("No content in response");
+
     const cleaned = content.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
     const prediction = JSON.parse(cleaned);
 
@@ -127,15 +123,6 @@ Exactly 5 tips, different bet types.`;
     });
   } catch (error) {
     console.error("Prediction error:", error);
-    
-    const msg = String(error);
-    if (msg.includes("429") || msg.includes("rate") || msg.includes("quota")) {
-      return new Response(
-        JSON.stringify({ error: "Rate limited, please try again later." }),
-        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     return new Response(
       JSON.stringify({ error: "Unable to generate prediction. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
