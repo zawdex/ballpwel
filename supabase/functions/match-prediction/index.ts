@@ -7,7 +7,48 @@ const corsHeaders = {
 
 // Simple in-memory cache
 const cache = new Map<string, { data: unknown; expiry: number }>();
-const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+const CACHE_TTL = 30 * 60 * 1000;
+
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+
+async function callGemini(prompt: string, apiKey: string, retries = 2): Promise<string> {
+  for (let i = 0; i <= retries; i++) {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.4,
+            maxOutputTokens: 2048,
+            responseMimeType: "application/json",
+          },
+        }),
+      }
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (content) return content;
+      throw new Error("No content in response");
+    }
+
+    const errText = await response.text();
+    
+    if (response.status === 429 && i < retries) {
+      console.log(`Rate limited, retrying in ${(i + 1) * 15}s...`);
+      await sleep((i + 1) * 15000);
+      continue;
+    }
+
+    console.error("Gemini API error:", response.status, errText);
+    throw new Error(`API error: ${response.status}`);
+  }
+  throw new Error("Max retries exceeded");
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -44,7 +85,7 @@ serve(async (req) => {
       throw new Error("GEMINI_API_KEY is not configured");
     }
 
-    const prompt = `You are an elite professional football betting analyst. Analyze this match and provide 5 betting tips.
+    const prompt = `You are an elite football betting analyst. Analyze this match and provide 5 betting tips.
 
 Match: ${homeName} vs ${awayName}
 Competition: ${comp}
@@ -64,57 +105,21 @@ Respond with ONLY valid JSON:
 
 Exactly 5 tips, different bet types.`;
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.4,
-            maxOutputTokens: 2048,
-            responseMimeType: "application/json",
-          },
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error("Gemini API error:", response.status, errText);
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limited, please try again later." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      throw new Error(`Gemini API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!content) {
-      console.error("No content in Gemini response:", JSON.stringify(data));
-      throw new Error("No content in Gemini response");
-    }
-
+    const content = await callGemini(prompt, GEMINI_API_KEY);
     const cleaned = content.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
     const prediction = JSON.parse(cleaned);
 
-    // Server-side consistency fix
+    // Consistency fix
     if (prediction.predicted_score) {
       const parts = prediction.predicted_score.split("-").map(Number);
       if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-        const [homeGoals, awayGoals] = parts;
-        if (homeGoals > awayGoals) prediction.winner = "home";
-        else if (homeGoals < awayGoals) prediction.winner = "away";
+        const [h, a] = parts;
+        if (h > a) prediction.winner = "home";
+        else if (h < a) prediction.winner = "away";
         else prediction.winner = "draw";
       }
     }
 
-    // Cache result
     cache.set(cacheKey, { data: prediction, expiry: Date.now() + CACHE_TTL });
 
     return new Response(JSON.stringify(prediction), {
@@ -122,12 +127,18 @@ Exactly 5 tips, different bet types.`;
     });
   } catch (error) {
     console.error("Prediction error:", error);
+    
+    const msg = String(error);
+    if (msg.includes("429") || msg.includes("rate") || msg.includes("quota")) {
+      return new Response(
+        JSON.stringify({ error: "Rate limited, please try again later." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     return new Response(
       JSON.stringify({ error: "Unable to generate prediction. Please try again." }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
