@@ -44,6 +44,7 @@ export const usePrediction = (
     },
     enabled: enabled && !!home_name && !!away_name,
     staleTime: 30 * 60 * 1000, // Cache for 30 minutes to reduce API calls
-    retry: false, // Don't retry on failure to avoid rate limits
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30000),
   });
 };

@@ -31,7 +31,7 @@ const MatchCard = memo(({ match, index = 0 }: MatchCardProps) => {
 
   // Stagger prediction calls by 3 seconds per card to avoid rate limits
   useEffect(() => {
-    const timer = setTimeout(() => setEnablePrediction(true), index * 3000);
+    const timer = setTimeout(() => setEnablePrediction(true), index * 5000);
     return () => clearTimeout(timer);
   }, [index]);
 
