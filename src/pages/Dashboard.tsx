@@ -1,11 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { footballAPI } from '@/services/api';
-import { MatchFilters } from '@/types';
+import { Match, MatchFilters } from '@/types';
 import { getMatchStatus } from '@/hooks/useMatches';
 import MatchList from '@/components/matches/MatchList';
-import MatchFiltersComponent from '@/components/matches/MatchFilters';
-import { RefreshCw, Zap, Trophy, Radio } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface DashboardProps {
@@ -13,135 +12,125 @@ interface DashboardProps {
   onFilterChange: (filters: Partial<MatchFilters>) => void;
 }
 
+// Popular leagues keywords to match against labels
+const POPULAR_LEAGUES = [
+  { key: 'all', label: 'All' },
+  { key: 'premier', label: 'EPL' },
+  { key: 'spanish|la liga', label: 'La Liga' },
+  { key: 'german|bundesliga', label: 'Bundesliga' },
+  { key: 'italian|serie a', label: 'Serie A' },
+  { key: 'french|ligue 1', label: 'Ligue 1' },
+  { key: 'champion', label: 'UCL' },
+  { key: 'europa', label: 'Europa' },
+  { key: 'asian elite|afc', label: 'AFC' },
+  { key: 'argentin', label: 'Argentina' },
+  { key: 'mexican', label: 'Mexico' },
+  { key: 'indonesian', label: 'Indonesia' },
+  { key: 'australian', label: 'Australia' },
+];
+
+const matchesLeague = (label: string, key: string): boolean => {
+  if (key === 'all') return true;
+  return key.split('|').some(k => label.toLowerCase().includes(k));
+};
+
 const Dashboard = ({ filters, onFilterChange }: DashboardProps) => {
+  const [activeLeague, setActiveLeague] = useState('all');
+
   const { data: allMatches, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ['matches'],
     queryFn: footballAPI.getMatches,
     refetchInterval: 60 * 1000,
   });
 
+  // Filter to popular leagues only, then by active tab
   const filteredMatches = useMemo(() => {
     if (!allMatches) return [];
-    let filtered = [...allMatches];
-    if (filters.status !== 'all') {
-      filtered = filtered.filter(
-        (match) => getMatchStatus(match.score, match.time) === filters.status
-      );
+
+    // First: only show matches from popular leagues
+    let popular = allMatches.filter(match =>
+      POPULAR_LEAGUES.some(l => l.key !== 'all' && matchesLeague(match.label, l.key))
+    );
+
+    // Then filter by selected league tab
+    if (activeLeague !== 'all') {
+      popular = popular.filter(match => matchesLeague(match.label, activeLeague));
     }
+
+    // Apply search filter
     if (filters.searchQuery) {
       const query = filters.searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (match) =>
+      popular = popular.filter(
+        match =>
           match.home_name.toLowerCase().includes(query) ||
           match.away_name.toLowerCase().includes(query) ||
           match.label.toLowerCase().includes(query)
       );
     }
-    if (filters.competition !== 'all') {
-      filtered = filtered.filter(
-        (match) => match.label === filters.competition
-      );
-    }
-    return filtered;
-  }, [allMatches, filters]);
 
-  const competitions = useMemo(() => {
-    if (!allMatches) return [];
-    return [...new Set(allMatches.map((match) => match.label))];
+    // Sort: live first, then upcoming, then finished
+    return popular.sort((a, b) => {
+      const order = { live: 0, upcoming: 1, finished: 2 };
+      const sa = order[getMatchStatus(a.score, a.time)] ?? 2;
+      const sb = order[getMatchStatus(b.score, b.time)] ?? 2;
+      return sa - sb;
+    });
+  }, [allMatches, activeLeague, filters.searchQuery]);
+
+  // Count available leagues for tabs
+  const availableLeagues = useMemo(() => {
+    if (!allMatches) return POPULAR_LEAGUES.slice(0, 1);
+    return POPULAR_LEAGUES.filter(league => {
+      if (league.key === 'all') return true;
+      return allMatches.some(match => matchesLeague(match.label, league.key));
+    });
   }, [allMatches]);
 
   const liveCount = useMemo(() => {
-    if (!allMatches) return 0;
-    return allMatches.filter((match) => getMatchStatus(match.score, match.time) === 'live').length;
-  }, [allMatches]);
-
-  const upcomingCount = useMemo(() => {
-    if (!allMatches) return 0;
-    return allMatches.filter((match) => getMatchStatus(match.score, match.time) === 'upcoming').length;
-  }, [allMatches]);
-
-  const streamCount = useMemo(() => {
-    if (!allMatches) return 0;
-    return allMatches.filter((match) => match.authors && match.authors.length > 0).length;
-  }, [allMatches]);
+    return filteredMatches.filter(m => getMatchStatus(m.score, m.time) === 'live').length;
+  }, [filteredMatches]);
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden rounded-3xl hero-gradient p-8 md:p-10 border border-border/50">
-        {/* Animated orbs */}
-        <div className="absolute top-0 right-0 w-80 h-80 bg-primary/8 rounded-full blur-3xl animate-float" />
-        <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-live/6 rounded-full blur-3xl animate-float" style={{ animationDelay: '4s' }} />
-
-        <div className="relative z-10">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-            <div className="animate-slide-up">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold mb-4">
-                <Trophy className="w-3.5 h-3.5" />
-                LIVE FOOTBALL
-              </div>
-              <h1 className="font-display text-4xl md:text-5xl font-bold mb-3 tracking-tight">
-                <span className="text-gradient">Live</span> Football Streams
-              </h1>
-              <p className="text-muted-foreground text-base max-w-md">
-                Watch live matches from leagues around the world with real-time AI predictions
-              </p>
-            </div>
-
-            {/* Stats pills */}
-            <div className="flex flex-wrap items-center gap-3 animate-slide-up" style={{ animationDelay: '0.15s' }}>
-              {liveCount > 0 && (
-                <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-live/10 border border-live/30 animate-count-pulse">
-                  <Zap className="w-4 h-4 text-live" />
-                  <span className="text-sm font-bold text-live">{liveCount}</span>
-                  <span className="text-xs text-live/80">LIVE</span>
-                </div>
-              )}
-              {upcomingCount > 0 && (
-                <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-upcoming/10 border border-upcoming/30">
-                  <span className="text-sm font-bold text-upcoming">{upcomingCount}</span>
-                  <span className="text-xs text-upcoming/80">Upcoming</span>
-                </div>
-              )}
-              {streamCount > 0 && (
-                <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-primary/10 border border-primary/30">
-                  <Radio className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-bold text-primary">{streamCount}</span>
-                  <span className="text-xs text-primary/80">Streams</span>
-                </div>
-              )}
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => refetch()}
-                disabled={isFetching}
-                className="border-border/50 hover:border-primary rounded-xl h-10 w-10 transition-all duration-300"
-              >
-                <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
-              </Button>
-            </div>
-          </div>
+    <div className="space-y-5 animate-fade-in">
+      {/* Header */}
+      <div className="pt-2">
+        <div className="flex items-center justify-between mb-1">
+          <h1 className="font-display text-2xl md:text-3xl font-bold">
+            Live Arena
+          </h1>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="rounded-xl h-9 w-9 text-muted-foreground"
+          >
+            <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
+          </Button>
         </div>
+        <p className="text-muted-foreground text-sm">
+          Watch the current fixtures and kickoff flow.
+          {liveCount > 0 && (
+            <span className="ml-2 inline-flex items-center gap-1.5 text-xs font-bold text-destructive">
+              <span className="w-1.5 h-1.5 rounded-full bg-destructive animate-count-pulse" />
+              {liveCount} LIVE
+            </span>
+          )}
+        </p>
       </div>
 
-      {/* Filters */}
-      <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
-        <MatchFiltersComponent
-          filters={filters}
-          onFilterChange={onFilterChange}
-          competitions={competitions}
-        />
+      {/* League Tabs - horizontal scroll */}
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
+        {availableLeagues.map(league => (
+          <button
+            key={league.key}
+            onClick={() => setActiveLeague(league.key)}
+            className={`league-tab ${activeLeague === league.key ? 'active' : ''}`}
+          >
+            {league.label}
+          </button>
+        ))}
       </div>
-
-      {/* Results count */}
-      {!isLoading && filteredMatches && (
-        <div className="flex items-center gap-2 animate-slide-up" style={{ animationDelay: '0.25s' }}>
-          <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-          <p className="text-sm text-muted-foreground">
-            Showing <span className="font-semibold text-foreground">{filteredMatches.length}</span> match{filteredMatches.length !== 1 ? 'es' : ''}
-          </p>
-        </div>
-      )}
 
       {/* Match List */}
       <MatchList
