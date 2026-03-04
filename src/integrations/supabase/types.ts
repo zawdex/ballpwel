@@ -74,6 +74,30 @@ export type Database = {
         }
         Relationships: []
       }
+      prediction_cache: {
+        Row: {
+          cache_key: string
+          created_at: string
+          expires_at: string
+          id: string
+          prediction: Json
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          prediction: Json
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          prediction?: Json
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
