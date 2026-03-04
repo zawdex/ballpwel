@@ -45,11 +45,12 @@ async function tryGroq(prompt: string): Promise<string> {
     body: JSON.stringify({
       model: "llama-3.3-70b-versatile",
       messages: [
-        { role: "system", content: "You are a football betting analyst. Always respond with valid JSON only, no markdown." },
+        { role: "system", content: "You are a football betting analyst. You MUST respond with ONLY a single valid JSON object. No text before or after. No markdown code blocks." },
         { role: "user", content: prompt },
       ],
-      temperature: 0.4,
+      temperature: 0.3,
       max_tokens: 2048,
+      response_format: { type: "json_object" },
     }),
   });
 
@@ -181,7 +182,13 @@ serve(async (req) => {
     const prompt = buildPrompt(homeName, awayName, comp, matchScore, matchTime);
     const content = await getAIResponse(prompt);
 
-    const cleaned = content.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+    // Robust JSON extraction
+    let cleaned = content.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+    // Extract first JSON object if there's extra text
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error("No JSON object found in response");
+    cleaned = jsonMatch[0];
+    
     const prediction = JSON.parse(cleaned);
 
     // Consistency fix
