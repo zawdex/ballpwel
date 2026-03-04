@@ -43,8 +43,9 @@ export const usePrediction = (
       return response.json();
     },
     enabled: enabled && !!home_name && !!away_name,
-    staleTime: 30 * 60 * 1000, // Cache for 30 minutes to reduce API calls
-    retry: 2,
-    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30000),
+    staleTime: 30 * 60 * 1000,
+    retry: 1,
+    retryDelay: 15000, // Wait 15s before retry
+    meta: { errorPolicy: 'ignore' }, // Don't propagate errors to UI
   });
 };
