@@ -5,9 +5,148 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Simple in-memory cache
+// In-memory cache - 30 min TTL
 const cache = new Map<string, { data: unknown; expiry: number }>();
 const CACHE_TTL = 30 * 60 * 1000;
+
+function buildPrompt(homeName: string, awayName: string, comp: string, matchScore: string, matchTime: string): string {
+  return `You are an elite football betting analyst. Analyze this match and provide 5 betting tips.
+
+Match: ${homeName} vs ${awayName}
+Competition: ${comp}
+Current Score: ${matchScore}
+Time: ${matchTime}
+
+RULES:
+1. predicted_score: "HomeGoals-AwayGoals" (home first)
+2. winner must match predicted_score logically
+3. If live, factor in current momentum
+
+Betting formats to use:
+- Handicap, Over/Under, BTTS, 1X2, Correct Score, First Half, Double Chance, HT/FT
+
+Respond with ONLY valid JSON:
+{"winner":"home or away or draw","confidence":65,"predicted_score":"2-1","tips":[{"tip":"Over 2.5 Goals","confidence":"high","description":"reasoning under 25 words"}],"analysis":"analysis under 60 words"}
+
+Exactly 5 tips, different bet types.`;
+}
+
+// Provider 1: Groq (free, generous limits)
+async function tryGroq(prompt: string): Promise<string> {
+  const apiKey = Deno.env.get("GROQ_API_KEY");
+  if (!apiKey) throw new Error("GROQ_API_KEY not set");
+
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        { role: "system", content: "You are a football betting analyst. Always respond with valid JSON only, no markdown." },
+        { role: "user", content: prompt },
+      ],
+      temperature: 0.4,
+      max_tokens: 2048,
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    console.error("Groq error:", res.status, err);
+    throw new Error(`Groq error: ${res.status}`);
+  }
+
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || "";
+}
+
+// Provider 2: Lovable AI Gateway
+async function tryLovableAI(prompt: string): Promise<string> {
+  const apiKey = Deno.env.get("LOVABLE_API_KEY");
+  if (!apiKey) throw new Error("LOVABLE_API_KEY not set");
+
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash-lite",
+      messages: [
+        { role: "system", content: "You are a football betting analyst. Always respond with valid JSON only, no markdown." },
+        { role: "user", content: prompt },
+      ],
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    console.error("Lovable AI error:", res.status, err);
+    throw new Error(`Lovable AI error: ${res.status}`);
+  }
+
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || "";
+}
+
+// Provider 3: Gemini direct
+async function tryGemini(prompt: string): Promise<string> {
+  const apiKey = Deno.env.get("GEMINI_API_KEY");
+  if (!apiKey) throw new Error("GEMINI_API_KEY not set");
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.4,
+          maxOutputTokens: 2048,
+          responseMimeType: "application/json",
+        },
+      }),
+    }
+  );
+
+  if (!res.ok) {
+    const err = await res.text();
+    console.error("Gemini error:", res.status, err);
+    throw new Error(`Gemini error: ${res.status}`);
+  }
+
+  const data = await res.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+}
+
+// Try providers in order, return first success
+async function getAIResponse(prompt: string): Promise<string> {
+  const providers = [
+    { name: "Groq", fn: () => tryGroq(prompt) },
+    { name: "Lovable AI", fn: () => tryLovableAI(prompt) },
+    { name: "Gemini", fn: () => tryGemini(prompt) },
+  ];
+
+  for (const provider of providers) {
+    try {
+      console.log(`Trying ${provider.name}...`);
+      const result = await provider.fn();
+      if (result) {
+        console.log(`${provider.name} succeeded`);
+        return result;
+      }
+    } catch (e) {
+      console.warn(`${provider.name} failed:`, e.message);
+    }
+  }
+
+  throw new Error("All AI providers failed");
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -39,68 +178,8 @@ serve(async (req) => {
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
-    }
-
-    const prompt = `You are an elite football betting analyst. Analyze this match and provide 5 betting tips.
-
-Match: ${homeName} vs ${awayName}
-Competition: ${comp}
-Current Score: ${matchScore}
-Time: ${matchTime}
-
-RULES:
-1. predicted_score: "HomeGoals-AwayGoals" (home first)
-2. winner must match predicted_score logically
-3. If live, factor in current momentum
-
-Betting formats to use:
-- Handicap, Over/Under, BTTS, 1X2, Correct Score, First Half, Double Chance, HT/FT
-
-Respond with ONLY valid JSON:
-{"winner":"home or away or draw","confidence":65,"predicted_score":"2-1","tips":[{"tip":"Over 2.5 Goals","confidence":"high","description":"reasoning under 25 words"}],"analysis":"analysis under 60 words"}
-
-Exactly 5 tips, different bet types.`;
-
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
-        messages: [
-          { role: "system", content: "You are a football betting analyst. Always respond with valid JSON only, no markdown." },
-          { role: "user", content: prompt },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error("Lovable AI error:", response.status, errText);
-      
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limited, please try again later." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "AI credits exhausted." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      throw new Error(`AI error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
-    if (!content) throw new Error("No content in response");
+    const prompt = buildPrompt(homeName, awayName, comp, matchScore, matchTime);
+    const content = await getAIResponse(prompt);
 
     const cleaned = content.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
     const prediction = JSON.parse(cleaned);
