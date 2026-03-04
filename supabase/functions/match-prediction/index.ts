@@ -7,7 +7,7 @@ const corsHeaders = {
 
 // In-memory cache - 30 min TTL
 const cache = new Map<string, { data: unknown; expiry: number }>();
-const CACHE_TTL = 30 * 60 * 1000;
+const CACHE_TTL = 24 * 60 * 60 * 1000;
 
 function buildPrompt(homeName: string, awayName: string, comp: string, matchScore: string, matchTime: string): string {
   return `You are an elite football betting analyst. Analyze this match and provide 5 betting tips.
