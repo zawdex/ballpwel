@@ -1,7 +1,7 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, Link, useLocation } from 'react-router-dom';
 import Header from './Header';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Send } from 'lucide-react';
+import { Send, Zap, Calendar, Trophy } from 'lucide-react';
 
 interface LayoutProps {
   onSearch: (query: string) => void;
@@ -10,37 +10,60 @@ interface LayoutProps {
 
 const Layout = ({ onSearch, searchQuery }: LayoutProps) => {
   const { t } = useLanguage();
+  const location = useLocation();
+
+  const bottomNavItems = [
+    { path: '/', label: t('allMatches'), icon: Trophy },
+    { path: '/live', label: t('live'), icon: Zap },
+    { path: '/upcoming', label: t('upcoming'), icon: Calendar },
+  ];
+
+  const isActive = (path: string) => location.pathname === path;
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-x-hidden">
-      {/* Ambient background orbs */}
-      <div className="orb w-96 h-96 bg-primary/5 top-0 -left-48" />
-      <div className="orb w-72 h-72 bg-live/5 top-1/3 -right-36" style={{ animationDelay: '3s' }} />
-      <div className="orb w-64 h-64 bg-upcoming/5 bottom-0 left-1/3" style={{ animationDelay: '5s' }} />
-
       <Header onSearch={onSearch} searchQuery={searchQuery} />
-      <main className="container mx-auto px-4 py-8 flex-1 relative z-10">
+      <main className="container mx-auto px-4 py-4 md:py-8 flex-1 relative z-10 pb-24 md:pb-8">
         <Outlet />
       </main>
-      <footer className="border-t border-border/50 py-8 mt-auto bg-card/30 backdrop-blur-sm relative z-10">
+
+      {/* Footer - desktop only */}
+      <footer className="hidden md:block border-t border-border/50 py-6 mt-auto bg-card/30 backdrop-blur-sm relative z-10">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="text-center md:text-left">
-              <p className="text-sm text-muted-foreground">{t('footerRights')}</p>
-              <p className="text-xs text-muted-foreground/70 mt-1">{t('footerDesc')}</p>
-            </div>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">{t('footerRights')}</p>
             <a
               href="https://t.me/itachiXCoder"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20 transition-all duration-300 text-sm font-medium border border-[#0088cc]/20 hover:scale-105 hover:shadow-lg hover:shadow-[#0088cc]/10"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20 transition-all text-xs font-medium border border-[#0088cc]/20"
             >
-              <Send className="w-4 h-4" />
-              <span>@itachiXCoder</span>
+              <Send className="w-3.5 h-3.5" />
+              @itachiXCoder
             </a>
           </div>
         </div>
       </footer>
+
+      {/* Bottom Navigation - mobile only */}
+      <nav className="bottom-nav">
+        <div className="flex items-center justify-around py-2 px-4">
+          {bottomNavItems.map(({ path, label, icon: Icon }) => (
+            <Link
+              key={path}
+              to={path}
+              className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all duration-200 min-w-[72px] ${
+                isActive(path)
+                  ? 'bg-primary/15 text-primary'
+                  : 'text-muted-foreground'
+              }`}
+            >
+              <Icon className={`w-5 h-5 ${isActive(path) ? 'text-primary' : ''}`} />
+              <span className="text-[10px] font-semibold">{label}</span>
+            </Link>
+          ))}
+        </div>
+      </nav>
     </div>
   );
 };
