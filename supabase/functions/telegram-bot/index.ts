@@ -232,6 +232,9 @@ function mainMenuKeyboard(lang: Lang) {
   };
 }
 
+const line = "━━━━━━━━━━━━━━━━━━━━━━━━";
+const thinLine = "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄";
+
 function formatMatchList(matches: any[], status: string | null, lang: Lang, page = 0) {
   const s = t(lang);
   const PAGE_SIZE = 8;
@@ -240,7 +243,7 @@ function formatMatchList(matches: any[], status: string | null, lang: Lang, page
 
   if (filtered.length === 0) {
     return {
-      text: s.noMatches(status),
+      text: `${line}\n${s.noMatches(status)}\n${line}`,
       keyboard: { inline_keyboard: [[{ text: s.backToMenu, callback_data: "menu_main" }]] },
     };
   }
@@ -249,13 +252,16 @@ function formatMatchList(matches: any[], status: string | null, lang: Lang, page
   const pageMatches = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const title = status === "live" ? s.liveTitle : status === "upcoming" ? s.upcomingTitle : s.allTitle;
 
-  let text = `${title}\n${"─".repeat(20)}\n\n`;
-  pageMatches.forEach((m: any) => {
+  let text = `${line}\n${title}\n${line}\n\n`;
+  pageMatches.forEach((m: any, i: number) => {
     const st = getMatchStatus(m.score, m.time);
-    text += `${statusEmoji(st)} <b>${m.home_name}</b> ${m.score === "vs" ? "VS" : m.score} <b>${m.away_name}</b>\n`;
-    text += `   📺 ${m.label} | ⏱ ${m.time}\n\n`;
+    const scoreDisplay = m.score === "vs" ? "  🆚  " : ` ${m.score} `;
+    text += `${statusEmoji(st)} │ <b>${m.home_name}</b>${scoreDisplay}<b>${m.away_name}</b>\n`;
+    text += `    │ 📺 ${m.label}\n`;
+    text += `    │ ⏱ ${m.time}\n`;
+    if (i < pageMatches.length - 1) text += `${thinLine}\n`;
   });
-  text += s.page(page + 1, totalPages, filtered.length);
+  text += `\n${line}\n${s.page(page + 1, totalPages, filtered.length)}\n${line}`;
 
   const buttons: any[][] = [];
   const row: any[] = [];
@@ -278,15 +284,24 @@ function formatMatchList(matches: any[], status: string | null, lang: Lang, page
 function formatMatchDetail(match: any, lang: Lang) {
   const s = t(lang);
   const status = getMatchStatus(match.score, match.time);
-  const scoreDisplay = match.score === "vs" ? "VS" : match.score;
+  const scoreDisplay = match.score === "vs" ? "🆚" : match.score;
 
-  let text = `${statusEmoji(status)} <b>${s.matchDetailsTitle}</b>\n${"─".repeat(24)}\n\n`;
+  let text = `${line}\n${statusEmoji(status)} <b>${s.matchDetailsTitle}</b>\n${line}\n\n`;
   text += `🏟 <b>${match.label}</b>\n\n`;
-  text += `🏠 <b>${match.home_name}</b>\n      ⚽ ${scoreDisplay}\n✈️ <b>${match.away_name}</b>\n\n`;
-  text += `⏱ ${s.time}: ${match.time}\n📊 ${s.status}: ${status.toUpperCase()}\n`;
+  text += `${thinLine}\n`;
+  text += `🏠 <b>${match.home_name}</b>\n`;
+  text += `         ⚽ <b>${scoreDisplay}</b>\n`;
+  text += `✈️ <b>${match.away_name}</b>\n`;
+  text += `${thinLine}\n\n`;
+  text += `⏱ ${s.time}:  <code>${match.time}</code>\n`;
+  text += `📊 ${s.status}:  <b>${status.toUpperCase()}</b>\n`;
 
   const hasStreams = match.authors?.length > 0;
-  if (hasStreams) text += `\n📺 <b>${s.streamsAvailable(match.authors.length)}</b>\n`;
+  if (hasStreams) {
+    text += `\n${thinLine}\n`;
+    text += `📺 <b>${s.streamsAvailable(match.authors.length)}</b>\n`;
+    text += `${thinLine}\n`;
+  }
 
   const id = generateId(match);
   const buttons: any[][] = [[{ text: s.getAiPrediction, callback_data: `pred_${id}` }]];
@@ -306,20 +321,33 @@ function formatPrediction(pred: any, home: string, away: string, lang: Lang) {
   const winnerLabel = pred.winner === "home" ? home : pred.winner === "away" ? away : "Draw";
   const winnerEmoji = pred.winner === "home" ? "🏠" : pred.winner === "away" ? "✈️" : "🤝";
 
-  let text = `${s.predictionTitle}\n${"─".repeat(24)}\n\n`;
-  text += `${winnerEmoji} <b>${s.winner}: ${winnerLabel}</b>\n`;
-  text += `⚽ ${s.predictedScore}: <b>${pred.predicted_score}</b>\n`;
-  text += `📊 ${s.confidence}: <b>${pred.confidence}%</b>\n\n`;
-  text += `📝 <b>${s.analysis}:</b>\n${pred.analysis}\n\n`;
-  text += `${s.bettingTips}\n${"─".repeat(20)}\n\n`;
+  let text = `${line}\n${s.predictionTitle}\n${line}\n\n`;
+
+  text += `${winnerEmoji} <b>${s.winner}:</b>  ${winnerLabel}\n`;
+  text += `⚽ <b>${s.predictedScore}:</b>  ${pred.predicted_score}\n`;
+
+  // Confidence bar
+  const conf = pred.confidence || 0;
+  const filled = Math.round(conf / 10);
+  const bar = "█".repeat(filled) + "░".repeat(10 - filled);
+  text += `📊 <b>${s.confidence}:</b>  [${bar}] ${conf}%\n`;
+
+  text += `\n${thinLine}\n`;
+  text += `📝 <b>${s.analysis}:</b>\n${pred.analysis}\n`;
+  text += `${thinLine}\n\n`;
+
+  text += `${s.bettingTips}\n${line}\n\n`;
 
   if (pred.tips?.length) {
     pred.tips.forEach((tip: any, i: number) => {
-      text += `${confEmoji(tip.confidence)} <b>${s.tip} ${i + 1}:</b> ${tip.tip}\n`;
-      text += `   📌 ${tip.description}\n   🎯 ${s.confidence}: ${tip.confidence.toUpperCase()}\n\n`;
+      text += `${confEmoji(tip.confidence)} <b>${s.tip} ${i + 1}</b>\n`;
+      text += `    ├ 🎰 ${tip.tip}\n`;
+      text += `    ├ 📌 ${tip.description}\n`;
+      text += `    └ 🎯 ${s.confidence}: <b>${tip.confidence.toUpperCase()}</b>\n`;
+      if (i < pred.tips.length - 1) text += `\n`;
     });
   }
-  text += `\n${s.disclaimer}`;
+  text += `\n${line}\n${s.disclaimer}\n${line}`;
   return text;
 }
 
@@ -332,9 +360,8 @@ async function handleUpdate(update: any) {
       const s = t(lang);
 
       if (text === "/start") {
-        // Show language selector first time
         return sendMessage(chatId,
-          `🌐 <b>Choose Language / ဘာသာစကားရွေးပါ</b>`,
+          `${line}\n🌐 <b>Choose Language / ဘာသာစကားရွေးပါ</b>\n${line}`,
           { reply_markup: { inline_keyboard: [
             [{ text: "🇬🇧 English", callback_data: "lang_en" }, { text: "🇲🇲 မြန်မာ", callback_data: "lang_my" }],
           ]}}
@@ -365,7 +392,7 @@ async function handleUpdate(update: any) {
         return sendMessage(chatId, msg, { reply_markup: keyboard });
       }
       if (text === "/help") {
-        const help = `${s.commands}\n\n/start - Menu\n/live - ${s.liveMatches}\n/upcoming - ${s.upcoming}\n/matches - ${s.allMatches}\n/lang - ${s.changeLang}\n/help - Help\n\n${s.helpTip}`;
+        const help = `${line}\n${s.commands}\n${line}\n\n/start  ─  Menu\n/live    ─  ${s.liveMatches}\n/upcoming ─ ${s.upcoming}\n/matches ─ ${s.allMatches}\n/lang   ─  ${s.changeLang}\n/help   ─  Help\n\n${thinLine}\n${s.helpTip}`;
         return sendMessage(chatId, help, { reply_markup: mainMenuKeyboard(lang) });
       }
 
@@ -393,7 +420,7 @@ async function handleUpdate(update: any) {
         const newLang: Lang = data === "lang_en" ? "en" : "my";
         userLangs.set(chatId, newLang);
         const s = t(newLang);
-        const welcome = `${s.botTitle}\n${"─".repeat(28)}\n\n${s.langSet}\n\n${s.welcome}\n\n🔴 ${s.watchLive}\n🕐 ${s.checkUpcoming}\n🔮 ${s.getPredictions}\n📺 ${s.accessStreams}\n\n${s.getStarted}`;
+        const welcome = `${line}\n${s.botTitle}\n${line}\n\n✅ ${s.langSet}\n\n${thinLine}\n\n${s.welcome}\n\n🔴 ${s.watchLive}\n🕐 ${s.checkUpcoming}\n🔮 ${s.getPredictions}\n📺 ${s.accessStreams}\n\n${thinLine}\n\n${s.getStarted}`;
         return editMessage(chatId, msgId, welcome, { reply_markup: mainMenuKeyboard(newLang) });
       }
 
@@ -401,7 +428,7 @@ async function handleUpdate(update: any) {
       const s = t(lang);
 
       if (data === "menu_lang") {
-        return editMessage(chatId, msgId, s.chooseLang, {
+        return editMessage(chatId, msgId, `${line}\n${s.chooseLang}\n${line}`, {
           reply_markup: { inline_keyboard: [
             [{ text: "🇬🇧 English", callback_data: "lang_en" }, { text: "🇲🇲 မြန်မာ", callback_data: "lang_my" }],
             [{ text: s.backToMenu, callback_data: "menu_main" }],
@@ -410,7 +437,7 @@ async function handleUpdate(update: any) {
       }
 
       if (data === "menu_main" || data === "menu_refresh") {
-        return editMessage(chatId, msgId, `${s.botTitle}\n${"─".repeat(28)}\n\n${s.chooseOption}`, { reply_markup: mainMenuKeyboard(lang) });
+        return editMessage(chatId, msgId, `${line}\n${s.botTitle}\n${line}\n\n${s.chooseOption}`, { reply_markup: mainMenuKeyboard(lang) });
       }
       if (data === "menu_live") {
         const matches = await fetchMatches();
