@@ -1,13 +1,48 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// In-memory cache - 30 min TTL
-const cache = new Map<string, { data: unknown; expiry: number }>();
-const CACHE_TTL = 24 * 60 * 60 * 1000;
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+function getSupabase() {
+  return createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+  );
+}
+
+async function getCachedPrediction(cacheKey: string): Promise<unknown | null> {
+  try {
+    const sb = getSupabase();
+    const { data } = await sb
+      .from("prediction_cache")
+      .select("prediction")
+      .eq("cache_key", cacheKey)
+      .gt("expires_at", new Date().toISOString())
+      .maybeSingle();
+    return data?.prediction ?? null;
+  } catch (e) {
+    console.warn("Cache read error:", e.message);
+    return null;
+  }
+}
+
+async function setCachedPrediction(cacheKey: string, prediction: unknown): Promise<void> {
+  try {
+    const sb = getSupabase();
+    const expiresAt = new Date(Date.now() + CACHE_TTL_MS).toISOString();
+    await sb.from("prediction_cache").upsert(
+      { cache_key: cacheKey, prediction, expires_at: expiresAt },
+      { onConflict: "cache_key" }
+    );
+  } catch (e) {
+    console.warn("Cache write error:", e.message);
+  }
+}
 
 function buildPrompt(homeName: string, awayName: string, comp: string, matchScore: string, matchTime: string): string {
   return `You are an elite football betting analyst. Analyze this match and provide 5 betting tips.
@@ -170,21 +205,22 @@ serve(async (req) => {
     const matchScore = (score || "Not started").trim();
     const matchTime = (time || "Unknown").trim();
 
-    // Check cache
+    // Check DB cache first
     const cacheKey = `${homeName}-${awayName}-${matchScore}`;
-    const cached = cache.get(cacheKey);
-    if (cached && cached.expiry > Date.now()) {
-      return new Response(JSON.stringify(cached.data), {
+    const cached = await getCachedPrediction(cacheKey);
+    if (cached) {
+      console.log("Cache hit:", cacheKey);
+      return new Response(JSON.stringify(cached), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    console.log("Cache miss:", cacheKey);
     const prompt = buildPrompt(homeName, awayName, comp, matchScore, matchTime);
     const content = await getAIResponse(prompt);
 
     // Robust JSON extraction
     let cleaned = content.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
-    // Extract first JSON object if there's extra text
     const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error("No JSON object found in response");
     cleaned = jsonMatch[0];
@@ -202,7 +238,8 @@ serve(async (req) => {
       }
     }
 
-    cache.set(cacheKey, { data: prediction, expiry: Date.now() + CACHE_TTL });
+    // Save to DB cache (non-blocking)
+    setCachedPrediction(cacheKey, prediction);
 
     return new Response(JSON.stringify(prediction), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
