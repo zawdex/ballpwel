@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,9 +11,29 @@ const SUPABASE_URL = () => Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = () => Deno.env.get("SUPABASE_ANON_KEY")!;
 const GROQ_API_KEY = () => Deno.env.get("GROQ_API_KEY")!;
 
+const getSupabase = () => createClient(SUPABASE_URL(), Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
 // ─── i18n ───
 type Lang = "en" | "my";
-const userLangs = new Map<number, Lang>();
+const langCache = new Map<number, Lang>();
+
+async function getSavedLang(chatId: number): Promise<Lang | null> {
+  if (langCache.has(chatId)) return langCache.get(chatId)!;
+  const sb = getSupabase();
+  const { data } = await sb.from("telegram_user_settings").select("language").eq("chat_id", chatId).maybeSingle();
+  if (data?.language) {
+    const lang = data.language as Lang;
+    langCache.set(chatId, lang);
+    return lang;
+  }
+  return null;
+}
+
+async function saveLang(chatId: number, lang: Lang) {
+  langCache.set(chatId, lang);
+  const sb = getSupabase();
+  await sb.from("telegram_user_settings").upsert({ chat_id: chatId, language: lang, updated_at: new Date().toISOString() }, { onConflict: "chat_id" });
+}
 
 const t = (lang: Lang) => ({
   en: {
@@ -131,7 +152,7 @@ const t = (lang: Lang) => ({
   },
 })[lang];
 
-const getLang = (chatId: number): Lang => userLangs.get(chatId) || "my";
+const getLang = async (chatId: number): Promise<Lang> => (await getSavedLang(chatId)) || "my";
 
 // ─── Telegram helpers ───
 const tgApi = async (method: string, body: Record<string, unknown>) => {
@@ -356,10 +377,17 @@ async function handleUpdate(update: any) {
     if (update.message?.text) {
       const chatId = update.message.chat.id;
       const text = update.message.text.trim();
-      const lang = getLang(chatId);
+      const lang = await getLang(chatId);
       const s = t(lang);
 
       if (text === "/start") {
+        // If user already has a saved language, skip language selection
+        const savedLang = await getSavedLang(chatId);
+        if (savedLang) {
+          const s2 = t(savedLang);
+          const welcome = `${line}\n${s2.botTitle}\n${line}\n\n${s2.welcome}\n\n🔴 ${s2.watchLive}\n🕐 ${s2.checkUpcoming}\n🔮 ${s2.getPredictions}\n📺 ${s2.accessStreams}\n\n${thinLine}\n\n${s2.getStarted}`;
+          return sendMessage(chatId, welcome, { reply_markup: mainMenuKeyboard(savedLang) });
+        }
         return sendMessage(chatId,
           `${line}\n🌐 <b>Choose Language / ဘာသာစကားရွေးပါ</b>\n${line}`,
           { reply_markup: { inline_keyboard: [
@@ -418,13 +446,13 @@ async function handleUpdate(update: any) {
       // Language selection
       if (data === "lang_en" || data === "lang_my") {
         const newLang: Lang = data === "lang_en" ? "en" : "my";
-        userLangs.set(chatId, newLang);
+        await saveLang(chatId, newLang);
         const s = t(newLang);
         const welcome = `${line}\n${s.botTitle}\n${line}\n\n✅ ${s.langSet}\n\n${thinLine}\n\n${s.welcome}\n\n🔴 ${s.watchLive}\n🕐 ${s.checkUpcoming}\n🔮 ${s.getPredictions}\n📺 ${s.accessStreams}\n\n${thinLine}\n\n${s.getStarted}`;
         return editMessage(chatId, msgId, welcome, { reply_markup: mainMenuKeyboard(newLang) });
       }
 
-      const lang = getLang(chatId);
+      const lang = await getLang(chatId);
       const s = t(lang);
 
       if (data === "menu_lang") {
