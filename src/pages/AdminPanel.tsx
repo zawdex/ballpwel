@@ -27,8 +27,10 @@ import {
   LogOut,
   Globe,
   Palette,
-  Code2
+  Code2,
+  TicketPercent
 } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 
 // Allowed file types for upload
 const ALLOWED_FILE_TYPES = ['image/png', 'image/jpeg', 'image/svg+xml', 'image/webp'];
@@ -43,12 +45,14 @@ const AdminPanel = () => {
   const [appName, setAppName] = useState(settings.appName);
   const [primaryColor, setPrimaryColor] = useState(settings.primaryColor);
   const [developerLink, setDeveloperLink] = useState(settings.developerLink);
+  const [tickerText, setTickerText] = useState(settings.tickerText || '');
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isUploadingStreamLogo, setIsUploadingStreamLogo] = useState(false);
   const [isUploadingFavicon, setIsUploadingFavicon] = useState(false);
   const [isSavingName, setIsSavingName] = useState(false);
   const [isSavingColor, setIsSavingColor] = useState(false);
   const [isSavingDevLink, setIsSavingDevLink] = useState(false);
+  const [isSavingTicker, setIsSavingTicker] = useState(false);
   
   const logoInputRef = useRef<HTMLInputElement>(null);
   const streamLogoInputRef = useRef<HTMLInputElement>(null);
@@ -70,7 +74,8 @@ const AdminPanel = () => {
     setAppName(settings.appName);
     setPrimaryColor(settings.primaryColor);
     setDeveloperLink(settings.developerLink);
-  }, [settings.appName, settings.primaryColor, settings.developerLink]);
+    setTickerText(settings.tickerText || '');
+  }, [settings.appName, settings.primaryColor, settings.developerLink, settings.tickerText]);
 
   // Redirect if not authenticated or not admin
   useEffect(() => {
@@ -629,6 +634,48 @@ const AdminPanel = () => {
                   {t('save')}
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Ticker Text Manager */}
+          <Card className="border-border/50">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-yellow-500/10">
+                  <TicketPercent className="w-5 h-5 text-yellow-500" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Scrolling Ad Text</CardTitle>
+                  <CardDescription>Video Player အောက်မှာ ရွေ့ပြီးပြမယ့် ကြော်ငြာစာသားထည့်ပါ</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Textarea
+                value={tickerText}
+                onChange={(e) => setTickerText(e.target.value)}
+                placeholder="ကြော်ငြာစာသား ထည့်ပါ... (ဗလာထားရင် ပြမှာမဟုတ်ပါ)"
+                rows={3}
+              />
+              <Button 
+                onClick={async () => {
+                  setIsSavingTicker(true);
+                  const success = await updateSetting('ticker_text', tickerText.trim());
+                  setIsSavingTicker(false);
+                  if (success) {
+                    toast({ title: t('success'), description: 'Ticker text updated!' });
+                  }
+                }}
+                disabled={isSavingTicker || tickerText.trim() === (settings.tickerText || '')}
+                className="gap-2"
+              >
+                {isSavingTicker ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                {t('save')}
+              </Button>
             </CardContent>
           </Card>
 
