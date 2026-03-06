@@ -31,7 +31,7 @@ const formatUnixTime = (unix: string): string => {
 
 // Generate a stable ID from match data
 const generateStableId = (home: string, away: string, time: string): string => {
-  const raw = `${home.trim()}-${away.trim()}-${time.trim()}`;
+  const raw = `${(home || '').trim()}-${(away || '').trim()}-${(time || '').trim()}`;
   let hash = 0;
   for (let i = 0; i < raw.length; i++) {
     const char = raw.charCodeAt(i);
