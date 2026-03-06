@@ -325,7 +325,7 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
         setShowControls(false);
         setShowVolumeSlider(false);
       }
-    }, 3500);
+    }, 3000);
   }, [isPlaying]);
 
   const togglePlay = () => {
