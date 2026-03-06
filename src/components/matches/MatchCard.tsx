@@ -42,8 +42,35 @@ const MatchCard = memo(({ match, index = 0, isFavoriteHome, isFavoriteAway, onTo
     return () => clearTimeout(timer);
   }, [index]);
 
+  // Close share menu on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (shareRef.current && !shareRef.current.contains(e.target as Node)) setShowShare(false);
+    };
+    if (showShare) document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showShare]);
+
   const hasStreams = match.authors && match.authors.length > 0;
   const encodedId = encodeURIComponent(match.id);
+  const matchUrl = `${window.location.origin}/matches/${encodedId}`;
+  const shareText = `${match.home_name} vs ${match.away_name}${match.score ? ' | ' + match.score : ''}`;
+
+  const handleShare = (type: 'whatsapp' | 'telegram' | 'copy') => (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (type === 'whatsapp') {
+      window.open(`https://wa.me/?text=${encodeURIComponent(shareText + '\n' + matchUrl)}`, '_blank');
+    } else if (type === 'telegram') {
+      window.open(`https://t.me/share/url?url=${encodeURIComponent(matchUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
+    } else {
+      navigator.clipboard.writeText(matchUrl);
+      setCopied(true);
+      toast.success('Link copied!');
+      setTimeout(() => setCopied(false), 2000);
+    }
+    setShowShare(false);
+  };
 
   const { data: prediction, isLoading: predLoading } = usePrediction(
     match.home_name,
