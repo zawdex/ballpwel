@@ -21,6 +21,43 @@ function isRateLimited(ip: string): boolean {
   return false;
 }
 
+function formatMatchTime(timestamp: string): string {
+  try {
+    const ts = parseInt(timestamp) * 1000;
+    const date = new Date(ts);
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${hours}:${minutes} ${day}/${month}/${year}`;
+  } catch {
+    return '';
+  }
+}
+
+function mapMatchStatus(status: string): string {
+  // The app uses time-based logic, but we can embed status hints in the score/time
+  switch (status) {
+    case 'live': return 'live';
+    case 'finished': return 'finished';
+    case 'vs':
+    default: return 'upcoming';
+  }
+}
+
+interface RawMatch {
+  match_time: string;
+  match_status: string;
+  home_team_name: string;
+  home_team_logo: string;
+  away_team_name: string;
+  away_team_logo: string;
+  league_name: string;
+  match_score: string | null;
+  servers: Array<{ name: string; stream_url: string; referer: string }>;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -53,9 +90,44 @@ serve(async (req) => {
       throw new Error('External service unavailable')
     }
 
-    const data = await response.json()
+    const rawData: RawMatch[] = await response.json()
 
-    return new Response(JSON.stringify(data), {
+    // Map to the format expected by the frontend
+    const mapped = (rawData || []).map((m: RawMatch) => {
+      const time = formatMatchTime(m.match_time);
+      const statusHint = mapMatchStatus(m.match_status);
+      
+      // Build score string
+      let score = 'vs';
+      if (m.match_score) {
+        score = m.match_score;
+      } else if (statusHint === 'live') {
+        score = '0 - 0'; // Live but no score yet
+      }
+
+      // Map servers to authors format
+      const authors = (m.servers || []).map((s) => ({
+        name: s.name || 'Stream',
+        url: s.stream_url || '',
+        logo: '',
+        referer: s.referer || '',
+      }));
+
+      return {
+        view_url: '',
+        label: m.league_name || '',
+        time: statusHint === 'live' ? `Live ${time}` : time,
+        home_logo: m.home_team_logo || '',
+        home_name: m.home_team_name || '',
+        score,
+        away_logo: m.away_team_logo || '',
+        away_name: m.away_team_name || '',
+        url: '',
+        authors,
+      };
+    });
+
+    return new Response(JSON.stringify(mapped), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })

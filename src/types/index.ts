@@ -2,6 +2,7 @@ export interface Author {
   name: string;
   url: string;
   logo: string;
+  referer?: string;
 }
 
 export interface Match {
