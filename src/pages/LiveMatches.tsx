@@ -27,10 +27,8 @@ const LiveMatches = () => {
             <Zap className="w-6 h-6 text-live animate-pulse" />
           </div>
           <div>
-            <h1 className="font-display text-2xl md:text-3xl font-bold animate-slide-up">
-              <span className="text-gradient inline-block animate-[gradient-shift_3s_ease_infinite] bg-[length:200%_200%]">
-                Live Matches
-              </span>
+            <h1 className="font-display text-2xl md:text-3xl font-bold animate-slide-up text-foreground">
+              Live Matches
             </h1>
             <p className="text-muted-foreground animate-slide-up [animation-delay:100ms] [animation-fill-mode:backwards]">
               {liveMatches.length} match{liveMatches.length !== 1 ? 'es' : ''} happening now
