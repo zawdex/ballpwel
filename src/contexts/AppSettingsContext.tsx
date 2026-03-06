@@ -8,6 +8,7 @@ interface AppSettings {
   faviconUrl: string;
   primaryColor: string;
   developerLink: string;
+  tickerText: string;
 }
 
 interface AppSettingsContextType {
@@ -24,6 +25,7 @@ const defaultSettings: AppSettings = {
   faviconUrl: '',
   primaryColor: '142 71% 45%',
   developerLink: 'https://t.me/itachiXCoder',
+  tickerText: '',
 };
 
 const AppSettingsContext = createContext<AppSettingsContextType | undefined>(undefined);
@@ -55,6 +57,8 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
             newSettings.primaryColor = item.setting_value || defaultSettings.primaryColor;
           } else if (item.setting_key === 'developer_link') {
             newSettings.developerLink = item.setting_value || defaultSettings.developerLink;
+          } else if (item.setting_key === 'ticker_text') {
+            newSettings.tickerText = item.setting_value || '';
           }
         });
         setSettings(newSettings);
