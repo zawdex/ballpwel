@@ -23,7 +23,7 @@ import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import PlayerTicker from './PlayerTicker';
-import PlayerAdButton from './PlayerAdButton';
+import { useAppSettings } from '@/contexts/AppSettingsContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,6 +47,7 @@ interface QualityLevel {
 }
 
 const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
+  const { settings } = useAppSettings();
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hlsRef = useRef<Hls | null>(null);
@@ -482,8 +483,10 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
         }}
       />
 
-      {/* Ad Button */}
-      <PlayerAdButton />
+      {/* App Icon - top right */}
+      <div className="absolute top-3 right-3 z-40 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm border-2 border-white/30 flex items-center justify-center overflow-hidden shadow-lg shadow-black/30">
+        <img src={settings.appLogoUrl} alt="App" className="w-7 h-7 rounded-full object-cover" />
+      </div>
 
       {/* Ticker */}
       <PlayerTicker />
