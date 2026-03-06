@@ -3,8 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { footballAPI } from '@/services/api';
 import { Match, MatchFilters } from '@/types';
 import { getMatchStatus } from '@/hooks/useMatches';
+import { useFavoriteTeams } from '@/hooks/useFavoriteTeams';
 import MatchList from '@/components/matches/MatchList';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface DashboardProps {
@@ -49,6 +50,7 @@ const getLeaguePriority = (label: string): number => {
 
 const Dashboard = ({ filters, onFilterChange }: DashboardProps) => {
   const [activeLeague, setActiveLeague] = useState('all');
+  const { favorites, toggleFavorite, isFavorite, hasFavoriteTeam } = useFavoriteTeams();
 
   const { data: allMatches, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ['matches'],
@@ -77,16 +79,19 @@ const Dashboard = ({ filters, onFilterChange }: DashboardProps) => {
       );
     }
 
-    // Sort: live first, then upcoming, then finished; within each group, popular leagues first
+    // Sort: favorites first, then live, upcoming, finished; within each group, popular leagues first
     return result.sort((a, b) => {
+      const aFav = hasFavoriteTeam(a.home_name, a.away_name) ? 0 : 1;
+      const bFav = hasFavoriteTeam(b.home_name, b.away_name) ? 0 : 1;
+      if (aFav !== bFav) return aFav - bFav;
+
       const statusOrder = { live: 0, upcoming: 1, finished: 2 };
       const sa = statusOrder[getMatchStatus(a.score, a.time, a.match_status)] ?? 2;
       const sb = statusOrder[getMatchStatus(b.score, b.time, b.match_status)] ?? 2;
       if (sa !== sb) return sa - sb;
-      // Within same status, popular leagues first
       return getLeaguePriority(a.label) - getLeaguePriority(b.label);
     });
-  }, [allMatches, activeLeague, filters.searchQuery]);
+  }, [allMatches, activeLeague, filters.searchQuery, favorites]);
 
   // Only show tabs that have matches
   const availableLeagues = useMemo(() => {
@@ -127,6 +132,12 @@ const Dashboard = ({ filters, onFilterChange }: DashboardProps) => {
               {liveCount} LIVE
             </span>
           )}
+          {favorites.length > 0 && (
+            <span className="ml-2 inline-flex items-center gap-1 text-xs font-bold text-yellow-400">
+              <Star className="w-3 h-3 fill-yellow-400" />
+              {favorites.length}
+            </span>
+          )}
         </p>
       </div>
 
@@ -149,6 +160,8 @@ const Dashboard = ({ filters, onFilterChange }: DashboardProps) => {
         matches={filteredMatches}
         isLoading={isLoading}
         error={error as Error}
+        isFavorite={isFavorite}
+        onToggleFavorite={toggleFavorite}
       />
     </div>
   );

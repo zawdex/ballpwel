@@ -10,9 +10,11 @@ interface MatchListProps {
   matches: Match[] | undefined;
   isLoading: boolean;
   error: Error | null;
+  isFavorite?: (teamName: string) => boolean;
+  onToggleFavorite?: (teamName: string) => void;
 }
 
-const MatchList = ({ matches, isLoading, error }: MatchListProps) => {
+const MatchList = ({ matches, isLoading, error, isFavorite, onToggleFavorite }: MatchListProps) => {
   // Fetch banner frequency setting
   const { data: banners } = useQuery({
     queryKey: ['ad-banners'],
@@ -84,7 +86,14 @@ const MatchList = ({ matches, isLoading, error }: MatchListProps) => {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 stagger-children">
       {items.map((item, index) =>
         item.type === 'match' ? (
-          <MatchCard key={item.key} match={item.match!} index={index} />
+          <MatchCard
+            key={item.key}
+            match={item.match!}
+            index={index}
+            isFavoriteHome={isFavorite?.(item.match!.home_name)}
+            isFavoriteAway={isFavorite?.(item.match!.away_name)}
+            onToggleFavorite={onToggleFavorite}
+          />
         ) : (
           <div key={item.key} className="col-span-1 md:col-span-2 lg:col-span-3">
             <AdBanner index={item.adIndex!} />
