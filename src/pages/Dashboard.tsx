@@ -15,21 +15,19 @@ interface DashboardProps {
 // Popular leagues keywords to match against labels
 const POPULAR_LEAGUES = [
   { key: 'all', label: 'All' },
-  { key: 'eng', label: 'England' },
-  { key: 'spa d1|spa d2', label: 'La Liga' },
-  { key: 'ger d1|ger d2', label: 'Germany' },
-  { key: 'ita d1|ita d2', label: 'Serie A' },
-  { key: 'fra d1|fra d2', label: 'Ligue 1' },
-  { key: 'ucl|champion', label: 'UCL' },
-  { key: 'uel|europa', label: 'Europa' },
-  { key: 'hol d1', label: 'Eredivisie' },
-  { key: 'ksa pr', label: 'Saudi' },
-  { key: 'jpn d1', label: 'J-League' },
-  { key: 'kor d1', label: 'K-League' },
+  { key: 'premier|english premier', label: 'EPL' },
+  { key: 'spanish|la liga', label: 'La Liga' },
+  { key: 'german|bundesliga', label: 'Bundesliga' },
+  { key: 'italian|serie a', label: 'Serie A' },
+  { key: 'french|ligue 1', label: 'Ligue 1' },
+  { key: 'champion', label: 'UCL' },
+  { key: 'europa', label: 'Europa' },
+  { key: 'dutch|eredivisie', label: 'Eredivisie' },
+  { key: 'saudi|arab', label: 'Saudi' },
+  { key: 'j-league|japanese', label: 'J-League' },
   { key: 'nba', label: 'NBA' },
-  { key: 'cha sl', label: 'China' },
-  { key: 'mex d1|mex d2', label: 'Mexico' },
-  { key: 'aus d1', label: 'Australia' },
+  { key: 'mexican|liga mx', label: 'Mexico' },
+  { key: 'australian|a-league', label: 'Australia' },
 ];
 
 const matchesLeague = (label: string, key: string): boolean => {
