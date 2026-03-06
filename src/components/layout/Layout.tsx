@@ -49,21 +49,47 @@ const Layout = ({ onSearch, searchQuery }: LayoutProps) => {
 
       {/* Bottom Navigation - mobile only */}
       <nav className="bottom-nav">
-        <div className="flex items-center justify-around py-2 px-4">
-          {bottomNavItems.map(({ path, label, icon: Icon }) => (
-            <Link
-              key={path}
-              to={path}
-              className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all duration-200 min-w-[72px] ${
-                isActive(path)
-                  ? 'bg-primary/15 text-primary'
-                  : 'text-muted-foreground'
-              }`}
-            >
-              <Icon className={`w-5 h-5 ${isActive(path) ? 'text-primary' : ''}`} />
-              <span className="text-[10px] font-semibold">{label}</span>
-            </Link>
-          ))}
+        <div className="flex items-center justify-around py-1.5 px-6 relative">
+          {bottomNavItems.map(({ path, label, icon: Icon }) => {
+            const active = isActive(path);
+            const isLive = path === '/live';
+            return (
+              <Link
+                key={path}
+                to={path}
+                className={`relative flex flex-col items-center gap-0.5 py-2 px-5 rounded-2xl transition-all duration-300 min-w-[72px] ${
+                  active
+                    ? 'text-primary'
+                    : 'text-muted-foreground active:scale-95'
+                }`}
+              >
+                {/* Active pill background */}
+                {active && (
+                  <div className="absolute inset-0 bg-primary/12 rounded-2xl border border-primary/20" />
+                )}
+
+                {/* Icon with indicator */}
+                <div className="relative z-10">
+                  <Icon className={`w-5 h-5 transition-all duration-200 ${active ? 'text-primary scale-110' : ''}`} />
+                  {isLive && (
+                    <span className="absolute -top-0.5 -right-1.5 w-2 h-2 rounded-full bg-live animate-pulse shadow-sm shadow-live/50" />
+                  )}
+                </div>
+
+                {/* Label */}
+                <span className={`relative z-10 text-[10px] font-bold tracking-wide transition-all duration-200 ${
+                  active ? 'text-primary' : ''
+                }`}>
+                  {label}
+                </span>
+
+                {/* Active dot indicator */}
+                {active && (
+                  <div className="absolute -bottom-0.5 w-1 h-1 rounded-full bg-primary" />
+                )}
+              </Link>
+            );
+          })}
         </div>
       </nav>
     </div>
