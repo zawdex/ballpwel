@@ -17,6 +17,7 @@ export interface Match {
   away_name: string;
   url: string;
   authors: Author[];
+  match_status?: string;
 }
 
 export type MatchStatus = 'live' | 'upcoming' | 'finished';

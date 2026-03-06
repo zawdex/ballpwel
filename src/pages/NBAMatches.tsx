@@ -23,8 +23,8 @@ const NBAMatches = () => {
       )
       .sort((a, b) => {
         const order = { live: 0, upcoming: 1, finished: 2 };
-        const sa = order[getMatchStatus(a.score, a.time)] ?? 2;
-        const sb = order[getMatchStatus(b.score, b.time)] ?? 2;
+        const sa = order[getMatchStatus(a.score, a.time, a.match_status)] ?? 2;
+        const sb = order[getMatchStatus(b.score, b.time, b.match_status)] ?? 2;
         return sa - sb;
       });
   }, [allMatches]);
