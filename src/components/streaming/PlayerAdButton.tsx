@@ -52,45 +52,49 @@ const PlayerAdButton = () => {
         <Megaphone className="w-4 h-4 text-yellow-400" />
       </button>
 
-      {/* Ad card popup */}
+      {/* Full-screen ad overlay */}
       {showCard && (
-        <div className="absolute top-24 left-3 z-50 animate-fade-in">
-          <div className="relative bg-card/95 backdrop-blur-xl rounded-xl border border-border shadow-2xl overflow-hidden max-w-[240px] sm:max-w-[280px]">
-            {/* Close button */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowCard(false);
-              }}
-              className="absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-destructive/80 text-destructive-foreground flex items-center justify-center hover:bg-destructive transition-colors"
-            >
-              <X className="w-3 h-3" />
-            </button>
+        <div
+          className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowCard(false);
+          }}
+        >
+          {/* Close button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowCard(false);
+            }}
+            className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:bg-white/30 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
 
-            {/* Ad content */}
-            <div
-              onClick={(e) => {
-                e.stopPropagation();
-                handleAdClick();
-              }}
-              className={ad.link_url ? 'cursor-pointer' : ''}
-            >
-              <img
-                src={ad.image_url}
-                alt={ad.name}
-                className="w-full object-contain"
-              />
-              <div className="p-3">
-                <p className="text-xs font-semibold text-foreground truncate">{ad.name}</p>
-                {ad.link_url && (
-                  <p className="text-[10px] text-primary mt-0.5">Tap to learn more →</p>
-                )}
-              </div>
-            </div>
+          {/* Ad label */}
+          <div className="absolute top-3 left-3 px-2 py-1 bg-black/60 backdrop-blur-sm rounded-md text-[10px] text-white/80 font-bold uppercase tracking-wider">
+            Ad
+          </div>
 
-            {/* Ad label */}
-            <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-black/60 rounded text-[9px] text-white/80 font-bold uppercase">
-              Ad
+          {/* Ad content - fills video area */}
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAdClick();
+            }}
+            className={`w-full h-full flex flex-col items-center justify-center p-4 ${ad.link_url ? 'cursor-pointer' : ''}`}
+          >
+            <img
+              src={ad.image_url}
+              alt={ad.name}
+              className="max-w-full max-h-[75%] object-contain rounded-lg shadow-2xl"
+            />
+            <div className="mt-3 text-center">
+              <p className="text-sm font-semibold text-white">{ad.name}</p>
+              {ad.link_url && (
+                <p className="text-xs text-primary mt-1">Tap to learn more →</p>
+              )}
             </div>
           </div>
         </div>
