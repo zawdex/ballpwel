@@ -18,7 +18,7 @@ interface MatchCardProps {
   onToggleFavorite?: (teamName: string) => void;
 }
 
-const MatchCard = memo(({ match, index = 0 }: MatchCardProps) => {
+const MatchCard = memo(({ match, index = 0, isFavoriteHome, isFavoriteAway, onToggleFavorite }: MatchCardProps) => {
   const status = getMatchStatus(match.score, match.time, match.match_status);
   const prevStatusRef = useRef<MatchStatus>(status);
   const [justWentLive, setJustWentLive] = useState(false);
