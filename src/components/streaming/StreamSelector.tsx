@@ -1,6 +1,6 @@
+import { useState } from 'react';
 import { Author } from '@/types';
-import { Play, Radio, ExternalLink, Check, Globe, Zap, Tv, Signal } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Play, Radio, ExternalLink, Check, Globe, Zap, Tv, Signal, ChevronDown, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import StreamQualityBadge from './StreamQualityBadge';
 
@@ -13,206 +13,175 @@ interface StreamSelectorProps {
 
 const StreamSelector = ({ streams, selectedStream, onSelectStream, isLive = true }: StreamSelectorProps) => {
   const { t } = useLanguage();
+  const [isExpanded, setIsExpanded] = useState(true);
 
-  // Show unavailable state when match is not live
   if (!isLive) {
     return (
-      <div className="text-center py-12 bg-gradient-to-br from-card via-card to-secondary/20 rounded-2xl border border-border relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-muted-foreground/20 rounded-full blur-3xl" />
-        </div>
-        <div className="relative">
-          <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-muted/50 flex items-center justify-center border border-border">
-            <Radio className="w-10 h-10 text-muted-foreground" />
-          </div>
-          <h3 className="text-lg font-bold mb-2 text-muted-foreground">{t('streamsUnavailableTitle')}</h3>
-          <p className="text-muted-foreground/70 text-sm">{t('streamsUnavailableDesc')}</p>
-        </div>
+      <div className="text-center py-10 bg-card rounded-xl border border-border">
+        <Radio className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+        <h3 className="text-sm font-semibold text-muted-foreground">{t('streamsUnavailableTitle')}</h3>
+        <p className="text-xs text-muted-foreground/60 mt-1">{t('streamsUnavailableDesc')}</p>
       </div>
     );
   }
 
   if (!streams || streams.length === 0) {
     return (
-      <div className="text-center py-12 bg-gradient-to-br from-card via-card to-secondary/20 rounded-2xl border border-border relative overflow-hidden">
-        {/* Background pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-muted-foreground/20 rounded-full blur-3xl" />
-        </div>
-        
-        <div className="relative">
-          <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-muted/50 flex items-center justify-center border border-border">
-            <Radio className="w-10 h-10 text-muted-foreground" />
-          </div>
-          <h3 className="text-lg font-bold mb-2">{t('noStreams')}</h3>
-          <p className="text-muted-foreground text-sm">{t('noStreamsDesc')}</p>
-        </div>
+      <div className="text-center py-10 bg-card rounded-xl border border-border">
+        <Radio className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+        <h3 className="text-sm font-semibold">{t('noStreams')}</h3>
+        <p className="text-xs text-muted-foreground mt-1">{t('noStreamsDesc')}</p>
       </div>
     );
   }
 
   const getStreamType = (url: string) => {
-    if (url?.includes('.m3u8')) return { label: t('streamTypeHLS'), icon: Zap, color: 'text-green-400' };
-    if (url?.includes('embed')) return { label: t('streamTypeEmbed'), icon: Globe, color: 'text-blue-400' };
-    return { label: t('streamTypeExternal'), icon: ExternalLink, color: 'text-orange-400' };
+    if (url?.includes('.m3u8')) return { label: 'HLS', icon: Zap, color: 'text-emerald-400', bg: 'bg-emerald-500/10' };
+    if (url?.includes('embed')) return { label: 'Embed', icon: Globe, color: 'text-blue-400', bg: 'bg-blue-500/10' };
+    return { label: 'Web', icon: ExternalLink, color: 'text-amber-400', bg: 'bg-amber-500/10' };
   };
 
   const estimateQuality = (stream: Author): 'HD' | 'SD' | 'LOW' => {
     const name = stream.name?.toLowerCase() || '';
     const url = stream.url?.toLowerCase() || '';
-    
-    if (name.includes('hd') || name.includes('1080') || name.includes('720') || url.includes('hd')) {
-      return 'HD';
-    }
-    if (name.includes('sd') || name.includes('480') || name.includes('360')) {
-      return 'SD';
-    }
-    if (name.includes('low') || name.includes('240')) {
-      return 'LOW';
-    }
+    if (name.includes('hd') || name.includes('1080') || name.includes('720') || url.includes('hd')) return 'HD';
+    if (name.includes('low') || name.includes('240')) return 'LOW';
     return 'SD';
   };
 
+  const selectedIndex = selectedStream ? streams.indexOf(selectedStream) : -1;
+
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/30">
-            <Signal className="w-5 h-5 text-primary" />
+    <div className="rounded-xl border border-border bg-card overflow-hidden">
+      {/* Collapsible Header */}
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-secondary/30 transition-colors"
+      >
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
+            <Signal className="w-4 h-4 text-primary" />
           </div>
-          <div>
-            <h3 className="text-lg font-bold">{t('availableStreams')}</h3>
-            <p className="text-xs text-muted-foreground">
+          <div className="text-left">
+            <h3 className="text-sm font-bold leading-none">{t('availableStreams')}</h3>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
               {streams.length} {streams.length > 1 ? t('sources') : t('source')}
+              {selectedStream && (
+                <span className="text-primary ml-1">• {selectedStream.name} {t('active')}</span>
+              )}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground bg-secondary px-3 py-1.5 rounded-full border border-border">
-            {streams.length} {streams.length > 1 ? t('streams') : t('stream')}
-          </span>
-        </div>
-      </div>
-      
-      {/* Stream Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {streams.map((stream, index) => {
-          const isSelected = selectedStream === stream;
-          const streamType = getStreamType(stream.url);
-          const StreamIcon = streamType.icon;
-          const quality = estimateQuality(stream);
+        <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+      </button>
 
-          return (
-            <button
-              key={index}
-              onClick={() => onSelectStream(stream)}
-              className={`relative flex flex-col p-4 rounded-2xl border transition-all duration-300 text-left group overflow-hidden ${
-                isSelected
-                  ? 'border-primary bg-gradient-to-br from-primary/15 to-primary/5 ring-2 ring-primary/30 shadow-lg shadow-primary/10'
-                  : 'border-border bg-gradient-to-br from-card to-card/80 hover:border-primary/40 hover:bg-card/90 hover:shadow-lg hover:shadow-primary/5'
-              }`}
-            >
-              {/* Selected glow effect */}
-              {isSelected && (
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent pointer-events-none" />
-              )}
+      {/* Stream List */}
+      <div className={`transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+        <div className="border-t border-border">
+          {streams.map((stream, index) => {
+            const isSelected = selectedStream === stream;
+            const streamType = getStreamType(stream.url);
+            const StreamIcon = streamType.icon;
+            const quality = estimateQuality(stream);
 
-              {/* Top section */}
-              <div className="flex items-start gap-3 relative">
-                {/* Stream Logo */}
-                <div className={`w-14 h-14 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0 transition-all duration-300 ${
-                  isSelected 
-                    ? 'bg-gradient-to-br from-primary/30 to-primary/10 border-2 border-primary/40' 
-                    : 'bg-gradient-to-br from-secondary to-secondary/50 border border-border group-hover:border-primary/30'
+            return (
+              <button
+                key={index}
+                onClick={() => onSelectStream(stream)}
+                className={`w-full flex items-center gap-3 px-4 py-3 transition-all duration-200 relative ${
+                  isSelected
+                    ? 'bg-primary/10'
+                    : 'hover:bg-secondary/40'
+                } ${index !== streams.length - 1 ? 'border-b border-border/50' : ''}`}
+              >
+                {/* Active indicator bar */}
+                {isSelected && (
+                  <div className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full bg-primary" />
+                )}
+
+                {/* Stream number / logo */}
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${
+                  isSelected
+                    ? 'bg-primary text-primary-foreground shadow-md shadow-primary/30'
+                    : 'bg-secondary/60 text-muted-foreground'
                 }`}>
                   {stream.logo ? (
                     <img
                       src={stream.logo}
                       alt={stream.name}
-                      className="w-10 h-10 object-contain"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
+                      className="w-7 h-7 object-contain rounded"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                     />
                   ) : (
-                    <Tv className={`w-6 h-6 ${isSelected ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'} transition-colors`} />
+                    <span className="text-sm font-bold">{index + 1}</span>
                   )}
                 </div>
 
-                {/* Stream Info */}
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold truncate pr-6 text-foreground">{stream.name || `Stream ${index + 1}`}</p>
-                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                {/* Info */}
+                <div className="flex-1 min-w-0 text-left">
+                  <div className="flex items-center gap-2">
+                    <p className={`text-sm font-semibold truncate ${isSelected ? 'text-primary' : 'text-foreground'}`}>
+                      {stream.name || `Stream ${index + 1}`}
+                    </p>
+                    {isSelected && (
+                      <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-primary/20 flex-shrink-0">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                        <span className="text-[9px] font-bold text-primary uppercase">{t('active')}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-1">
                     <StreamQualityBadge quality={quality} showIcon={false} />
-                    <span className={`inline-flex items-center gap-1 text-xs ${streamType.color} bg-secondary/50 px-2 py-0.5 rounded-full`}>
-                      <StreamIcon className="w-3 h-3" />
+                    <span className={`inline-flex items-center gap-0.5 text-[10px] ${streamType.color} ${streamType.bg} px-1.5 py-0.5 rounded font-medium`}>
+                      <StreamIcon className="w-2.5 h-2.5" />
                       {streamType.label}
                     </span>
+                    {stream.url && (
+                      <span className="text-[10px] text-muted-foreground/50 truncate max-w-[100px]">
+                        {(() => { try { return new URL(stream.url).hostname; } catch { return ''; } })()}
+                      </span>
+                    )}
                   </div>
                 </div>
 
-                {/* Selected Check */}
-                {isSelected && (
-                  <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-primary flex items-center justify-center shadow-lg">
-                    <Check className="w-4 h-4 text-primary-foreground" />
-                  </div>
-                )}
-              </div>
-
-              {/* Bottom section */}
-              <div className="mt-3 pt-3 border-t border-border/50">
-                <div className="flex items-center justify-between">
-                  {stream.url && (
-                    <p className="text-xs text-muted-foreground truncate max-w-[70%]">
-                      {(() => {
-                        try {
-                          return new URL(stream.url).hostname;
-                        } catch {
-                          return t('externalLink');
-                        }
-                      })()}
-                    </p>
-                  )}
-                  
-                  {/* Status indicator */}
+                {/* Right side */}
+                <div className="flex items-center gap-2 flex-shrink-0">
                   {isSelected ? (
-                    <span className="flex items-center gap-1.5 text-xs text-primary font-medium">
-                      <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                      {t('active')}
-                    </span>
+                    <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                      <Check className="w-3.5 h-3.5 text-primary-foreground" />
+                    </div>
                   ) : (
-                    <span className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                      Click to select
-                    </span>
+                    <div className="w-6 h-6 rounded-full border border-border flex items-center justify-center group-hover:border-primary/40">
+                      <Play className="w-3 h-3 text-muted-foreground ml-0.5" />
+                    </div>
                   )}
                 </div>
-              </div>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Action Buttons */}
-      {selectedStream && (
-        <div className="flex flex-col sm:flex-row gap-3 pt-2">
-          <Button
-            className="flex-1 gap-2 h-12 text-base font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/20"
-            onClick={() => window.open(selectedStream.url, '_blank')}
-          >
-            <ExternalLink className="w-5 h-5" />
-            {t('openInNewTab')}
-          </Button>
-          <Button
-            variant="outline"
-            className="flex-1 gap-2 h-12 text-base font-semibold border-2 hover:bg-primary/10 hover:border-primary"
-            onClick={() => onSelectStream(selectedStream)}
-          >
-            <Play className="w-5 h-5" />
-            {t('playEmbedded')}
-          </Button>
+              </button>
+            );
+          })}
         </div>
-      )}
+
+        {/* Quick actions for selected stream */}
+        {selectedStream && (
+          <div className="border-t border-border px-4 py-2.5 bg-secondary/20 flex items-center gap-2">
+            <button
+              onClick={() => window.open(selectedStream.url, '_blank', 'noopener,noreferrer')}
+              className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground py-2 rounded-lg hover:bg-secondary/50 transition-colors"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              {t('openInNewTab')}
+            </button>
+            <div className="w-px h-5 bg-border" />
+            <button
+              onClick={() => onSelectStream(selectedStream)}
+              className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 py-2 rounded-lg hover:bg-primary/10 transition-colors"
+            >
+              <Play className="w-3.5 h-3.5 fill-current" />
+              {t('playEmbedded')}
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
