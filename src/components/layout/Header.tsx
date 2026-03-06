@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, Tv, Zap, Calendar, Trophy, Settings, X, Code2 } from 'lucide-react';
+import { Search, Tv, Zap, Calendar, Trophy, Settings, X, Code2, Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAppSettings } from '@/contexts/AppSettingsContext';
+import { useTheme } from '@/hooks/useTheme';
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
 import TelegramLink from '@/components/ui/TelegramLink';
 
@@ -19,6 +20,7 @@ const Header = ({ onSearch, searchQuery }: HeaderProps) => {
   const location = useLocation();
   const { t } = useLanguage();
   const { settings } = useAppSettings();
+  const { theme, toggleTheme } = useTheme();
 
   const navLinks = [
     { path: '/', label: t('allMatches'), icon: Trophy },
@@ -116,6 +118,14 @@ const Header = ({ onSearch, searchQuery }: HeaderProps) => {
                   </a>
                 )}
                 <TelegramLink />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleTheme}
+                  className="text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl h-8 w-8 transition-colors"
+                >
+                  {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                </Button>
                 <LanguageSwitcher />
               </div>
 
@@ -134,6 +144,14 @@ const Header = ({ onSearch, searchQuery }: HeaderProps) => {
                     </Button>
                   </a>
                 )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleTheme}
+                  className="text-muted-foreground hover:text-primary rounded-xl h-8 w-8 transition-colors"
+                >
+                  {theme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+                </Button>
                 <LanguageSwitcher />
               </div>
             </div>
