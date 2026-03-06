@@ -12,6 +12,7 @@ import Dashboard from "@/pages/Dashboard";
 import MatchDetail from "@/pages/MatchDetail";
 import LiveMatches from "@/pages/LiveMatches";
 import UpcomingMatches from "@/pages/UpcomingMatches";
+import NBAMatches from "@/pages/NBAMatches";
 import AdminPanel from "@/pages/AdminPanel";
 import Login from "@/pages/Login";
 import NotFound from "./pages/NotFound";
@@ -55,6 +56,7 @@ const App = () => {
                   <Route path="/matches/:matchId" element={<MatchDetail />} />
                   <Route path="/live" element={<LiveMatches />} />
                   <Route path="/upcoming" element={<UpcomingMatches />} />
+                  <Route path="/basketball" element={<NBAMatches />} />
                 </Route>
                 <Route path="/admin" element={<AdminPanel />} />
                 <Route path="/login" element={<Login />} />
