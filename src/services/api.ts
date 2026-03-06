@@ -5,7 +5,7 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 // Generate a stable ID from match data (team names + time)
 const generateStableId = (match: Match): string => {
-  const raw = `${match.home_name.trim()}-${match.away_name.trim()}-${match.time.trim()}`;
+  const raw = `${(match.home_name || '').trim()}-${(match.away_name || '').trim()}-${(match.time || '').trim()}`;
   let hash = 0;
   for (let i = 0; i < raw.length; i++) {
     const char = raw.charCodeAt(i);

@@ -15,18 +15,19 @@ interface DashboardProps {
 // Popular leagues keywords to match against labels
 const POPULAR_LEAGUES = [
   { key: 'all', label: 'All' },
-  { key: 'premier', label: 'EPL' },
+  { key: 'premier|english premier', label: 'EPL' },
   { key: 'spanish|la liga', label: 'La Liga' },
   { key: 'german|bundesliga', label: 'Bundesliga' },
   { key: 'italian|serie a', label: 'Serie A' },
   { key: 'french|ligue 1', label: 'Ligue 1' },
   { key: 'champion', label: 'UCL' },
   { key: 'europa', label: 'Europa' },
-  { key: 'asian elite|afc', label: 'AFC' },
-  { key: 'argentin', label: 'Argentina' },
-  { key: 'mexican', label: 'Mexico' },
-  { key: 'indonesian', label: 'Indonesia' },
-  { key: 'australian', label: 'Australia' },
+  { key: 'dutch|eredivisie', label: 'Eredivisie' },
+  { key: 'saudi|arab', label: 'Saudi' },
+  { key: 'j-league|japanese', label: 'J-League' },
+  { key: 'nba', label: 'NBA' },
+  { key: 'mexican|liga mx', label: 'Mexico' },
+  { key: 'australian|a-league', label: 'Australia' },
 ];
 
 const matchesLeague = (label: string, key: string): boolean => {
