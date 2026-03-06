@@ -5,6 +5,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// In-memory cache
+let cachedData: { data: unknown; timestamp: number } | null = null;
+const CACHE_TTL = 30 * 1000; // 30 seconds
+
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT = 60;
 const RATE_WINDOW = 60 * 1000;
@@ -25,11 +29,11 @@ function formatMatchTime(timestamp: string): string {
   try {
     const ts = parseInt(timestamp) * 1000;
     const date = new Date(ts);
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
+    const hours = date.getUTCHours().toString().padStart(2, '0');
+    const minutes = date.getUTCMinutes().toString().padStart(2, '0');
+    const day = date.getUTCDate().toString().padStart(2, '0');
+    const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+    const year = date.getUTCFullYear();
     return `${hours}:${minutes} ${day}/${month}/${year}`;
   } catch {
     return '';
@@ -37,7 +41,6 @@ function formatMatchTime(timestamp: string): string {
 }
 
 function mapMatchStatus(status: string): string {
-  // The app uses time-based logic, but we can embed status hints in the score/time
   switch (status) {
     case 'live': return 'live';
     case 'finished': return 'finished';
@@ -74,6 +77,15 @@ serve(async (req) => {
       )
     }
 
+    // Serve from cache if fresh
+    const now = Date.now();
+    if (cachedData && (now - cachedData.timestamp) < CACHE_TTL) {
+      return new Response(JSON.stringify(cachedData.data), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Cache': 'HIT' },
+        status: 200,
+      })
+    }
+
     const response = await fetch('https://api.myanmarlive2d3d.online/matches', {
       method: 'GET',
       headers: {
@@ -87,25 +99,30 @@ serve(async (req) => {
 
     if (!response.ok) {
       console.error(`External API error: ${response.status}`)
+      // Serve stale cache if available
+      if (cachedData) {
+        return new Response(JSON.stringify(cachedData.data), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Cache': 'STALE' },
+          status: 200,
+        })
+      }
       throw new Error('External service unavailable')
     }
 
     const rawData: RawMatch[] = await response.json()
 
-    // Map to the format expected by the frontend
     const mapped = (rawData || []).map((m: RawMatch) => {
       const time = formatMatchTime(m.match_time);
       const statusHint = mapMatchStatus(m.match_status);
-      
-      // Build score string
+      const matchTimestamp = parseInt(m.match_time) || 0;
+
       let score = 'vs';
       if (m.match_score) {
         score = m.match_score;
       } else if (statusHint === 'live') {
-        score = '0 - 0'; // Live but no score yet
+        score = '0 - 0';
       }
 
-      // Map servers to authors format
       const authors = (m.servers || []).map((s) => ({
         name: s.name || 'Stream',
         url: s.stream_url || '',
@@ -125,11 +142,15 @@ serve(async (req) => {
         url: '',
         authors,
         match_status: statusHint,
+        match_timestamp: matchTimestamp,
       };
     });
 
+    // Update cache
+    cachedData = { data: mapped, timestamp: now };
+
     return new Response(JSON.stringify(mapped), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Cache': 'MISS' },
       status: 200,
     })
   } catch (error: unknown) {

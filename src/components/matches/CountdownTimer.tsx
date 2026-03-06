@@ -2,11 +2,11 @@ import { Clock } from 'lucide-react';
 import { useCountdown } from '@/hooks/useCountdown';
 
 interface CountdownTimerProps {
-  time: string;
+  timestamp?: number;
 }
 
-const CountdownTimer = ({ time }: CountdownTimerProps) => {
-  const { formatted, isExpired, days, hours, minutes, seconds } = useCountdown(time);
+const CountdownTimer = ({ timestamp }: CountdownTimerProps) => {
+  const { formatted, isExpired, days, hours, minutes, seconds } = useCountdown(timestamp);
 
   if (isExpired || !formatted) return null;
 
