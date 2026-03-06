@@ -188,7 +188,7 @@ const MatchDetail = () => {
           {/* Countdown for upcoming */}
           {status === 'upcoming' && (
             <div className="mt-5 animate-fade-in [animation-delay:400ms] [animation-fill-mode:backwards]">
-              <CountdownTimer time={match.time} />
+              <CountdownTimer timestamp={match.match_timestamp} />
             </div>
           )}
         </div>
