@@ -26,7 +26,8 @@ import {
   ShieldAlert,
   LogOut,
   Globe,
-  Palette
+  Palette,
+  Code2
 } from 'lucide-react';
 
 // Allowed file types for upload
@@ -41,11 +42,13 @@ const AdminPanel = () => {
   
   const [appName, setAppName] = useState(settings.appName);
   const [primaryColor, setPrimaryColor] = useState(settings.primaryColor);
+  const [developerLink, setDeveloperLink] = useState(settings.developerLink);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isUploadingStreamLogo, setIsUploadingStreamLogo] = useState(false);
   const [isUploadingFavicon, setIsUploadingFavicon] = useState(false);
   const [isSavingName, setIsSavingName] = useState(false);
   const [isSavingColor, setIsSavingColor] = useState(false);
+  const [isSavingDevLink, setIsSavingDevLink] = useState(false);
   
   const logoInputRef = useRef<HTMLInputElement>(null);
   const streamLogoInputRef = useRef<HTMLInputElement>(null);
@@ -66,7 +69,8 @@ const AdminPanel = () => {
   useEffect(() => {
     setAppName(settings.appName);
     setPrimaryColor(settings.primaryColor);
-  }, [settings.appName, settings.primaryColor]);
+    setDeveloperLink(settings.developerLink);
+  }, [settings.appName, settings.primaryColor, settings.developerLink]);
 
   // Redirect if not authenticated or not admin
   useEffect(() => {
@@ -580,6 +584,50 @@ const AdminPanel = () => {
                 <p className="text-xs text-muted-foreground">
                   HSL format: hue saturation% lightness% (e.g., 142 71% 45%)
                 </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Developer Link Setting */}
+          <Card className="border-border/50 bg-card/50 backdrop-blur">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-cyan-500/10">
+                  <Code2 className="w-5 h-5 text-cyan-500" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Developer Link</CardTitle>
+                  <CardDescription>Header ထဲက Developer ခလုတ်နှိပ်ရင် ရောက်မယ့် link ကို သတ်မှတ်ပါ</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-3">
+                <Input
+                  value={developerLink}
+                  onChange={(e) => setDeveloperLink(e.target.value)}
+                  placeholder="https://t.me/yourChannel"
+                  className="flex-1"
+                />
+                <Button 
+                  onClick={async () => {
+                    setIsSavingDevLink(true);
+                    const success = await updateSetting('developer_link', developerLink.trim());
+                    setIsSavingDevLink(false);
+                    if (success) {
+                      toast({ title: t('success'), description: 'Developer link updated!' });
+                    }
+                  }}
+                  disabled={isSavingDevLink || developerLink.trim() === settings.developerLink}
+                  className="gap-2"
+                >
+                  {isSavingDevLink ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4" />
+                  )}
+                  {t('save')}
+                </Button>
               </div>
             </CardContent>
           </Card>

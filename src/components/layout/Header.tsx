@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, Tv, Zap, Calendar, Trophy, Settings, X } from 'lucide-react';
+import { Search, Tv, Zap, Calendar, Trophy, Settings, X, Code2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -107,6 +107,14 @@ const Header = ({ onSearch, searchQuery }: HeaderProps) => {
               </Button>
 
               <div className="hidden sm:flex items-center gap-1">
+                {settings.developerLink && (
+                  <a href={settings.developerLink} target="_blank" rel="noopener noreferrer">
+                    <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl h-8 gap-1.5 text-xs font-medium transition-colors">
+                      <Code2 className="w-3.5 h-3.5" />
+                      Developer
+                    </Button>
+                  </a>
+                )}
                 <TelegramLink />
                 <LanguageSwitcher />
               </div>
