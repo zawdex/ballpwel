@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_banners: {
+        Row: {
+          created_at: string
+          frequency: number
+          id: string
+          image_url: string
+          is_active: boolean
+          link_url: string | null
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          frequency?: number
+          id?: string
+          image_url: string
+          is_active?: boolean
+          link_url?: string | null
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          frequency?: number
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          link_url?: string | null
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           created_at: string

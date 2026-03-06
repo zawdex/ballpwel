@@ -1,5 +1,9 @@
+import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Match } from '@/types';
 import MatchCard from './MatchCard';
+import AdBanner from '../ads/AdBanner';
 import LoadingSkeleton from '../ui/LoadingSkeleton';
 
 interface MatchListProps {
@@ -9,6 +13,39 @@ interface MatchListProps {
 }
 
 const MatchList = ({ matches, isLoading, error }: MatchListProps) => {
+  // Fetch banner frequency setting
+  const { data: banners } = useQuery({
+    queryKey: ['ad-banners'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('ad_banners')
+        .select('id, frequency')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true })
+        .limit(1);
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const frequency = banners?.[0]?.frequency || 3;
+
+  // Build items list with ads interspersed
+  const items = useMemo(() => {
+    if (!matches || matches.length === 0) return [];
+    const result: { type: 'match' | 'ad'; match?: Match; adIndex?: number; key: string }[] = [];
+    let adCount = 0;
+    matches.forEach((match, i) => {
+      result.push({ type: 'match', match, key: match.id });
+      if ((i + 1) % frequency === 0 && i < matches.length - 1) {
+        result.push({ type: 'ad', adIndex: adCount, key: `ad-${adCount}` });
+        adCount++;
+      }
+    });
+    return result;
+  }, [matches, frequency]);
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -45,9 +82,15 @@ const MatchList = ({ matches, isLoading, error }: MatchListProps) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 stagger-children">
-      {matches.map((match, index) => (
-        <MatchCard key={match.id} match={match} index={index} />
-      ))}
+      {items.map((item, index) =>
+        item.type === 'match' ? (
+          <MatchCard key={item.key} match={item.match!} index={index} />
+        ) : (
+          <div key={item.key} className="col-span-1 md:col-span-2 lg:col-span-3">
+            <AdBanner index={item.adIndex!} />
+          </div>
+        )
+      )}
     </div>
   );
 };
