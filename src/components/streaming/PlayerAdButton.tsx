@@ -47,7 +47,7 @@ const PlayerAdButton = () => {
           e.stopPropagation();
           setShowCard(!showCard);
         }}
-        className="absolute top-14 left-3 z-40 w-9 h-9 rounded-full bg-black/60 backdrop-blur-sm border border-white/20 flex items-center justify-center hover:bg-black/80 transition-all"
+        className="absolute top-3 left-3 z-40 w-9 h-9 rounded-full bg-black/60 backdrop-blur-sm border border-white/20 flex items-center justify-center hover:bg-black/80 transition-all"
       >
         <Megaphone className="w-4 h-4 text-yellow-400" />
       </button>
