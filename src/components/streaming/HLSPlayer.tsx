@@ -69,6 +69,11 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [bufferedPercent, setBufferedPercent] = useState(0);
 
+  const retryCountRef = useRef(0);
+  const maxRetries = 5;
+  const stallCheckRef = useRef<NodeJS.Timeout | null>(null);
+  const lastTimeRef = useRef(0);
+
   const initializePlayer = useCallback(() => {
     if (!videoRef.current || !src) return;
 
@@ -77,6 +82,10 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
 
     if (hlsRef.current) {
       hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
+    if (stallCheckRef.current) {
+      clearInterval(stallCheckRef.current);
     }
 
     if (src.includes('.m3u8')) {
@@ -85,6 +94,19 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
           enableWorker: true,
           lowLatencyMode: true,
           backBufferLength: 90,
+          maxBufferLength: 30,
+          maxMaxBufferLength: 60,
+          maxBufferHole: 0.5,
+          // Retry settings
+          fragLoadingMaxRetry: 6,
+          fragLoadingMaxRetryTimeout: 16000,
+          fragLoadingRetryDelay: 1000,
+          manifestLoadingMaxRetry: 4,
+          manifestLoadingMaxRetryTimeout: 16000,
+          manifestLoadingRetryDelay: 1000,
+          levelLoadingMaxRetry: 4,
+          levelLoadingMaxRetryTimeout: 16000,
+          levelLoadingRetryDelay: 1000,
         });
 
         hlsRef.current = hls;
@@ -93,28 +115,53 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
 
         hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
           setIsLoading(false);
+          retryCountRef.current = 0;
           const levels = data.levels.map((level, index) => ({
             height: level.height,
             bitrate: level.bitrate,
             index,
           }));
           setQualityLevels(levels);
+
+          // Auto-play after manifest parsed
+          videoRef.current?.play().catch(() => {});
         });
 
         hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => {
           setCurrentQuality(data.level);
         });
 
+        hls.on(Hls.Events.FRAG_LOADED, () => {
+          // Reset retry count on successful fragment load
+          retryCountRef.current = 0;
+        });
+
         hls.on(Hls.Events.ERROR, (_, data) => {
+          console.warn('HLS error:', data.type, data.details, data.fatal);
+
           if (data.fatal) {
             switch (data.type) {
               case Hls.ErrorTypes.NETWORK_ERROR:
-                setError(t('networkError'));
-                hls.startLoad();
+                if (retryCountRef.current < maxRetries) {
+                  retryCountRef.current++;
+                  console.log(`Network error recovery attempt ${retryCountRef.current}/${maxRetries}`);
+                  setTimeout(() => {
+                    hls.startLoad();
+                  }, 1000 * retryCountRef.current);
+                } else {
+                  setError(t('networkError'));
+                  onError?.('Network error after max retries');
+                }
                 break;
               case Hls.ErrorTypes.MEDIA_ERROR:
-                setError(t('mediaError'));
-                hls.recoverMediaError();
+                if (retryCountRef.current < maxRetries) {
+                  retryCountRef.current++;
+                  console.log(`Media error recovery attempt ${retryCountRef.current}/${maxRetries}`);
+                  hls.recoverMediaError();
+                } else {
+                  setError(t('mediaError'));
+                  onError?.('Media error after max retries');
+                }
                 break;
               default:
                 setError(t('streamUnavailable'));
@@ -122,8 +169,31 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
                 onError?.('Fatal streaming error');
                 break;
             }
+          } else if (data.details === 'bufferStalledError') {
+            // Non-fatal buffer stall — try to nudge playback
+            const video = videoRef.current;
+            if (video && video.paused === false) {
+              video.currentTime = video.currentTime + 0.1;
+            }
           }
         });
+
+        // Stall detection: if currentTime hasn't changed for 8s while playing, reload
+        stallCheckRef.current = setInterval(() => {
+          const video = videoRef.current;
+          if (video && !video.paused && !video.ended) {
+            if (Math.abs(video.currentTime - lastTimeRef.current) < 0.1) {
+              console.log('Stall detected, attempting recovery...');
+              if (hlsRef.current) {
+                hlsRef.current.startLoad();
+                video.currentTime = video.currentTime + 0.1;
+                video.play().catch(() => {});
+              }
+            }
+            lastTimeRef.current = video.currentTime;
+          }
+        }, 8000);
+
       } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
         videoRef.current.src = src;
         setIsLoading(false);
@@ -142,6 +212,9 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
     return () => {
       if (hlsRef.current) {
         hlsRef.current.destroy();
+      }
+      if (stallCheckRef.current) {
+        clearInterval(stallCheckRef.current);
       }
     };
   }, [initializePlayer]);
