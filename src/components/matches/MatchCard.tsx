@@ -141,7 +141,7 @@ const MatchCard = memo(({ match, index = 0 }: MatchCardProps) => {
           </div>
 
           {/* Countdown */}
-          {status === 'upcoming' && <div className="mt-3"><CountdownTimer time={match.time} /></div>}
+          {status === 'upcoming' && <div className="mt-3"><CountdownTimer timestamp={match.match_timestamp} /></div>}
 
           {/* Action row */}
           {hasStreams && (

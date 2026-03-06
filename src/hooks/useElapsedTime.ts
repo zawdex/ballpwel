@@ -1,5 +1,14 @@
 import { useState, useEffect } from 'react';
-import { parseMatchTime } from './useCountdown';
+
+function parseMatchTime(time: string): Date | null {
+  const cleaned = time.replace(/^live\s*/i, '').trim();
+  const match = cleaned.match(/^(\d{1,2}):(\d{2})\s+(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!match) return null;
+  const [, hours, minutes, day, month, year] = match;
+  return new Date(
+    Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes))
+  );
+}
 
 export const useElapsedTime = (time: string): string | null => {
   const [now, setNow] = useState(() => Date.now());
@@ -17,14 +26,10 @@ export const useElapsedTime = (time: string): string | null => {
 
   const totalMinutes = Math.floor(diffMs / (1000 * 60));
 
-  // First half: 0-45 min
   if (totalMinutes <= 45) return `${totalMinutes}'`;
-  // Half-time break: 45-60 min elapsed (~15 min break)
   if (totalMinutes <= 60) return 'HT';
-  // Second half: offset by 15 min break, so 61 elapsed = 46'
   const secondHalfMin = totalMinutes - 15;
   if (secondHalfMin <= 90) return `${secondHalfMin}'`;
-  // Extra time
   if (secondHalfMin <= 120) return `${secondHalfMin}'`;
   
   return 'FT';
