@@ -17,6 +17,7 @@ const Layout = ({ onSearch, searchQuery }: LayoutProps) => {
     { path: '/', label: t('allMatches'), icon: Trophy },
     { path: '/live', label: t('live'), icon: Zap },
     { path: '/upcoming', label: t('upcoming'), icon: Calendar },
+    { path: '/basketball', label: '🏀 NBA', icon: null },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -49,7 +50,7 @@ const Layout = ({ onSearch, searchQuery }: LayoutProps) => {
 
       {/* Bottom Navigation - mobile only */}
       <nav className="bottom-nav">
-        <div className="flex items-center justify-around py-1.5 px-6 relative">
+        <div className="flex items-center justify-around py-1.5 px-4 relative">
           {bottomNavItems.map(({ path, label, icon: Icon }) => {
             const active = isActive(path);
             const isLive = path === '/live';
@@ -57,33 +58,33 @@ const Layout = ({ onSearch, searchQuery }: LayoutProps) => {
               <Link
                 key={path}
                 to={path}
-                className={`relative flex flex-col items-center gap-0.5 py-2 px-5 rounded-2xl transition-all duration-300 min-w-[72px] ${
+                className={`relative flex flex-col items-center gap-0.5 py-2 px-3 rounded-2xl transition-all duration-300 min-w-[60px] ${
                   active
                     ? 'text-primary'
                     : 'text-muted-foreground active:scale-95'
                 }`}
               >
-                {/* Active pill background */}
                 {active && (
                   <div className="absolute inset-0 bg-primary/12 rounded-2xl border border-primary/20" />
                 )}
 
-                {/* Icon with indicator */}
                 <div className="relative z-10">
-                  <Icon className={`w-5 h-5 transition-all duration-200 ${active ? 'text-primary scale-110' : ''}`} />
+                  {Icon ? (
+                    <Icon className={`w-5 h-5 transition-all duration-200 ${active ? 'text-primary scale-110' : ''}`} />
+                  ) : (
+                    <span className="text-lg leading-5">{label.split(' ')[0]}</span>
+                  )}
                   {isLive && (
                     <span className="absolute -top-0.5 -right-1.5 w-2 h-2 rounded-full bg-live animate-pulse shadow-sm shadow-live/50" />
                   )}
                 </div>
 
-                {/* Label */}
                 <span className={`relative z-10 text-[10px] font-bold tracking-wide transition-all duration-200 ${
                   active ? 'text-primary' : ''
                 }`}>
-                  {label}
+                  {Icon ? label : label.split(' ').slice(1).join(' ') || label}
                 </span>
 
-                {/* Active dot indicator */}
                 {active && (
                   <div className="absolute -bottom-0.5 w-1 h-1 rounded-full bg-primary" />
                 )}

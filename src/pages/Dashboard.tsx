@@ -12,27 +12,39 @@ interface DashboardProps {
   onFilterChange: (filters: Partial<MatchFilters>) => void;
 }
 
-// Popular leagues keywords to match against labels
+// Popular leagues shown as tabs - order matters for priority display
 const POPULAR_LEAGUES = [
   { key: 'all', label: 'All' },
-  { key: 'premier|english premier', label: 'EPL' },
-  { key: 'spanish|la liga', label: 'La Liga' },
-  { key: 'german|bundesliga', label: 'Bundesliga' },
-  { key: 'italian|serie a', label: 'Serie A' },
-  { key: 'french|ligue 1', label: 'Ligue 1' },
-  { key: 'champion', label: 'UCL' },
+  { key: 'premier|eng pr|epl|english premier', label: 'EPL' },
+  { key: 'champion|ucl', label: 'UCL' },
+  { key: 'spa d1|la liga|spanish', label: 'La Liga' },
+  { key: 'ita d1|serie a|italian', label: 'Serie A' },
+  { key: 'ger d1|bundesliga|german', label: 'Bundesliga' },
+  { key: 'fra d1|ligue 1|french', label: 'Ligue 1' },
   { key: 'europa', label: 'Europa' },
-  { key: 'dutch|eredivisie', label: 'Eredivisie' },
-  { key: 'saudi|arab', label: 'Saudi' },
-  { key: 'j-league|japanese', label: 'J-League' },
-  { key: 'nba', label: 'NBA' },
-  { key: 'mexican|liga mx', label: 'Mexico' },
-  { key: 'australian|a-league', label: 'Australia' },
+  { key: 'eng fac|eng lch|eng', label: 'England' },
+  { key: 'hol d1|eredivisie|dutch', label: 'Eredivisie' },
+  { key: 'ksa|saudi|arab', label: 'Saudi' },
+  { key: 'jpn|j-league|japanese', label: 'J-League' },
+  { key: 'kor d1|korean', label: 'K-League' },
+  { key: 'aus d1|australian|a-league', label: 'Australia' },
+  { key: 'mex d1|liga mx|mexican', label: 'Mexico' },
+  { key: 'cha sl|chinese', label: 'China' },
+  { key: 'tha|thai', label: 'Thailand' },
+  { key: 'vie d1|vietnam', label: 'Vietnam' },
 ];
 
 const matchesLeague = (label: string, key: string): boolean => {
   if (key === 'all') return true;
   return key.split('|').some(k => label.toLowerCase().includes(k));
+};
+
+// Priority order for sorting: popular leagues first
+const getLeaguePriority = (label: string): number => {
+  for (let i = 1; i < POPULAR_LEAGUES.length; i++) {
+    if (matchesLeague(label, POPULAR_LEAGUES[i].key)) return i;
+  }
+  return 999; // Unknown leagues go last
 };
 
 const Dashboard = ({ filters, onFilterChange }: DashboardProps) => {
@@ -44,24 +56,20 @@ const Dashboard = ({ filters, onFilterChange }: DashboardProps) => {
     refetchInterval: 60 * 1000,
   });
 
-  // Filter to popular leagues only, then by active tab
   const filteredMatches = useMemo(() => {
     if (!allMatches) return [];
 
-    // First: only show matches from popular leagues
-    let popular = allMatches.filter(match =>
-      POPULAR_LEAGUES.some(l => l.key !== 'all' && matchesLeague(match.label, l.key))
-    );
+    let result = [...allMatches];
 
-    // Then filter by selected league tab
+    // Filter by selected league tab
     if (activeLeague !== 'all') {
-      popular = popular.filter(match => matchesLeague(match.label, activeLeague));
+      result = result.filter(match => matchesLeague(match.label, activeLeague));
     }
 
     // Apply search filter
     if (filters.searchQuery) {
       const query = filters.searchQuery.toLowerCase();
-      popular = popular.filter(
+      result = result.filter(
         match =>
           match.home_name.toLowerCase().includes(query) ||
           match.away_name.toLowerCase().includes(query) ||
@@ -69,16 +77,18 @@ const Dashboard = ({ filters, onFilterChange }: DashboardProps) => {
       );
     }
 
-    // Sort: live first, then upcoming, then finished
-    return popular.sort((a, b) => {
-      const order = { live: 0, upcoming: 1, finished: 2 };
-      const sa = order[getMatchStatus(a.score, a.time)] ?? 2;
-      const sb = order[getMatchStatus(b.score, b.time)] ?? 2;
-      return sa - sb;
+    // Sort: live first, then upcoming, then finished; within each group, popular leagues first
+    return result.sort((a, b) => {
+      const statusOrder = { live: 0, upcoming: 1, finished: 2 };
+      const sa = statusOrder[getMatchStatus(a.score, a.time)] ?? 2;
+      const sb = statusOrder[getMatchStatus(b.score, b.time)] ?? 2;
+      if (sa !== sb) return sa - sb;
+      // Within same status, popular leagues first
+      return getLeaguePriority(a.label) - getLeaguePriority(b.label);
     });
   }, [allMatches, activeLeague, filters.searchQuery]);
 
-  // Count available leagues for tabs
+  // Only show tabs that have matches
   const availableLeagues = useMemo(() => {
     if (!allMatches) return POPULAR_LEAGUES.slice(0, 1);
     return POPULAR_LEAGUES.filter(league => {
