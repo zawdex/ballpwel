@@ -7,6 +7,7 @@ interface AppSettings {
   streamDialogLogoUrl: string;
   faviconUrl: string;
   primaryColor: string;
+  developerLink: string;
 }
 
 interface AppSettingsContextType {
@@ -22,6 +23,7 @@ const defaultSettings: AppSettings = {
   streamDialogLogoUrl: '',
   faviconUrl: '',
   primaryColor: '142 71% 45%',
+  developerLink: 'https://t.me/itachiXCoder',
 };
 
 const AppSettingsContext = createContext<AppSettingsContextType | undefined>(undefined);
@@ -51,6 +53,8 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
             newSettings.faviconUrl = item.setting_value || '';
           } else if (item.setting_key === 'primary_color') {
             newSettings.primaryColor = item.setting_value || defaultSettings.primaryColor;
+          } else if (item.setting_key === 'developer_link') {
+            newSettings.developerLink = item.setting_value || defaultSettings.developerLink;
           }
         });
         setSettings(newSettings);
