@@ -24,7 +24,7 @@ const FootballBackground = () => {
       const h = canvas.height;
       ctx.clearRect(0, 0, w, h);
 
-      const alpha = 0.035;
+      const alpha = 0.12;
 
       // --- Stadium oval / bowl outline ---
       ctx.save();
@@ -121,7 +121,7 @@ const FootballBackground = () => {
         const px2 = (seed * 7.3 + time * 0.15 * (0.3 + (i % 5) * 0.1)) % w;
         const py2 = (seed * 3.7 + Math.sin(time * 0.008 + i) * 30) % h;
         const size = 1 + (i % 3) * 0.5;
-        const particleAlpha = 0.015 + 0.01 * Math.sin(time * 0.015 + i * 0.8);
+        const particleAlpha = 0.04 + 0.025 * Math.sin(time * 0.015 + i * 0.8);
 
         ctx.beginPath();
         ctx.arc(px2, py2, size, 0, Math.PI * 2);
@@ -131,7 +131,7 @@ const FootballBackground = () => {
 
       // --- Subtle crowd silhouette arcs ---
       ctx.save();
-      ctx.globalAlpha = alpha * 0.4;
+      ctx.globalAlpha = alpha * 0.8;
       const crowdSegments = 40;
       for (let i = 0; i < crowdSegments; i++) {
         const angle = (Math.PI * 2 / crowdSegments) * i;
