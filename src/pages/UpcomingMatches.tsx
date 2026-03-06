@@ -15,7 +15,7 @@ const UpcomingMatches = () => {
 
   const upcomingMatches = useMemo(() => {
     if (!allMatches) return [];
-    return allMatches.filter((match) => getMatchStatus(match.score, match.time) === 'upcoming');
+    return allMatches.filter((match) => getMatchStatus(match.score, match.time, match.api_status) === 'upcoming');
   }, [allMatches]);
 
   return (

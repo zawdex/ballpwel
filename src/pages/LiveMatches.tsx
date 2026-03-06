@@ -15,7 +15,7 @@ const LiveMatches = () => {
 
   const liveMatches = useMemo(() => {
     if (!allMatches) return [];
-    return allMatches.filter((match) => getMatchStatus(match.score, match.time) === 'live');
+    return allMatches.filter((match) => getMatchStatus(match.score, match.time, match.api_status) === 'live');
   }, [allMatches]);
 
   return (
