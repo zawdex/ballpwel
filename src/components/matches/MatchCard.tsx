@@ -105,8 +105,18 @@ const MatchCard = memo(({ match, index = 0, isFavoriteHome, isFavoriteAway, onTo
           <div className="flex items-center gap-2">
             {/* Home team */}
             <div className="flex-1 flex flex-col items-center gap-2 min-w-0">
-              <div className="w-12 h-12 rounded-2xl bg-secondary/60 flex items-center justify-center overflow-hidden border border-border/40 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-primary/10">
-                <TeamLogo src={match.home_logo} name={match.home_name} size="sm" />
+              <div className="relative">
+                <div className="w-12 h-12 rounded-2xl bg-secondary/60 flex items-center justify-center overflow-hidden border border-border/40 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-primary/10">
+                  <TeamLogo src={match.home_logo} name={match.home_name} size="sm" />
+                </div>
+                {onToggleFavorite && (
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleFavorite(match.home_name); }}
+                    className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-background/90 border border-border/50 flex items-center justify-center transition-all hover:scale-110"
+                  >
+                    <Star className={`w-3 h-3 ${isFavoriteHome ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground'}`} />
+                  </button>
+                )}
               </div>
               <span className="text-xs font-semibold text-center truncate w-full leading-tight">{match.home_name}</span>
             </div>
@@ -136,8 +146,18 @@ const MatchCard = memo(({ match, index = 0, isFavoriteHome, isFavoriteAway, onTo
 
             {/* Away team */}
             <div className="flex-1 flex flex-col items-center gap-2 min-w-0">
-              <div className="w-12 h-12 rounded-2xl bg-secondary/60 flex items-center justify-center overflow-hidden border border-border/40 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-primary/10">
-                <TeamLogo src={match.away_logo} name={match.away_name} size="sm" />
+              <div className="relative">
+                <div className="w-12 h-12 rounded-2xl bg-secondary/60 flex items-center justify-center overflow-hidden border border-border/40 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-primary/10">
+                  <TeamLogo src={match.away_logo} name={match.away_name} size="sm" />
+                </div>
+                {onToggleFavorite && (
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleFavorite(match.away_name); }}
+                    className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-background/90 border border-border/50 flex items-center justify-center transition-all hover:scale-110"
+                  >
+                    <Star className={`w-3 h-3 ${isFavoriteAway ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground'}`} />
+                  </button>
+                )}
               </div>
               <span className="text-xs font-semibold text-center truncate w-full leading-tight">{match.away_name}</span>
             </div>
