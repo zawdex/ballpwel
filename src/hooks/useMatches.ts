@@ -30,7 +30,7 @@ export const useMatches = (filters?: Partial<MatchFilters>) => {
       
       if (filters?.status && filters.status !== 'all') {
         filtered = filtered.filter(
-          (match) => getMatchStatus(match.score, match.time) === filters.status
+          (match) => getMatchStatus(match.score, match.time, match.match_status) === filters.status
         );
       }
       

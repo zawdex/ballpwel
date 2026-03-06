@@ -31,7 +31,7 @@ const MatchDetail = () => {
     return matches.find((m: Match) => m.id === matchId);
   }, [matches, matchId]);
 
-  const status = match ? getMatchStatus(match.score, match.time) : 'upcoming';
+  const status = match ? getMatchStatus(match.score, match.time, match.match_status) : 'upcoming';
   const { data: prediction, isLoading: predLoading, error: predError, refetch: retryPrediction } = usePrediction(
     match?.home_name || '', match?.away_name || '', match?.label || '', match?.score || '', match?.time || ''
   );

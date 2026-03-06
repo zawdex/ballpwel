@@ -80,8 +80,8 @@ const Dashboard = ({ filters, onFilterChange }: DashboardProps) => {
     // Sort: live first, then upcoming, then finished; within each group, popular leagues first
     return result.sort((a, b) => {
       const statusOrder = { live: 0, upcoming: 1, finished: 2 };
-      const sa = statusOrder[getMatchStatus(a.score, a.time)] ?? 2;
-      const sb = statusOrder[getMatchStatus(b.score, b.time)] ?? 2;
+      const sa = statusOrder[getMatchStatus(a.score, a.time, a.match_status)] ?? 2;
+      const sb = statusOrder[getMatchStatus(b.score, b.time, b.match_status)] ?? 2;
       if (sa !== sb) return sa - sb;
       // Within same status, popular leagues first
       return getLeaguePriority(a.label) - getLeaguePriority(b.label);
@@ -98,7 +98,7 @@ const Dashboard = ({ filters, onFilterChange }: DashboardProps) => {
   }, [allMatches]);
 
   const liveCount = useMemo(() => {
-    return filteredMatches.filter(m => getMatchStatus(m.score, m.time) === 'live').length;
+    return filteredMatches.filter(m => getMatchStatus(m.score, m.time, m.match_status) === 'live').length;
   }, [filteredMatches]);
 
   return (
