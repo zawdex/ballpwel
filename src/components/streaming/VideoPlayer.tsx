@@ -5,7 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAppSettings } from '@/contexts/AppSettingsContext';
 import { isValidStreamUrl } from '@/lib/urlValidation';
 import HLSPlayer from './HLSPlayer';
-import OverlayAd from './OverlayAd';
+
 import { Button } from '@/components/ui/button';
 
 interface VideoPlayerProps {
@@ -110,7 +110,6 @@ const VideoPlayer = ({ stream, matchTitle, isLive = true }: VideoPlayerProps) =>
             title={matchTitle || `${stream.name} Stream`}
             onError={handlePlayerError}
           />
-          <OverlayAd />
         </div>
         <StreamInfo stream={stream} onExternalClick={handleExternalClick} />
       </div>
@@ -131,7 +130,6 @@ const VideoPlayer = ({ stream, matchTitle, isLive = true }: VideoPlayerProps) =>
             sandbox="allow-scripts allow-same-origin allow-presentation allow-fullscreen"
             referrerPolicy="no-referrer"
           />
-          <OverlayAd />
         </div>
         <StreamInfo stream={stream} onExternalClick={handleExternalClick} />
       </div>
