@@ -24,6 +24,9 @@ const MatchCard = memo(({ match, index = 0, isFavoriteHome, isFavoriteAway, onTo
   const prevStatusRef = useRef<MatchStatus>(status);
   const [justWentLive, setJustWentLive] = useState(false);
   const [enablePrediction, setEnablePrediction] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const shareRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (prevStatusRef.current === 'upcoming' && status === 'live') {
