@@ -125,8 +125,15 @@ const Header = ({ onSearch, searchQuery }: HeaderProps) => {
                 </Button>
               </Link>
 
-              {/* Mobile: language + telegram */}
+              {/* Mobile: language + developer */}
               <div className="flex sm:hidden items-center gap-0.5">
+                {settings.developerLink && (
+                  <a href={settings.developerLink} target="_blank" rel="noopener noreferrer">
+                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary rounded-xl h-8 w-8">
+                      <Code2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </a>
+                )}
                 <LanguageSwitcher />
               </div>
             </div>
