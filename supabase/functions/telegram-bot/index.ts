@@ -92,6 +92,18 @@ const t = (lang: Lang) => ({
     changeLang: "🌐 Language",
     noPredMatches: "No matches available for predictions.",
     stream: (i: number) => `Stream ${i}`,
+    // Reminder translations
+    remindTitle: "⏰ <b>MATCH REMINDERS</b>",
+    remindSelect: "Select a match to set a reminder:",
+    remindBefore: (min: number) => `⏰ Remind ${min} min before`,
+    reminderSet: (home: string, away: string, min: number) => `✅ Reminder set!\n\n⏰ You'll be notified <b>${min} minutes</b> before\n🏟 <b>${home}</b> vs <b>${away}</b>`,
+    reminderExists: "⚠️ You already have a reminder for this match.",
+    reminderCancelled: "❌ Reminder cancelled.",
+    noUpcomingRemind: "No upcoming matches to set reminders for.",
+    myReminders: "📋 My Reminders",
+    noReminders: "You have no active reminders.",
+    cancelReminder: "❌ Cancel",
+    remindersTitle: "📋 <b>MY REMINDERS</b>",
   },
   my: {
     botTitle: "⚽ ဘောလုံး တိုက်ရိုက် ကြည့်ရှုရေး Bot",
@@ -149,6 +161,18 @@ const t = (lang: Lang) => ({
     changeLang: "🌐 ဘာသာစကား",
     noPredMatches: "ခန့်မှန်းရန် ပွဲများ မရှိပါ။",
     stream: (i: number) => `Stream ${i}`,
+    // Reminder translations
+    remindTitle: "⏰ <b>ပွဲ REMINDER များ</b>",
+    remindSelect: "Reminder သတ်မှတ်ရန် ပွဲတစ်ခု ရွေးပါ:",
+    remindBefore: (min: number) => `⏰ ${min} မိနစ် ကြိုသတိပေး`,
+    reminderSet: (home: string, away: string, min: number) => `✅ Reminder သတ်မှတ်ပြီးပါပြီ!\n\n⏰ <b>${min} မိနစ်</b> ကြိုပြီး အကြောင်းကြားပါမည်\n🏟 <b>${home}</b> vs <b>${away}</b>`,
+    reminderExists: "⚠️ ဤပွဲအတွက် Reminder ရှိပြီးသားဖြစ်ပါသည်။",
+    reminderCancelled: "❌ Reminder ဖျက်ပြီးပါပြီ။",
+    noUpcomingRemind: "Reminder သတ်မှတ်ရန် လာမည့်ပွဲများ မရှိပါ။",
+    myReminders: "📋 ကျွန်ုပ်၏ Reminders",
+    noReminders: "Active reminder များ မရှိပါ။",
+    cancelReminder: "❌ ဖျက်မည်",
+    remindersTitle: "📋 <b>ကျွန်ုပ်၏ REMINDERS</b>",
   },
 })[lang];
 
@@ -248,9 +272,47 @@ function mainMenuKeyboard(lang: Lang) {
       [{ text: s.liveMatches, callback_data: "menu_live" }, { text: s.upcoming, callback_data: "menu_upcoming" }],
       [{ text: s.allMatches, callback_data: "menu_all" }],
       [{ text: s.quickPredictions, callback_data: "menu_predictions" }],
+      [{ text: "⏰ Reminders", callback_data: "menu_remind" }, { text: s.myReminders, callback_data: "menu_myreminders" }],
       [{ text: s.changeLang, callback_data: "menu_lang" }, { text: s.refresh, callback_data: "menu_refresh" }],
     ],
   };
+}
+
+function parseMatchTime(timeStr: string): Date | null {
+  const m = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s+(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!m) return null;
+  return new Date(+m[5], +m[4] - 1, +m[3], +m[1], +m[2]);
+}
+
+async function setReminder(chatId: number, matchId: string, homeName: string, awayName: string, matchTime: Date, remindBefore: number) {
+  const sb = getSupabase();
+  const { error } = await sb.from("match_reminders").upsert({
+    chat_id: chatId,
+    match_id: matchId,
+    home_name: homeName,
+    away_name: awayName,
+    match_time: matchTime.toISOString(),
+    remind_before: remindBefore,
+    reminded: false,
+  }, { onConflict: "chat_id,match_id" });
+  return !error;
+}
+
+async function getMyReminders(chatId: number) {
+  const sb = getSupabase();
+  const { data } = await sb
+    .from("match_reminders")
+    .select("*")
+    .eq("chat_id", chatId)
+    .eq("reminded", false)
+    .gte("match_time", new Date().toISOString())
+    .order("match_time", { ascending: true });
+  return data || [];
+}
+
+async function cancelReminder(chatId: number, matchId: string) {
+  const sb = getSupabase();
+  await sb.from("match_reminders").delete().eq("chat_id", chatId).eq("match_id", matchId);
 }
 
 const line = "━━━━━━━━━━━━━━━━━━━━━━━━";
@@ -418,8 +480,27 @@ async function handleUpdate(update: any) {
         return sendMessage(chatId, msg, { reply_markup: keyboard });
       }
       if (text === "/help") {
-        const help = `${line}\n${s.commands}\n${line}\n\n/start  ─  Menu\n/live    ─  ${s.liveMatches}\n/upcoming ─ ${s.upcoming}\n/matches ─ ${s.allMatches}\n/lang   ─  ${s.changeLang}\n/help   ─  Help\n\n${thinLine}\n${s.helpTip}`;
+        const help = `${line}\n${s.commands}\n${line}\n\n/start  ─  Menu\n/live    ─  ${s.liveMatches}\n/upcoming ─ ${s.upcoming}\n/matches ─ ${s.allMatches}\n/remind ─  ⏰ Reminders\n/lang   ─  ${s.changeLang}\n/help   ─  Help\n\n${thinLine}\n${s.helpTip}`;
         return sendMessage(chatId, help, { reply_markup: mainMenuKeyboard(lang) });
+      }
+
+      if (text === "/remind") {
+        const matches = await fetchMatches();
+        const upcoming = matches.filter((m: any) => getMatchStatus(m.score, m.time) === "upcoming");
+        if (upcoming.length === 0) {
+          return sendMessage(chatId, `${line}\n${s.remindTitle}\n${line}\n\n${s.noUpcomingRemind}`, { reply_markup: mainMenuKeyboard(lang) });
+        }
+        let msg = `${line}\n${s.remindTitle}\n${line}\n\n${s.remindSelect}\n\n`;
+        const buttons: any[][] = [];
+        upcoming.slice(0, 10).forEach((m: any) => {
+          const mt = parseMatchTime(m.time);
+          const timeStr = mt ? `${mt.getHours()}:${String(mt.getMinutes()).padStart(2, '0')}` : m.time;
+          msg += `🕐 ${m.home_name} vs ${m.away_name} - ${timeStr}\n`;
+          buttons.push([{ text: `⏰ ${m.home_name.slice(0, 10)} v ${m.away_name.slice(0, 10)}`, callback_data: `remind_${generateId(m)}` }]);
+        });
+        buttons.push([{ text: s.myReminders, callback_data: "menu_myreminders" }]);
+        buttons.push([{ text: s.backToMenu, callback_data: "menu_main" }]);
+        return sendMessage(chatId, msg, { reply_markup: { inline_keyboard: buttons } });
       }
 
       // Search
@@ -498,6 +579,105 @@ async function handleUpdate(update: any) {
         buttons.push([{ text: s.backToMenu, callback_data: "menu_main" }]);
         return editMessage(chatId, msgId, text, { reply_markup: { inline_keyboard: buttons } });
       }
+      // Reminder menu
+      if (data === "menu_remind") {
+        const matches = await fetchMatches();
+        const upcoming = matches.filter((m: any) => getMatchStatus(m.score, m.time) === "upcoming");
+        if (upcoming.length === 0) {
+          return editMessage(chatId, msgId, `${line}\n${s.remindTitle}\n${line}\n\n${s.noUpcomingRemind}`, {
+            reply_markup: { inline_keyboard: [[{ text: s.backToMenu, callback_data: "menu_main" }]] },
+          });
+        }
+        let text = `${line}\n${s.remindTitle}\n${line}\n\n${s.remindSelect}\n\n`;
+        const buttons: any[][] = [];
+        upcoming.slice(0, 10).forEach((m: any) => {
+          const mt = parseMatchTime(m.time);
+          const timeStr = mt ? `${mt.getHours()}:${String(mt.getMinutes()).padStart(2, '0')}` : m.time;
+          text += `🕐 ${m.home_name} vs ${m.away_name} - ${timeStr}\n`;
+          buttons.push([{ text: `⏰ ${m.home_name.slice(0, 10)} v ${m.away_name.slice(0, 10)}`, callback_data: `remind_${generateId(m)}` }]);
+        });
+        buttons.push([{ text: s.myReminders, callback_data: "menu_myreminders" }]);
+        buttons.push([{ text: s.backToMenu, callback_data: "menu_main" }]);
+        return editMessage(chatId, msgId, text, { reply_markup: { inline_keyboard: buttons } });
+      }
+
+      // Select reminder time for a match
+      if (data.startsWith("remind_") && !data.startsWith("remind_set_") && !data.startsWith("remind_cancel_")) {
+        const matchId = data.replace("remind_", "");
+        const matches = await fetchMatches();
+        const match = matches.find((m: any) => generateId(m) === matchId);
+        if (!match) return editMessage(chatId, msgId, s.matchNotFound, { reply_markup: { inline_keyboard: [[{ text: s.back, callback_data: "menu_remind" }]] } });
+
+        const text = `${line}\n⏰ <b>SET REMINDER</b>\n${line}\n\n🏟 <b>${match.home_name}</b> vs <b>${match.away_name}</b>\n⏱ ${match.time}\n\n${lang === "my" ? "ဘယ်အချိန် ကြိုသတိပေးမလဲ?" : "When should I remind you?"}`;
+        return editMessage(chatId, msgId, text, {
+          reply_markup: { inline_keyboard: [
+            [{ text: s.remindBefore(15), callback_data: `remind_set_${matchId}_15` }],
+            [{ text: s.remindBefore(30), callback_data: `remind_set_${matchId}_30` }],
+            [{ text: s.back, callback_data: "menu_remind" }],
+          ]},
+        });
+      }
+
+      // Set reminder
+      if (data.startsWith("remind_set_")) {
+        const parts = data.replace("remind_set_", "").split("_");
+        const mins = parseInt(parts.pop()!);
+        const matchId = parts.join("_");
+        const matches = await fetchMatches();
+        const match = matches.find((m: any) => generateId(m) === matchId);
+        if (!match) return editMessage(chatId, msgId, s.matchNotFound, { reply_markup: { inline_keyboard: [[{ text: s.back, callback_data: "menu_remind" }]] } });
+
+        const mt = parseMatchTime(match.time);
+        if (!mt) return editMessage(chatId, msgId, s.matchNotFound, { reply_markup: { inline_keyboard: [[{ text: s.back, callback_data: "menu_remind" }]] } });
+
+        const ok = await setReminder(chatId, matchId, match.home_name, match.away_name, mt, mins);
+        if (ok) {
+          return editMessage(chatId, msgId, `${line}\n${s.reminderSet(match.home_name, match.away_name, mins)}\n${line}`, {
+            reply_markup: { inline_keyboard: [
+              [{ text: s.myReminders, callback_data: "menu_myreminders" }],
+              [{ text: s.backToMenu, callback_data: "menu_main" }],
+            ]},
+          });
+        }
+        return editMessage(chatId, msgId, s.reminderExists, { reply_markup: { inline_keyboard: [[{ text: s.back, callback_data: "menu_remind" }]] } });
+      }
+
+      // My reminders
+      if (data === "menu_myreminders") {
+        const reminders = await getMyReminders(chatId);
+        if (reminders.length === 0) {
+          return editMessage(chatId, msgId, `${line}\n${s.remindersTitle}\n${line}\n\n${s.noReminders}`, {
+            reply_markup: { inline_keyboard: [
+              [{ text: "⏰ " + (lang === "my" ? "Reminder သတ်မှတ်ရန်" : "Set Reminder"), callback_data: "menu_remind" }],
+              [{ text: s.backToMenu, callback_data: "menu_main" }],
+            ]},
+          });
+        }
+        let text = `${line}\n${s.remindersTitle}\n${line}\n\n`;
+        const buttons: any[][] = [];
+        reminders.forEach((r: any) => {
+          const mt = new Date(r.match_time);
+          const timeStr = `${mt.getHours()}:${String(mt.getMinutes()).padStart(2, '0')} ${mt.getDate()}/${mt.getMonth() + 1}`;
+          text += `⏰ <b>${r.home_name}</b> vs <b>${r.away_name}</b>\n    📅 ${timeStr} | ${r.remind_before}min before\n${thinLine}\n`;
+          buttons.push([{ text: `❌ ${r.home_name.slice(0, 8)} v ${r.away_name.slice(0, 8)}`, callback_data: `remind_cancel_${r.match_id}` }]);
+        });
+        buttons.push([{ text: "⏰ " + (lang === "my" ? "Reminder ထပ်ထည့်ရန်" : "Add Reminder"), callback_data: "menu_remind" }]);
+        buttons.push([{ text: s.backToMenu, callback_data: "menu_main" }]);
+        return editMessage(chatId, msgId, text, { reply_markup: { inline_keyboard: buttons } });
+      }
+
+      // Cancel reminder
+      if (data.startsWith("remind_cancel_")) {
+        const matchId = data.replace("remind_cancel_", "");
+        await cancelReminder(chatId, matchId);
+        return editMessage(chatId, msgId, `${s.reminderCancelled}`, {
+          reply_markup: { inline_keyboard: [
+            [{ text: s.myReminders, callback_data: "menu_myreminders" }],
+            [{ text: s.backToMenu, callback_data: "menu_main" }],
+          ]},
+        });
+      }
+
 
       if (data.startsWith("page_")) {
         const parts = data.split("_");
