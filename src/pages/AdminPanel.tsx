@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import OverlayAdsManager from '@/components/admin/OverlayAdsManager';
+import AdBannersManager from '@/components/admin/AdBannersManager';
 import { 
   Settings, 
   Upload, 
@@ -585,6 +586,9 @@ const AdminPanel = () => {
 
           {/* Overlay Ads Manager */}
           <OverlayAdsManager />
+
+          {/* Ad Banners Manager */}
+          <AdBannersManager />
 
           {/* Current Settings Preview */}
           <Card className="border-primary/20 bg-primary/5">
