@@ -13,7 +13,7 @@ import VideoPlayer from '@/components/streaming/VideoPlayer';
 import StreamSelector from '@/components/streaming/StreamSelector';
 import PredictionPanel from '@/components/predictions/PredictionPanel';
 import { Button } from '@/components/ui/button';
-
+import TeamLogo from '@/components/ui/TeamLogo';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const MatchDetail = () => {
