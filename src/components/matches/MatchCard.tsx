@@ -8,7 +8,7 @@ import StatusBadge from './StatusBadge';
 import PredictionBadge from '@/components/predictions/PredictionBadge';
 import CountdownTimer from './CountdownTimer';
 import ElapsedTime from './ElapsedTime';
-
+import TeamLogo from '@/components/ui/TeamLogo';
 
 interface MatchCardProps {
   match: Match;
@@ -102,11 +102,8 @@ const MatchCard = memo(({ match, index = 0 }: MatchCardProps) => {
           <div className="flex items-center gap-2">
             {/* Home team */}
             <div className="flex-1 flex flex-col items-center gap-2 min-w-0">
-              <div className="w-12 h-12 rounded-2xl bg-secondary/60 flex items-center justify-center overflow-hidden border border-border/40 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-primary/10 relative">
-                {match.home_logo ? (
-                  <img src={match.home_logo} alt={match.home_name} className="w-8 h-8 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling && ((e.target as HTMLImageElement).parentElement!.querySelector('.fallback-initial')! as HTMLElement).style.display = 'flex'; }} />
-                ) : null}
-                <span className={`fallback-initial text-base font-bold text-muted-foreground absolute inset-0 items-center justify-center ${match.home_logo ? 'hidden' : 'flex'}`}>{match.home_name.charAt(0)}</span>
+              <div className="w-12 h-12 rounded-2xl bg-secondary/60 flex items-center justify-center overflow-hidden border border-border/40 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-primary/10">
+                <TeamLogo src={match.home_logo} name={match.home_name} size="sm" />
               </div>
               <span className="text-xs font-semibold text-center truncate w-full leading-tight">{match.home_name}</span>
             </div>
@@ -136,11 +133,8 @@ const MatchCard = memo(({ match, index = 0 }: MatchCardProps) => {
 
             {/* Away team */}
             <div className="flex-1 flex flex-col items-center gap-2 min-w-0">
-              <div className="w-12 h-12 rounded-2xl bg-secondary/60 flex items-center justify-center overflow-hidden border border-border/40 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-primary/10 relative">
-                {match.away_logo ? (
-                  <img src={match.away_logo} alt={match.away_name} className="w-8 h-8 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).parentElement!.querySelector('.fallback-initial')!.setAttribute('style', 'display:flex'); }} />
-                ) : null}
-                <span className={`fallback-initial text-base font-bold text-muted-foreground absolute inset-0 items-center justify-center ${match.away_logo ? 'hidden' : 'flex'}`}>{match.away_name.charAt(0)}</span>
+              <div className="w-12 h-12 rounded-2xl bg-secondary/60 flex items-center justify-center overflow-hidden border border-border/40 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-primary/10">
+                <TeamLogo src={match.away_logo} name={match.away_name} size="sm" />
               </div>
               <span className="text-xs font-semibold text-center truncate w-full leading-tight">{match.away_name}</span>
             </div>
