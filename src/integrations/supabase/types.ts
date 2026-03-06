@@ -74,6 +74,42 @@ export type Database = {
         }
         Relationships: []
       }
+      match_reminders: {
+        Row: {
+          away_name: string
+          chat_id: number
+          created_at: string
+          home_name: string
+          id: string
+          match_id: string
+          match_time: string
+          remind_before: number
+          reminded: boolean
+        }
+        Insert: {
+          away_name: string
+          chat_id: number
+          created_at?: string
+          home_name: string
+          id?: string
+          match_id: string
+          match_time: string
+          remind_before?: number
+          reminded?: boolean
+        }
+        Update: {
+          away_name?: string
+          chat_id?: number
+          created_at?: string
+          home_name?: string
+          id?: string
+          match_id?: string
+          match_time?: string
+          remind_before?: number
+          reminded?: boolean
+        }
+        Relationships: []
+      }
       overlay_ads: {
         Row: {
           created_at: string
