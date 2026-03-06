@@ -46,7 +46,7 @@ const Header = ({ onSearch, searchQuery }: HeaderProps) => {
                 <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
               <div className="hidden sm:flex flex-col">
-                <span className="font-display text-base font-bold text-gradient leading-tight">
+                <span className="font-display text-base font-bold text-foreground leading-tight">
                   {settings.appName || t('appName')}
                 </span>
                 <span className="text-[9px] text-muted-foreground font-medium tracking-widest uppercase">
@@ -54,7 +54,7 @@ const Header = ({ onSearch, searchQuery }: HeaderProps) => {
                 </span>
               </div>
               {/* Mobile: app name only */}
-              <span className="sm:hidden font-display text-base font-bold text-gradient">
+              <span className="sm:hidden font-display text-base font-bold text-foreground">
                 {settings.appName || t('appName')}
               </span>
             </Link>
