@@ -1,6 +1,7 @@
 import { memo, useRef, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Play, Radio, ArrowRight, Star } from 'lucide-react';
+import { Play, Radio, ArrowRight, Star, Share2, MessageCircle, Send, Link2, Check } from 'lucide-react';
+import { toast } from 'sonner';
 import { Match, MatchStatus } from '@/types';
 import { getMatchStatus } from '@/hooks/useMatches';
 import { usePrediction } from '@/hooks/usePrediction';
@@ -23,6 +24,9 @@ const MatchCard = memo(({ match, index = 0, isFavoriteHome, isFavoriteAway, onTo
   const prevStatusRef = useRef<MatchStatus>(status);
   const [justWentLive, setJustWentLive] = useState(false);
   const [enablePrediction, setEnablePrediction] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const shareRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (prevStatusRef.current === 'upcoming' && status === 'live') {
@@ -38,8 +42,35 @@ const MatchCard = memo(({ match, index = 0, isFavoriteHome, isFavoriteAway, onTo
     return () => clearTimeout(timer);
   }, [index]);
 
+  // Close share menu on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (shareRef.current && !shareRef.current.contains(e.target as Node)) setShowShare(false);
+    };
+    if (showShare) document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showShare]);
+
   const hasStreams = match.authors && match.authors.length > 0;
   const encodedId = encodeURIComponent(match.id);
+  const matchUrl = `${window.location.origin}/matches/${encodedId}`;
+  const shareText = `${match.home_name} vs ${match.away_name}${match.score ? ' | ' + match.score : ''}`;
+
+  const handleShare = (type: 'whatsapp' | 'telegram' | 'copy') => (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (type === 'whatsapp') {
+      window.open(`https://wa.me/?text=${encodeURIComponent(shareText + '\n' + matchUrl)}`, '_blank');
+    } else if (type === 'telegram') {
+      window.open(`https://t.me/share/url?url=${encodeURIComponent(matchUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
+    } else {
+      navigator.clipboard.writeText(matchUrl);
+      setCopied(true);
+      toast.success('Link copied!');
+      setTimeout(() => setCopied(false), 2000);
+    }
+    setShowShare(false);
+  };
 
   const { data: prediction, isLoading: predLoading } = usePrediction(
     match.home_name,
@@ -85,6 +116,28 @@ const MatchCard = memo(({ match, index = 0, isFavoriteHome, isFavoriteAway, onTo
               )}
             </div>
             <div className="flex items-center gap-2">
+              {/* Share button */}
+              <div className="relative" ref={shareRef}>
+                <button
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowShare(!showShare); }}
+                  className="w-6 h-6 rounded-full bg-secondary/60 border border-border/40 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
+                >
+                  <Share2 className="w-3 h-3" />
+                </button>
+                {showShare && (
+                  <div className="absolute right-0 top-8 z-50 bg-popover border border-border rounded-xl shadow-xl p-1.5 flex flex-col gap-1 min-w-[140px] animate-in fade-in-0 zoom-in-95">
+                    <button onClick={handleShare('whatsapp')} className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium hover:bg-accent transition-colors text-foreground">
+                      <MessageCircle className="w-3.5 h-3.5 text-green-500" /> WhatsApp
+                    </button>
+                    <button onClick={handleShare('telegram')} className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium hover:bg-accent transition-colors text-foreground">
+                      <Send className="w-3.5 h-3.5 text-[#0088cc]" /> Telegram
+                    </button>
+                    <button onClick={handleShare('copy')} className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium hover:bg-accent transition-colors text-foreground">
+                      {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Link2 className="w-3.5 h-3.5 text-muted-foreground" />} Copy Link
+                    </button>
+                  </div>
+                )}
+              </div>
               <PredictionBadge prediction={prediction} isLoading={predLoading} homeName={match.home_name} awayName={match.away_name} />
               {status === 'live' ? (
                 <ElapsedTime time={match.time} />
