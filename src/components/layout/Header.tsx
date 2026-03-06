@@ -36,11 +36,11 @@ const Header = ({ onSearch, searchQuery }: HeaderProps) => {
           <div className="flex items-center justify-between h-14">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2.5 group flex-shrink-0">
-              <div className="relative w-9 h-9 rounded-xl gradient-pitch flex items-center justify-center transition-all duration-300 group-hover:shadow-lg group-hover:shadow-primary/30 overflow-hidden">
+              <div className="relative w-8 h-8 rounded-lg gradient-pitch flex items-center justify-center transition-all duration-300 group-hover:shadow-lg group-hover:shadow-primary/30 overflow-hidden flex-shrink-0">
                 {settings.appLogoUrl ? (
-                  <img src={settings.appLogoUrl} alt="Logo" className="w-5 h-5 object-contain" />
+                  <img src={settings.appLogoUrl} alt="Logo" className="w-full h-full object-cover" />
                 ) : (
-                  <Tv className="w-5 h-5 text-primary-foreground" />
+                  <Tv className="w-4 h-4 text-primary-foreground" />
                 )}
                 {/* Shine effect */}
                 <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
