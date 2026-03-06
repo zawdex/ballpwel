@@ -22,6 +22,19 @@ import {
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
+import PlayerTicker from './PlayerTicker';
+import PlayerAdButton from './PlayerAdButton';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu';
+import { Slider } from '@/components/ui/slider';
+import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -405,8 +418,8 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
     }
   };
 
-  // Double tap to seek (mobile)
-  const handleDoubleTap = (e: React.TouchEvent) => {
+  // Touch handler: single tap toggles controls, double tap seeks
+  const handleTouchEnd = (e: React.TouchEvent) => {
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
     const x = e.changedTouches[0].clientX - rect.left;
@@ -419,7 +432,8 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
     } else {
       doubleTapTimeoutRef.current = setTimeout(() => {
         doubleTapTimeoutRef.current = null;
-        togglePlay();
+        // Single tap: toggle controls visibility only
+        showControlsTemporarily();
       }, 250);
     }
   };
@@ -471,13 +485,19 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
         className="w-full h-full object-contain bg-black"
         poster={poster}
         playsInline
-        onTouchEnd={handleDoubleTap}
+        onTouchEnd={handleTouchEnd}
         onClick={(e) => {
           e.preventDefault();
-          togglePlay();
+          // Click only toggles controls, not play/pause
           showControlsTemporarily();
         }}
       />
+
+      {/* Ad Button */}
+      <PlayerAdButton />
+
+      {/* Ticker */}
+      <PlayerTicker />
 
       {/* Seek Indicator (double-tap feedback) */}
       {seekIndicator && (
