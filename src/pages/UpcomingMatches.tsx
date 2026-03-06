@@ -27,10 +27,8 @@ const UpcomingMatches = () => {
             <Calendar className="w-6 h-6 text-upcoming animate-float" />
           </div>
           <div>
-            <h1 className="font-display text-2xl md:text-3xl font-bold animate-slide-up">
-              <span className="text-gradient inline-block animate-[gradient-shift_3s_ease_infinite] bg-[length:200%_200%]">
-                Upcoming Matches
-              </span>
+            <h1 className="font-display text-2xl md:text-3xl font-bold animate-slide-up text-foreground">
+              Upcoming Matches
             </h1>
             <p className="text-muted-foreground animate-slide-up [animation-delay:100ms] [animation-fill-mode:backwards]">
               {upcomingMatches.length} match{upcomingMatches.length !== 1 ? 'es' : ''} scheduled
