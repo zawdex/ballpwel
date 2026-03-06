@@ -55,7 +55,7 @@ const PlayerAdButton = () => {
       {/* Ad card popup */}
       {showCard && (
         <div
-          className="absolute top-14 left-3 z-50 w-56 rounded-xl bg-card/95 backdrop-blur-md border border-border/60 shadow-2xl overflow-hidden animate-fade-in"
+          className="absolute top-3 left-14 z-50 w-56 rounded-xl bg-card/95 backdrop-blur-md border border-border/60 shadow-2xl overflow-hidden animate-fade-in"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close button */}
