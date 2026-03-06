@@ -122,12 +122,13 @@ const Dashboard = ({ filters, onFilterChange }: DashboardProps) => {
       </div>
 
       {/* League Tabs - horizontal scroll */}
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
-        {availableLeagues.map(league => (
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 animate-slide-up [animation-delay:200ms] [animation-fill-mode:backwards]">
+        {availableLeagues.map((league, index) => (
           <button
             key={league.key}
             onClick={() => setActiveLeague(league.key)}
-            className={`league-tab ${activeLeague === league.key ? 'active' : ''}`}
+            className={`league-tab transition-all duration-300 animate-scale-in ${activeLeague === league.key ? 'active' : ''}`}
+            style={{ animationDelay: `${250 + index * 50}ms`, animationFillMode: 'backwards' }}
           >
             {league.label}
           </button>
