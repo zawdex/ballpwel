@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -148,6 +149,32 @@ serve(async (req) => {
 
     // Update cache
     cachedData = { data: mapped, timestamp: now };
+
+    // Save finished matches to DB (fire-and-forget)
+    const finished = mapped.filter((m: { match_status: string; score: string }) => m.match_status === 'finished' && m.score !== 'vs');
+    if (finished.length > 0) {
+      try {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        const sb = createClient(supabaseUrl, supabaseKey);
+
+        const rows = finished.map((m: { home_name: string; away_name: string; match_timestamp: number; home_logo: string; away_logo: string; score: string; label: string; time: string }) => ({
+          match_key: `${m.home_name}-${m.away_name}-${m.match_timestamp}`,
+          home_name: m.home_name,
+          away_name: m.away_name,
+          home_logo: m.home_logo,
+          away_logo: m.away_logo,
+          score: m.score,
+          league: m.label,
+          match_timestamp: m.match_timestamp,
+          match_time: m.time,
+        }));
+
+        await sb.from('match_results').upsert(rows, { onConflict: 'match_key', ignoreDuplicates: true });
+      } catch (e) {
+        console.error('Failed to save match results:', e);
+      }
+    }
 
     return new Response(JSON.stringify(mapped), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Cache': 'MISS' },
