@@ -325,13 +325,11 @@ function formatMatchDetail(match: any, lang: Lang) {
   }
 
   const id = generateId(match);
+  const appUrl = `https://ballpwel.lovable.app/matches/${encodeURIComponent(id)}`;
   const buttons: any[][] = [[{ text: s.getAiPrediction, callback_data: `pred_${id}` }]];
   if (hasStreams) {
-    match.authors.slice(0, 6).forEach((a: any, i: number) => {
-      buttons.push([{ text: `📺 ${a.name || s.stream(i + 1)}`, url: a.url }]);
-    });
+    buttons.push([{ text: `📺 ${s.viewOnWebsite}`, web_app: { url: appUrl } }]);
   }
-  if (match.view_url) buttons.push([{ text: s.viewOnWebsite, url: match.view_url }]);
   buttons.push([{ text: s.backToMatches, callback_data: "menu_all" }]);
 
   return { text, keyboard: { inline_keyboard: buttons } };
