@@ -132,6 +132,12 @@ const Dashboard = ({ filters, onFilterChange }: DashboardProps) => {
               {liveCount} LIVE
             </span>
           )}
+          {favorites.length > 0 && (
+            <span className="ml-2 inline-flex items-center gap-1 text-xs font-bold text-yellow-400">
+              <Star className="w-3 h-3 fill-yellow-400" />
+              {favorites.length}
+            </span>
+          )}
         </p>
       </div>
 
@@ -154,6 +160,8 @@ const Dashboard = ({ filters, onFilterChange }: DashboardProps) => {
         matches={filteredMatches}
         isLoading={isLoading}
         error={error as Error}
+        isFavorite={isFavorite}
+        onToggleFavorite={toggleFavorite}
       />
     </div>
   );
