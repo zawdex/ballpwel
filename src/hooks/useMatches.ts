@@ -2,55 +2,20 @@ import { useQuery } from '@tanstack/react-query';
 import { footballAPI } from '@/services/api';
 import { Match, MatchStatus, MatchFilters } from '@/types';
 
-export const getMatchStatus = (score: string, time: string): MatchStatus => {
-  // Check for explicit live indicators first
+export const getMatchStatus = (score: string, time: string, matchStatus?: string): MatchStatus => {
+  // Use the API-provided status directly if available
+  if (matchStatus === 'live') return 'live';
+  if (matchStatus === 'finished') return 'finished';
+  if (matchStatus === 'upcoming') return 'upcoming';
+
+  // Fallback: Check for explicit live indicators
   const timeLower = time.toLowerCase().trim();
   if (timeLower.includes('live') || timeLower.includes("'") || timeLower.includes('ht') || timeLower.includes('half')) {
     return 'live';
   }
 
-  // Check if there's a real score (e.g. "2 - 0", "1 - 1") vs placeholder "vs"
   const hasRealScore = score && score !== 'vs' && score !== '-' && /\d+\s*-\s*\d+/.test(score);
-
-  // Parse match time in format "HH:MM DD/MM/YYYY"
-  const timeMatch = time.trim().match(/^(\d{1,2}):(\d{2})\s+(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (timeMatch) {
-    const [, hours, minutes, day, month, year] = timeMatch;
-    const matchDate = new Date(
-      parseInt(year),
-      parseInt(month) - 1,
-      parseInt(day),
-      parseInt(hours),
-      parseInt(minutes)
-    );
-    const now = new Date();
-    const diffMs = now.getTime() - matchDate.getTime();
-    const diffMinutes = diffMs / (1000 * 60);
-
-    // If there's a real score, the match is either live or finished
-    if (hasRealScore) {
-      // If more than 150 minutes since start, it's finished
-      if (diffMinutes > 150) {
-        return 'finished';
-      }
-      // Otherwise it's live (score exists = match has started)
-      return 'live';
-    }
-
-    // No real score - use time-based logic
-    if (diffMinutes < 0) {
-      return 'upcoming';
-    }
-    if (diffMinutes >= 0 && diffMinutes <= 120) {
-      return 'live';
-    }
-    return 'finished';
-  }
-
-  // Fallback: if there's a real score, it's live; otherwise upcoming
-  if (hasRealScore) {
-    return 'live';
-  }
+  if (hasRealScore) return 'live';
 
   return 'upcoming';
 };

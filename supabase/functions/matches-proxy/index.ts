@@ -124,6 +124,7 @@ serve(async (req) => {
         away_name: m.away_team_name || '',
         url: '',
         authors,
+        match_status: statusHint,
       };
     });
 
