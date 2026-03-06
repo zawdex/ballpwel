@@ -24,7 +24,7 @@ const FootballBackground = () => {
       const h = canvas.height;
       ctx.clearRect(0, 0, w, h);
 
-      const alpha = 0.12;
+      const alpha = 0.18;
 
       // --- Stadium oval / bowl outline ---
       ctx.save();
