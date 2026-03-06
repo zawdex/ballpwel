@@ -726,6 +726,69 @@ async function handleUpdate(update: any) {
         }
       }
     }
+
+    // Inline query handler
+    if (update.inline_query) {
+      const inlineQuery = update.inline_query;
+      const query = (inlineQuery.query || "").toLowerCase().trim();
+      const fromId = inlineQuery.from.id;
+      const lang = await getLang(fromId);
+
+      try {
+        const matches = await fetchMatches();
+        let filtered = matches;
+
+        if (query) {
+          filtered = matches.filter((m: any) =>
+            m.home_name.toLowerCase().includes(query) ||
+            m.away_name.toLowerCase().includes(query) ||
+            m.label.toLowerCase().includes(query)
+          );
+        }
+
+        const results = filtered.slice(0, 20).map((m: any, i: number) => {
+          const status = getMatchStatus(m.score, m.time);
+          const emoji = statusEmoji(status);
+          const scoreDisplay = m.score === "vs" ? "🆚" : m.score;
+          const id = generateId(m);
+          const appUrl = `https://ballpwel.lovable.app/matches/${encodeURIComponent(id)}`;
+
+          const msgText = `${line}\n${emoji} <b>${m.home_name}</b> ${scoreDisplay} <b>${m.away_name}</b>\n${line}\n\n🏟 ${m.label}\n⏱ ${m.time}\n📊 ${lang === "my" ? "အခြေအနေ" : "Status"}: <b>${status.toUpperCase()}</b>\n\n${thinLine}\n📺 ${lang === "my" ? "ကြည့်ရှုရန်" : "Watch"}: ${appUrl}\n${line}`;
+
+          return {
+            type: "article",
+            id: `${id}_${i}`,
+            title: `${emoji} ${m.home_name} vs ${m.away_name}`,
+            description: `${m.label} | ${m.time} | ${scoreDisplay}`,
+            input_message_content: {
+              message_text: msgText,
+              parse_mode: "HTML",
+              disable_web_page_preview: true,
+            },
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: `📺 ${lang === "my" ? "Website တွင်ကြည့်ရန်" : "Watch on Website"}`, url: appUrl }],
+              ],
+            },
+          };
+        });
+
+        await tgApi("answerInlineQuery", {
+          inline_query_id: inlineQuery.id,
+          results,
+          cache_time: 30,
+          switch_pm_text: lang === "my" ? "⚽ Bot ကိုဖွင့်ရန်" : "⚽ Open Bot",
+          switch_pm_parameter: "start",
+        });
+      } catch (e) {
+        console.error("Inline query error:", e);
+        await tgApi("answerInlineQuery", {
+          inline_query_id: inlineQuery.id,
+          results: [],
+          cache_time: 5,
+        });
+      }
+    }
   } catch (error) {
     console.error("Handle update error:", error);
   }
