@@ -50,9 +50,9 @@ const PlayerAdButton = () => {
           e.stopPropagation();
           setShowCard(!showCard);
         }}
-        className="absolute top-3 right-3 z-40 w-9 h-9 rounded-full bg-black/60 backdrop-blur-sm border border-white/20 flex items-center justify-center hover:bg-black/80 transition-all overflow-hidden"
+        className="absolute top-3 right-3 z-40 w-11 h-11 rounded-full bg-black/50 backdrop-blur-sm border-2 border-white/30 flex items-center justify-center hover:bg-black/70 transition-all overflow-hidden shadow-lg shadow-black/30"
       >
-        <img src={settings.appLogoUrl} alt="Ad" className="w-6 h-6 object-contain" />
+        <img src={settings.appLogoUrl} alt="Ad" className="w-8 h-8 rounded-full object-cover" />
       </button>
 
       {/* Ad card popup */}
