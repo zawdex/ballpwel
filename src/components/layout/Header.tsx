@@ -122,9 +122,14 @@ const Header = ({ onSearch, searchQuery }: HeaderProps) => {
                   variant="ghost"
                   size="icon"
                   onClick={toggleTheme}
-                  className="text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl h-8 w-8 transition-colors"
+                  className="rounded-xl h-8 w-8 transition-all duration-300 bg-secondary/60 border border-border/50 hover:bg-primary/15 hover:border-primary/40"
+                  title={theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
                 >
-                  {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                  {theme === 'dark' ? (
+                    <Sun className="w-4 h-4 text-primary" />
+                  ) : (
+                    <Moon className="w-4 h-4 text-primary" />
+                  )}
                 </Button>
                 <LanguageSwitcher />
               </div>
@@ -148,9 +153,14 @@ const Header = ({ onSearch, searchQuery }: HeaderProps) => {
                   variant="ghost"
                   size="icon"
                   onClick={toggleTheme}
-                  className="text-muted-foreground hover:text-primary rounded-xl h-8 w-8 transition-colors"
+                  className="rounded-xl h-8 w-8 transition-all duration-300 bg-secondary/60 border border-border/50 hover:bg-primary/15 hover:border-primary/40"
+                  title={theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
                 >
-                  {theme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+                  {theme === 'dark' ? (
+                    <Sun className="w-3.5 h-3.5 text-primary" />
+                  ) : (
+                    <Moon className="w-3.5 h-3.5 text-primary" />
+                  )}
                 </Button>
                 <LanguageSwitcher />
               </div>
