@@ -95,23 +95,25 @@ const Dashboard = ({ filters, onFilterChange }: DashboardProps) => {
       {/* Header */}
       <div className="pt-2">
         <div className="flex items-center justify-between mb-1">
-          <h1 className="font-display text-2xl md:text-3xl font-bold">
-            Live Arena
+          <h1 className="font-display text-2xl md:text-3xl font-bold animate-slide-up">
+            <span className="text-gradient inline-block animate-[gradient-shift_3s_ease_infinite] bg-[length:200%_200%]">
+              Live Arena
+            </span>
           </h1>
           <Button
             variant="ghost"
             size="icon"
             onClick={() => refetch()}
             disabled={isFetching}
-            className="rounded-xl h-9 w-9 text-muted-foreground"
+            className="rounded-xl h-9 w-9 text-muted-foreground animate-fade-in"
           >
             <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
           </Button>
         </div>
-        <p className="text-muted-foreground text-sm">
+        <p className="text-muted-foreground text-sm animate-slide-up [animation-delay:100ms] [animation-fill-mode:backwards]">
           Watch the current fixtures and kickoff flow.
           {liveCount > 0 && (
-            <span className="ml-2 inline-flex items-center gap-1.5 text-xs font-bold text-destructive">
+            <span className="ml-2 inline-flex items-center gap-1.5 text-xs font-bold text-destructive animate-scale-in [animation-delay:300ms] [animation-fill-mode:backwards]">
               <span className="w-1.5 h-1.5 rounded-full bg-destructive animate-count-pulse" />
               {liveCount} LIVE
             </span>
