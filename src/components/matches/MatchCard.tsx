@@ -1,6 +1,7 @@
 import { memo, useRef, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Play, Radio, ArrowRight, Star } from 'lucide-react';
+import { Play, Radio, ArrowRight, Star, Share2, MessageCircle, Send, Link2, Check } from 'lucide-react';
+import { toast } from 'sonner';
 import { Match, MatchStatus } from '@/types';
 import { getMatchStatus } from '@/hooks/useMatches';
 import { usePrediction } from '@/hooks/usePrediction';
