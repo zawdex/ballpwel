@@ -8,7 +8,7 @@ import StatusBadge from './StatusBadge';
 import PredictionBadge from '@/components/predictions/PredictionBadge';
 import CountdownTimer from './CountdownTimer';
 import ElapsedTime from './ElapsedTime';
-import ProxiedImage from '@/components/ui/ProxiedImage';
+
 
 interface MatchCardProps {
   match: Match;
@@ -103,10 +103,10 @@ const MatchCard = memo(({ match, index = 0 }: MatchCardProps) => {
             {/* Home team */}
             <div className="flex-1 flex flex-col items-center gap-2 min-w-0">
               <div className="w-12 h-12 rounded-2xl bg-secondary/60 flex items-center justify-center overflow-hidden border border-border/40 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-primary/10 relative">
-                <span className="text-base font-bold text-muted-foreground">{match.home_name.charAt(0)}</span>
-                {match.home_logo && (
-                  <ProxiedImage src={match.home_logo} alt={match.home_name} className="w-8 h-8 object-contain absolute inset-0 m-auto" />
-                )}
+                {match.home_logo ? (
+                  <img src={match.home_logo} alt={match.home_name} className="w-8 h-8 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling && ((e.target as HTMLImageElement).parentElement!.querySelector('.fallback-initial')! as HTMLElement).style.display = 'flex'; }} />
+                ) : null}
+                <span className={`fallback-initial text-base font-bold text-muted-foreground absolute inset-0 items-center justify-center ${match.home_logo ? 'hidden' : 'flex'}`}>{match.home_name.charAt(0)}</span>
               </div>
               <span className="text-xs font-semibold text-center truncate w-full leading-tight">{match.home_name}</span>
             </div>
@@ -137,10 +137,10 @@ const MatchCard = memo(({ match, index = 0 }: MatchCardProps) => {
             {/* Away team */}
             <div className="flex-1 flex flex-col items-center gap-2 min-w-0">
               <div className="w-12 h-12 rounded-2xl bg-secondary/60 flex items-center justify-center overflow-hidden border border-border/40 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-primary/10 relative">
-                <span className="text-base font-bold text-muted-foreground">{match.away_name.charAt(0)}</span>
-                {match.away_logo && (
-                  <ProxiedImage src={match.away_logo} alt={match.away_name} className="w-8 h-8 object-contain absolute inset-0 m-auto" />
-                )}
+                {match.away_logo ? (
+                  <img src={match.away_logo} alt={match.away_name} className="w-8 h-8 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).parentElement!.querySelector('.fallback-initial')!.setAttribute('style', 'display:flex'); }} />
+                ) : null}
+                <span className={`fallback-initial text-base font-bold text-muted-foreground absolute inset-0 items-center justify-center ${match.away_logo ? 'hidden' : 'flex'}`}>{match.away_name.charAt(0)}</span>
               </div>
               <span className="text-xs font-semibold text-center truncate w-full leading-tight">{match.away_name}</span>
             </div>
