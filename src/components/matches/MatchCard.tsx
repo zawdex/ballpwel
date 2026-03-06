@@ -16,7 +16,7 @@ interface MatchCardProps {
 }
 
 const MatchCard = memo(({ match, index = 0 }: MatchCardProps) => {
-  const status = getMatchStatus(match.score, match.time);
+  const status = getMatchStatus(match.score, match.time, match.api_status);
   const prevStatusRef = useRef<MatchStatus>(status);
   const [justWentLive, setJustWentLive] = useState(false);
   const [enablePrediction, setEnablePrediction] = useState(false);

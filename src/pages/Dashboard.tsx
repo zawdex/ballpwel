@@ -71,8 +71,8 @@ const Dashboard = ({ filters, onFilterChange }: DashboardProps) => {
     // Sort: live first, then upcoming, then finished
     return popular.sort((a, b) => {
       const order = { live: 0, upcoming: 1, finished: 2 };
-      const sa = order[getMatchStatus(a.score, a.time)] ?? 2;
-      const sb = order[getMatchStatus(b.score, b.time)] ?? 2;
+      const sa = order[getMatchStatus(a.score, a.time, a.api_status)] ?? 2;
+      const sb = order[getMatchStatus(b.score, b.time, b.api_status)] ?? 2;
       return sa - sb;
     });
   }, [allMatches, activeLeague, filters.searchQuery]);
@@ -87,7 +87,7 @@ const Dashboard = ({ filters, onFilterChange }: DashboardProps) => {
   }, [allMatches]);
 
   const liveCount = useMemo(() => {
-    return filteredMatches.filter(m => getMatchStatus(m.score, m.time) === 'live').length;
+    return filteredMatches.filter(m => getMatchStatus(m.score, m.time, m.api_status) === 'live').length;
   }, [filteredMatches]);
 
   return (
