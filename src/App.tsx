@@ -13,6 +13,7 @@ import MatchDetail from "@/pages/MatchDetail";
 import LiveMatches from "@/pages/LiveMatches";
 import UpcomingMatches from "@/pages/UpcomingMatches";
 import NBAMatches from "@/pages/NBAMatches";
+import Results from "@/pages/Results";
 import AdminPanel from "@/pages/AdminPanel";
 import Login from "@/pages/Login";
 import NotFound from "./pages/NotFound";
@@ -57,6 +58,7 @@ const App = () => {
                   <Route path="/live" element={<LiveMatches />} />
                   <Route path="/upcoming" element={<UpcomingMatches />} />
                   <Route path="/basketball" element={<NBAMatches />} />
+                  <Route path="/results" element={<Results />} />
                 </Route>
                 <Route path="/admin" element={<AdminPanel />} />
                 <Route path="/login" element={<Login />} />

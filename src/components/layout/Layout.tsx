@@ -2,7 +2,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import Header from './Header';
 import FootballBackground from './FootballBackground';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Send, Zap, Calendar, Trophy } from 'lucide-react';
+import { Send, Zap, Calendar, Trophy, CheckCircle } from 'lucide-react';
 
 interface LayoutProps {
   onSearch: (query: string) => void;
@@ -17,7 +17,8 @@ const Layout = ({ onSearch, searchQuery }: LayoutProps) => {
     { path: '/', label: t('allMatches'), icon: Trophy },
     { path: '/live', label: t('live'), icon: Zap },
     { path: '/upcoming', label: t('upcoming'), icon: Calendar },
-    { path: '/basketball', label: '🏀 NBA', icon: null },
+    { path: '/results', label: 'Results', icon: CheckCircle },
+    { path: '/basketball', label: 'NBA', icon: null },
   ];
 
   const isActive = (path: string) => location.pathname === path;
