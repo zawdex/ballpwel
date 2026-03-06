@@ -118,6 +118,14 @@ const Header = ({ onSearch, searchQuery }: HeaderProps) => {
                   </a>
                 )}
                 <TelegramLink />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleTheme}
+                  className="text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl h-8 w-8 transition-colors"
+                >
+                  {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                </Button>
                 <LanguageSwitcher />
               </div>
 
@@ -136,6 +144,14 @@ const Header = ({ onSearch, searchQuery }: HeaderProps) => {
                     </Button>
                   </a>
                 )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleTheme}
+                  className="text-muted-foreground hover:text-primary rounded-xl h-8 w-8 transition-colors"
+                >
+                  {theme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+                </Button>
                 <LanguageSwitcher />
               </div>
             </div>
