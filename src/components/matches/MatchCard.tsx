@@ -1,6 +1,6 @@
 import { memo, useRef, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Play, Radio, ArrowRight } from 'lucide-react';
+import { Play, Radio, ArrowRight, Star } from 'lucide-react';
 import { Match, MatchStatus } from '@/types';
 import { getMatchStatus } from '@/hooks/useMatches';
 import { usePrediction } from '@/hooks/usePrediction';
@@ -13,6 +13,9 @@ import TeamLogo from '@/components/ui/TeamLogo';
 interface MatchCardProps {
   match: Match;
   index?: number;
+  isFavoriteHome?: boolean;
+  isFavoriteAway?: boolean;
+  onToggleFavorite?: (teamName: string) => void;
 }
 
 const MatchCard = memo(({ match, index = 0 }: MatchCardProps) => {
