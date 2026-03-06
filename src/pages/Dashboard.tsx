@@ -95,10 +95,8 @@ const Dashboard = ({ filters, onFilterChange }: DashboardProps) => {
       {/* Header */}
       <div className="pt-2">
         <div className="flex items-center justify-between mb-1">
-          <h1 className="font-display text-2xl md:text-3xl font-bold animate-slide-up">
-            <span className="text-gradient inline-block animate-[gradient-shift_3s_ease_infinite] bg-[length:200%_200%]">
-              Live Arena
-            </span>
+          <h1 className="font-display text-2xl md:text-3xl font-bold animate-slide-up text-foreground">
+            Live Arena
           </h1>
           <Button
             variant="ghost"
