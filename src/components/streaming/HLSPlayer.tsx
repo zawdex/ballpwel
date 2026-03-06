@@ -5,6 +5,7 @@ import {
   Pause, 
   Volume2, 
   VolumeX, 
+  Volume1,
   Maximize, 
   Minimize,
   Settings,
@@ -12,7 +13,11 @@ import {
   AlertCircle,
   RefreshCw,
   Tv,
-  Check
+  Check,
+  PictureInPicture2,
+  SkipBack,
+  SkipForward,
+  Signal
 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
@@ -22,6 +27,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 
 interface HLSPlayerProps {
@@ -42,6 +49,7 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const doubleTapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { t } = useLanguage();
 
   const [isPlaying, setIsPlaying] = useState(false);
@@ -56,6 +64,10 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
   const [qualityLevels, setQualityLevels] = useState<QualityLevel[]>([]);
   const [currentQuality, setCurrentQuality] = useState(-1);
   const [isBuffering, setIsBuffering] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const [seekIndicator, setSeekIndicator] = useState<{ side: 'left' | 'right'; seconds: number } | null>(null);
+  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+  const [bufferedPercent, setBufferedPercent] = useState(0);
 
   const initializePlayer = useCallback(() => {
     if (!videoRef.current || !src) return;
@@ -127,7 +139,6 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
 
   useEffect(() => {
     initializePlayer();
-
     return () => {
       if (hlsRef.current) {
         hlsRef.current.destroy();
@@ -139,7 +150,14 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
     const video = videoRef.current;
     if (!video) return;
 
-    const handleTimeUpdate = () => setCurrentTime(video.currentTime);
+    const handleTimeUpdate = () => {
+      setCurrentTime(video.currentTime);
+      // Update buffered
+      if (video.buffered.length > 0) {
+        const buffEnd = video.buffered.end(video.buffered.length - 1);
+        setBufferedPercent(video.duration ? (buffEnd / video.duration) * 100 : 0);
+      }
+    };
     const handleDurationChange = () => setDuration(video.duration);
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
@@ -176,10 +194,51 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
-
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (!containerRef.current?.contains(document.activeElement) && document.activeElement !== document.body) return;
+      
+      switch (e.key) {
+        case ' ':
+        case 'k':
+          e.preventDefault();
+          togglePlay();
+          break;
+        case 'f':
+          e.preventDefault();
+          toggleFullscreen();
+          break;
+        case 'm':
+          e.preventDefault();
+          toggleMute();
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          seekBy(-10);
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          seekBy(10);
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          handleVolumeChange([Math.min(1, volume + 0.1)]);
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          handleVolumeChange([Math.max(0, volume - 0.1)]);
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeydown);
+    return () => document.removeEventListener('keydown', handleKeydown);
+  }, [isPlaying, volume]);
 
   const showControlsTemporarily = useCallback(() => {
     setShowControls(true);
@@ -189,8 +248,9 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
     controlsTimeoutRef.current = setTimeout(() => {
       if (isPlaying) {
         setShowControls(false);
+        setShowVolumeSlider(false);
       }
-    }, 3000);
+    }, 3500);
   }, [isPlaying]);
 
   const togglePlay = () => {
@@ -226,13 +286,35 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
     }
   };
 
+  const seekBy = (seconds: number) => {
+    if (videoRef.current) {
+      const newTime = Math.max(0, Math.min(duration, videoRef.current.currentTime + seconds));
+      videoRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
+      setSeekIndicator({ side: seconds > 0 ? 'right' : 'left', seconds: Math.abs(seconds) });
+      setTimeout(() => setSeekIndicator(null), 600);
+    }
+  };
+
   const toggleFullscreen = () => {
     if (!containerRef.current) return;
-
     if (!document.fullscreenElement) {
       containerRef.current.requestFullscreen();
     } else {
       document.exitFullscreen();
+    }
+  };
+
+  const togglePiP = async () => {
+    if (!videoRef.current) return;
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+      } else {
+        await videoRef.current.requestPictureInPicture();
+      }
+    } catch (err) {
+      console.error('PiP error:', err);
     }
   };
 
@@ -243,178 +325,326 @@ const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
     }
   };
 
+  const changePlaybackRate = (rate: number) => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = rate;
+      setPlaybackRate(rate);
+    }
+  };
+
+  // Double tap to seek (mobile)
+  const handleDoubleTap = (e: React.TouchEvent) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const x = e.changedTouches[0].clientX - rect.left;
+    const isLeft = x < rect.width / 2;
+
+    if (doubleTapTimeoutRef.current) {
+      clearTimeout(doubleTapTimeoutRef.current);
+      doubleTapTimeoutRef.current = null;
+      seekBy(isLeft ? -10 : 10);
+    } else {
+      doubleTapTimeoutRef.current = setTimeout(() => {
+        doubleTapTimeoutRef.current = null;
+        togglePlay();
+      }, 250);
+    }
+  };
+
   const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
+    if (!isFinite(time)) return '0:00';
+    const hours = Math.floor(time / 3600);
+    const minutes = Math.floor((time % 3600) / 60);
     const seconds = Math.floor(time % 60);
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
   const getQualityLabel = (level: QualityLevel) => {
-    if (level.height >= 1080) return '1080p';
-    if (level.height >= 720) return '720p';
+    if (level.height >= 1080) return '1080p HD';
+    if (level.height >= 720) return '720p HD';
     if (level.height >= 480) return '480p';
     if (level.height >= 360) return '360p';
     return `${level.height}p`;
   };
 
+  const getQualityShortLabel = (level: QualityLevel) => {
+    if (level.height >= 1080) return '1080p';
+    if (level.height >= 720) return '720p';
+    if (level.height >= 480) return '480p';
+    return `${level.height}p`;
+  };
+
+  const VolumeIcon = isMuted || volume === 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2;
+  const progressPercent = duration ? (currentTime / duration) * 100 : 0;
+
   return (
     <div
       ref={containerRef}
-      className="relative aspect-video bg-gradient-to-br from-black via-zinc-900 to-black rounded-xl overflow-hidden group"
+      className="relative aspect-video bg-black rounded-xl overflow-hidden group cursor-pointer select-none"
       onMouseMove={showControlsTemporarily}
-      onMouseLeave={() => isPlaying && setShowControls(false)}
+      onMouseLeave={() => {
+        if (isPlaying) {
+          setShowControls(false);
+          setShowVolumeSlider(false);
+        }
+      }}
+      tabIndex={0}
     >
       <video
         ref={videoRef}
-        className="w-full h-full object-contain"
+        className="w-full h-full object-contain bg-black"
         poster={poster}
         playsInline
-        onClick={togglePlay}
+        onTouchEnd={handleDoubleTap}
+        onClick={(e) => {
+          e.preventDefault();
+          togglePlay();
+          showControlsTemporarily();
+        }}
       />
+
+      {/* Seek Indicator (double-tap feedback) */}
+      {seekIndicator && (
+        <div className={`absolute top-1/2 -translate-y-1/2 ${seekIndicator.side === 'left' ? 'left-8' : 'right-8'} animate-fade-in`}>
+          <div className="flex flex-col items-center gap-1 bg-black/60 backdrop-blur-md rounded-full px-5 py-3">
+            {seekIndicator.side === 'left' ? (
+              <SkipBack className="w-6 h-6 text-white" />
+            ) : (
+              <SkipForward className="w-6 h-6 text-white" />
+            )}
+            <span className="text-white text-xs font-bold">{seekIndicator.seconds}s</span>
+          </div>
+        </div>
+      )}
 
       {/* Loading Overlay */}
       {(isLoading || isBuffering) && !error && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="relative">
-            <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center">
-              <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 pointer-events-none">
+          <div className="relative w-14 h-14">
+            <div className="absolute inset-0 rounded-full border-2 border-primary/20" />
+            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary animate-spin" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Signal className="w-5 h-5 text-primary" />
             </div>
           </div>
-          <p className="mt-4 text-sm text-muted-foreground">{t('loading')}</p>
+          {isBuffering && !isLoading && (
+            <p className="mt-3 text-xs text-white/60 font-medium">Buffering...</p>
+          )}
         </div>
       )}
 
       {/* Error Overlay */}
       {error && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-black/90 to-black/80 text-center p-6 backdrop-blur-sm">
-          <div className="w-16 h-16 rounded-2xl bg-destructive/20 flex items-center justify-center mb-4">
-            <AlertCircle className="w-8 h-8 text-destructive" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 text-center p-6">
+          <div className="w-14 h-14 rounded-full bg-destructive/20 flex items-center justify-center mb-4">
+            <AlertCircle className="w-7 h-7 text-destructive" />
           </div>
-          <p className="text-lg font-bold mb-2">{error}</p>
-          <Button onClick={initializePlayer} variant="outline" className="gap-2 mt-2">
-            <RefreshCw className="w-4 h-4" />
+          <p className="text-base font-semibold text-white mb-1">{error}</p>
+          <p className="text-xs text-white/50 mb-4">Please check your connection</p>
+          <Button onClick={initializePlayer} size="sm" className="gap-2 bg-primary hover:bg-primary/90">
+            <RefreshCw className="w-3.5 h-3.5" />
             {t('retry')}
           </Button>
         </div>
       )}
 
-      {/* Play Button Overlay (when paused) */}
+      {/* Large Play Button (when paused, not loading) */}
       {!isPlaying && !isLoading && !error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-          <button
-            onClick={togglePlay}
-            className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-2xl shadow-primary/30"
-          >
-            <Play className="w-12 h-12 text-primary-foreground fill-primary-foreground ml-1" />
-          </button>
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary/90 flex items-center justify-center shadow-2xl shadow-primary/40 transition-transform group-hover:scale-110">
+            <Play className="w-7 h-7 sm:w-9 sm:h-9 text-primary-foreground fill-primary-foreground ml-0.5" />
+          </div>
         </div>
       )}
 
-      {/* Controls */}
+      {/* Top Gradient + Title */}
       <div
-        className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent p-4 pt-16 transition-opacity duration-300 ${
-          showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        className={`absolute top-0 left-0 right-0 bg-gradient-to-b from-black/70 to-transparent p-3 sm:p-4 transition-all duration-300 ${
+          showControls ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
         }`}
       >
-        {/* Title Bar */}
-        {title && showControls && (
-          <div className="absolute top-4 left-4 right-4 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center backdrop-blur-sm border border-primary/20">
-              <Tv className="w-4 h-4 text-primary" />
-            </div>
-            <span className="text-sm font-medium text-white/90 truncate">{title}</span>
+        <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/10 backdrop-blur-sm">
+            <div className="w-1.5 h-1.5 rounded-full bg-live animate-pulse" />
+            <span className="text-[10px] font-bold text-white uppercase tracking-wider">Live</span>
           </div>
-        )}
+          {title && (
+            <span className="text-xs sm:text-sm font-medium text-white/80 truncate">{title}</span>
+          )}
+        </div>
+      </div>
 
-        {/* Progress Bar */}
-        <div className="mb-4">
-          <Slider
-            value={[currentTime]}
-            max={duration || 100}
-            step={1}
-            onValueChange={handleSeek}
-            className="cursor-pointer"
-          />
-          <div className="flex justify-between text-xs text-white/60 mt-1.5 font-medium">
-            <span>{formatTime(currentTime)}</span>
-            <span>{formatTime(duration)}</span>
+      {/* Bottom Controls */}
+      <div
+        className={`absolute bottom-0 left-0 right-0 transition-all duration-300 ${
+          showControls ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
+        }`}
+      >
+        {/* Progress bar area */}
+        <div className="px-3 sm:px-4">
+          {/* Custom progress bar */}
+          <div className="relative group/progress h-6 flex items-end pb-2 cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              const rect = e.currentTarget.getBoundingClientRect();
+              const percent = (e.clientX - rect.left) / rect.width;
+              handleSeek([percent * (duration || 100)]);
+            }}
+          >
+            {/* Track background */}
+            <div className="w-full h-1 group-hover/progress:h-1.5 rounded-full bg-white/20 transition-all relative overflow-hidden">
+              {/* Buffered */}
+              <div
+                className="absolute inset-y-0 left-0 bg-white/30 rounded-full"
+                style={{ width: `${bufferedPercent}%` }}
+              />
+              {/* Progress */}
+              <div
+                className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+            {/* Thumb */}
+            <div
+              className="absolute bottom-1.5 w-3 h-3 rounded-full bg-primary shadow-lg shadow-primary/50 opacity-0 group-hover/progress:opacity-100 transition-opacity -translate-x-1/2"
+              style={{ left: `${progressPercent}%` }}
+            />
           </div>
         </div>
 
-        {/* Control Buttons */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {/* Play/Pause */}
-            <button
-              onClick={togglePlay}
-              className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-sm border border-white/10"
-            >
-              {isPlaying ? (
-                <Pause className="w-5 h-5 text-white" />
-              ) : (
-                <Play className="w-5 h-5 text-white" />
-              )}
-            </button>
-
-            {/* Volume */}
-            <div className="flex items-center gap-2">
+        {/* Controls bar */}
+        <div className="bg-gradient-to-t from-black/90 via-black/60 to-transparent px-3 sm:px-4 pb-3 pt-1">
+          <div className="flex items-center justify-between gap-2">
+            {/* Left controls */}
+            <div className="flex items-center gap-1 sm:gap-1.5">
+              {/* Play/Pause */}
               <button
-                onClick={toggleMute}
-                className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-sm border border-white/10"
+                onClick={(e) => { e.stopPropagation(); togglePlay(); }}
+                className="p-1.5 sm:p-2 rounded-lg hover:bg-white/15 transition-colors"
               >
-                {isMuted || volume === 0 ? (
-                  <VolumeX className="w-5 h-5 text-white" />
+                {isPlaying ? (
+                  <Pause className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 ) : (
-                  <Volume2 className="w-5 h-5 text-white" />
+                  <Play className="w-5 h-5 sm:w-6 sm:h-6 text-white fill-white" />
                 )}
               </button>
-              <div className="w-24 hidden sm:block">
-                <Slider
-                  value={[isMuted ? 0 : volume]}
-                  max={1}
-                  step={0.1}
-                  onValueChange={handleVolumeChange}
-                />
+
+              {/* Skip Back */}
+              <button
+                onClick={(e) => { e.stopPropagation(); seekBy(-10); }}
+                className="p-1.5 sm:p-2 rounded-lg hover:bg-white/15 transition-colors hidden sm:flex"
+              >
+                <SkipBack className="w-4 h-4 sm:w-5 sm:h-5 text-white/80" />
+              </button>
+
+              {/* Skip Forward */}
+              <button
+                onClick={(e) => { e.stopPropagation(); seekBy(10); }}
+                className="p-1.5 sm:p-2 rounded-lg hover:bg-white/15 transition-colors hidden sm:flex"
+              >
+                <SkipForward className="w-4 h-4 sm:w-5 sm:h-5 text-white/80" />
+              </button>
+
+              {/* Volume */}
+              <div className="relative flex items-center"
+                onMouseEnter={() => setShowVolumeSlider(true)}
+                onMouseLeave={() => setShowVolumeSlider(false)}
+              >
+                <button
+                  onClick={(e) => { e.stopPropagation(); toggleMute(); }}
+                  className="p-1.5 sm:p-2 rounded-lg hover:bg-white/15 transition-colors"
+                >
+                  <VolumeIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white/80" />
+                </button>
+                <div className={`overflow-hidden transition-all duration-200 ${showVolumeSlider ? 'w-20 opacity-100 ml-1' : 'w-0 opacity-0'}`}>
+                  <Slider
+                    value={[isMuted ? 0 : volume]}
+                    max={1}
+                    step={0.05}
+                    onValueChange={(v) => { handleVolumeChange(v); }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              {/* Time */}
+              <div className="text-[10px] sm:text-xs text-white/60 font-mono ml-1 whitespace-nowrap">
+                {formatTime(currentTime)} / {formatTime(duration)}
               </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-2">
-            {/* Quality Selector */}
-            {qualityLevels.length > 0 && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors flex items-center gap-1.5 backdrop-blur-sm border border-white/10">
-                    <Settings className="w-5 h-5 text-white" />
-                    <span className="text-xs text-white font-medium hidden sm:inline">
-                      {currentQuality === -1 ? t('auto') : getQualityLabel(qualityLevels[currentQuality])}
-                    </span>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-card/95 backdrop-blur-xl border-border">
-                  <DropdownMenuItem onClick={() => setQuality(-1)} className="gap-2">
-                    {t('auto')} {currentQuality === -1 && <Check className="w-4 h-4 text-primary ml-auto" />}
-                  </DropdownMenuItem>
-                  {qualityLevels.map((level) => (
-                    <DropdownMenuItem key={level.index} onClick={() => setQuality(level.index)} className="gap-2">
-                      {getQualityLabel(level)} {currentQuality === level.index && <Check className="w-4 h-4 text-primary ml-auto" />}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-
-            {/* Fullscreen */}
-            <button
-              onClick={toggleFullscreen}
-              className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-sm border border-white/10"
-            >
-              {isFullscreen ? (
-                <Minimize className="w-5 h-5 text-white" />
-              ) : (
-                <Maximize className="w-5 h-5 text-white" />
+            {/* Right controls */}
+            <div className="flex items-center gap-0.5 sm:gap-1">
+              {/* Settings (Quality + Speed) */}
+              {(qualityLevels.length > 0 || true) && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      onClick={(e) => e.stopPropagation()}
+                      className="p-1.5 sm:p-2 rounded-lg hover:bg-white/15 transition-colors relative"
+                    >
+                      <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-white/80" />
+                      {currentQuality !== -1 && qualityLevels[currentQuality] && (
+                        <span className="absolute -top-0.5 -right-0.5 text-[8px] bg-primary text-primary-foreground rounded px-0.5 font-bold">
+                          {getQualityShortLabel(qualityLevels[currentQuality])}
+                        </span>
+                      )}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" side="top" className="bg-card/95 backdrop-blur-xl border-border min-w-[160px]">
+                    {qualityLevels.length > 0 && (
+                      <>
+                        <DropdownMenuLabel className="text-xs text-muted-foreground">Quality</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => setQuality(-1)} className="gap-2 text-sm">
+                          Auto
+                          {currentQuality === -1 && <Check className="w-3.5 h-3.5 text-primary ml-auto" />}
+                        </DropdownMenuItem>
+                        {qualityLevels.map((level) => (
+                          <DropdownMenuItem key={level.index} onClick={() => setQuality(level.index)} className="gap-2 text-sm">
+                            {getQualityLabel(level)}
+                            {currentQuality === level.index && <Check className="w-3.5 h-3.5 text-primary ml-auto" />}
+                          </DropdownMenuItem>
+                        ))}
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
+                    <DropdownMenuLabel className="text-xs text-muted-foreground">Speed</DropdownMenuLabel>
+                    {[0.5, 0.75, 1, 1.25, 1.5, 2].map((rate) => (
+                      <DropdownMenuItem key={rate} onClick={() => changePlaybackRate(rate)} className="gap-2 text-sm">
+                        {rate}x{rate === 1 && ' (Normal)'}
+                        {playbackRate === rate && <Check className="w-3.5 h-3.5 text-primary ml-auto" />}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
-            </button>
+
+              {/* Picture-in-Picture */}
+              {'pictureInPictureEnabled' in document && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); togglePiP(); }}
+                  className="p-1.5 sm:p-2 rounded-lg hover:bg-white/15 transition-colors hidden sm:flex"
+                >
+                  <PictureInPicture2 className="w-4 h-4 sm:w-5 sm:h-5 text-white/80" />
+                </button>
+              )}
+
+              {/* Fullscreen */}
+              <button
+                onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }}
+                className="p-1.5 sm:p-2 rounded-lg hover:bg-white/15 transition-colors"
+              >
+                {isFullscreen ? (
+                  <Minimize className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                ) : (
+                  <Maximize className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>
