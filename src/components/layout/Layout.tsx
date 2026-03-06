@@ -1,5 +1,6 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import Header from './Header';
+import FootballBackground from './FootballBackground';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Send, Zap, Calendar, Trophy } from 'lucide-react';
 
@@ -22,6 +23,7 @@ const Layout = ({ onSearch, searchQuery }: LayoutProps) => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-x-hidden pitch-bg">
+      <FootballBackground />
       <Header onSearch={onSearch} searchQuery={searchQuery} />
       <main className="container mx-auto px-4 py-4 md:py-8 flex-1 relative z-10 pb-24 md:pb-8">
         <Outlet />
