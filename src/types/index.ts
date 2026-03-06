@@ -2,6 +2,7 @@ export interface Author {
   name: string;
   url: string;
   logo: string;
+  referer?: string;
 }
 
 export interface Match {
@@ -16,6 +17,7 @@ export interface Match {
   away_name: string;
   url: string;
   authors: Author[];
+  api_status?: string; // raw status from API: "live", "finished", "vs"
 }
 
 export type MatchStatus = 'live' | 'upcoming' | 'finished';
