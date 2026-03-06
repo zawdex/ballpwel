@@ -110,6 +110,48 @@ export type Database = {
         }
         Relationships: []
       }
+      match_results: {
+        Row: {
+          away_logo: string | null
+          away_name: string
+          created_at: string
+          home_logo: string | null
+          home_name: string
+          id: string
+          league: string | null
+          match_key: string
+          match_time: string | null
+          match_timestamp: number | null
+          score: string
+        }
+        Insert: {
+          away_logo?: string | null
+          away_name: string
+          created_at?: string
+          home_logo?: string | null
+          home_name: string
+          id?: string
+          league?: string | null
+          match_key: string
+          match_time?: string | null
+          match_timestamp?: number | null
+          score: string
+        }
+        Update: {
+          away_logo?: string | null
+          away_name?: string
+          created_at?: string
+          home_logo?: string | null
+          home_name?: string
+          id?: string
+          league?: string | null
+          match_key?: string
+          match_time?: string | null
+          match_timestamp?: number | null
+          score?: string
+        }
+        Relationships: []
+      }
       overlay_ads: {
         Row: {
           created_at: string
