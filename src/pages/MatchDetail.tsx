@@ -131,11 +131,7 @@ const MatchDetail = () => {
             {/* Home Team */}
             <div className="flex-1 flex flex-col items-center text-center min-w-0 gap-2.5">
               <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-secondary/60 border border-border/40 flex items-center justify-center overflow-hidden transition-transform duration-300 hover:scale-105">
-                {match.home_logo ? (
-                  <img src={match.home_logo} alt={match.home_name} className="w-11 h-11 md:w-14 md:h-14 object-contain" onError={(e) => { (e.target as HTMLImageElement).replaceWith(Object.assign(document.createElement('span'), { className: 'text-xl md:text-2xl font-bold text-muted-foreground', textContent: match.home_name.charAt(0) })); }} />
-                ) : (
-                  <span className="text-xl md:text-2xl font-bold text-muted-foreground">{match.home_name.charAt(0)}</span>
-                )}
+                <TeamLogo src={match.home_logo} name={match.home_name} size="md" />
               </div>
               <div>
                 <h2 className="font-display text-sm md:text-base font-bold truncate w-full leading-tight">{match.home_name}</h2>
@@ -180,11 +176,7 @@ const MatchDetail = () => {
             {/* Away Team */}
             <div className="flex-1 flex flex-col items-center text-center min-w-0 gap-2.5">
               <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-secondary/60 border border-border/40 flex items-center justify-center overflow-hidden transition-transform duration-300 hover:scale-105">
-                {match.away_logo ? (
-                  <img src={match.away_logo} alt={match.away_name} className="w-11 h-11 md:w-14 md:h-14 object-contain" onError={(e) => { (e.target as HTMLImageElement).replaceWith(Object.assign(document.createElement('span'), { className: 'text-xl md:text-2xl font-bold text-muted-foreground', textContent: match.away_name.charAt(0) })); }} />
-                ) : (
-                  <span className="text-xl md:text-2xl font-bold text-muted-foreground">{match.away_name.charAt(0)}</span>
-                )}
+                <TeamLogo src={match.away_logo} name={match.away_name} size="md" />
               </div>
               <div>
                 <h2 className="font-display text-sm md:text-base font-bold truncate w-full leading-tight">{match.away_name}</h2>
