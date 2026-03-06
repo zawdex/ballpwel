@@ -116,6 +116,28 @@ const MatchCard = memo(({ match, index = 0, isFavoriteHome, isFavoriteAway, onTo
               )}
             </div>
             <div className="flex items-center gap-2">
+              {/* Share button */}
+              <div className="relative" ref={shareRef}>
+                <button
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowShare(!showShare); }}
+                  className="w-6 h-6 rounded-full bg-secondary/60 border border-border/40 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
+                >
+                  <Share2 className="w-3 h-3" />
+                </button>
+                {showShare && (
+                  <div className="absolute right-0 top-8 z-50 bg-popover border border-border rounded-xl shadow-xl p-1.5 flex flex-col gap-1 min-w-[140px] animate-in fade-in-0 zoom-in-95">
+                    <button onClick={handleShare('whatsapp')} className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium hover:bg-accent transition-colors text-foreground">
+                      <MessageCircle className="w-3.5 h-3.5 text-green-500" /> WhatsApp
+                    </button>
+                    <button onClick={handleShare('telegram')} className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium hover:bg-accent transition-colors text-foreground">
+                      <Send className="w-3.5 h-3.5 text-[#0088cc]" /> Telegram
+                    </button>
+                    <button onClick={handleShare('copy')} className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium hover:bg-accent transition-colors text-foreground">
+                      {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Link2 className="w-3.5 h-3.5 text-muted-foreground" />} Copy Link
+                    </button>
+                  </div>
+                )}
+              </div>
               <PredictionBadge prediction={prediction} isLoading={predLoading} homeName={match.home_name} awayName={match.away_name} />
               {status === 'live' ? (
                 <ElapsedTime time={match.time} />
