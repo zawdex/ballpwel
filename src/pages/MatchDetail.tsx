@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Clock, Trophy, Radio, Sparkles, Swords } from 'lucide-react';
+import { ArrowLeft, Clock, Trophy, Radio, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { footballAPI } from '@/services/api';
 import { Author, Match } from '@/types';
