@@ -3,6 +3,7 @@ import Header from './Header';
 import FootballBackground from './FootballBackground';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Send, Zap, Calendar, Trophy, CheckCircle } from 'lucide-react';
+import FloatingAccumulator from '@/components/ui/FloatingAccumulator';
 
 interface LayoutProps {
   onSearch: (query: string) => void;
