@@ -247,8 +247,14 @@ serve(async (req) => {
     const matchScore = (score || "Not started").trim();
     const matchTime = (time || "Unknown").trim();
 
-    // Check DB cache first
-    const cacheKey = `${homeName}-${awayName}-${matchScore}`;
+    // Determine if live for cache strategy
+    const live = isLiveMatch(matchScore, matchTime);
+    
+    // Cache key includes score for live matches (so new score = new prediction)
+    const cacheKey = live 
+      ? `live-${homeName}-${awayName}-${matchScore}` 
+      : `pre-${homeName}-${awayName}`;
+    
     const cached = await getCachedPrediction(cacheKey);
     if (cached) {
       console.log("Cache hit:", cacheKey);
@@ -257,7 +263,7 @@ serve(async (req) => {
       });
     }
 
-    console.log("Cache miss:", cacheKey);
+    console.log("Cache miss:", cacheKey, live ? "(LIVE)" : "(PRE-MATCH)");
     const prompt = buildPrompt(homeName, awayName, comp, matchScore, matchTime);
     const content = await getAIResponse(prompt);
 
@@ -269,7 +275,7 @@ serve(async (req) => {
     
     const prediction = JSON.parse(cleaned);
 
-    // Consistency fix
+    // Consistency fix: winner must match predicted_score
     if (prediction.predicted_score) {
       const parts = prediction.predicted_score.split("-").map(Number);
       if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
@@ -280,8 +286,18 @@ serve(async (req) => {
       }
     }
 
-    // Save to DB cache (non-blocking)
-    setCachedPrediction(cacheKey, prediction);
+    // Clamp confidence to realistic range
+    if (prediction.confidence) {
+      prediction.confidence = Math.max(30, Math.min(95, prediction.confidence));
+    }
+
+    // Ensure exactly 5 tips
+    if (prediction.tips && prediction.tips.length > 5) {
+      prediction.tips = prediction.tips.slice(0, 5);
+    }
+
+    // Save to DB cache with appropriate TTL
+    setCachedPrediction(cacheKey, prediction, live);
 
     return new Response(JSON.stringify(prediction), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
