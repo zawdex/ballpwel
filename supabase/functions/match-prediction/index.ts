@@ -52,7 +52,7 @@ function isLiveMatch(matchScore: string, matchTime: string): boolean {
   return timeLower.includes('live') || timeLower.includes("'") || timeLower.includes('ht') || hasScore;
 }
 
-function buildPrompt(homeName: string, awayName: string, comp: string, matchScore: string, matchTime: string): string {
+function buildPrompt(homeName: string, awayName: string, comp: string, matchScore: string, matchTime: string, language: string = 'en'): string {
   const live = isLiveMatch(matchScore, matchTime);
   const scoreParts = matchScore.match(/(\d+)\s*-\s*(\d+)/);
   
@@ -75,6 +75,10 @@ LIVE MATCH CONTEXT:
 - If score is 0-0 late in game, Under tips become stronger
 - If score is high early, Over tips become stronger`;
   }
+
+  const langInstruction = language === 'my' 
+    ? `\n\nCRITICAL LANGUAGE REQUIREMENT: You MUST write the "analysis" field and all tip "description" fields in Burmese (Myanmar) language. The "tip" field names (like "Over 2.5 Goals", "BTTS: Yes") should remain in English. The "winner" field must be "home", "away", or "draw" in English. Only "analysis" and "description" values must be in Burmese.`
+    : '';
 
   return `You are the world's top football/sports betting analyst with 20+ years of experience. Your predictions are data-driven, realistic, and varied.
 
@@ -100,6 +104,7 @@ BETTING TIPS RULES:
 - Each tip's confidence must be independently assessed (high/medium/low)
 - Include at least one Correct Score tip
 - Descriptions must explain WHY with specific reasoning (not generic)
+${langInstruction}
 
 Respond with ONLY valid JSON, no markdown:
 {"winner":"home","confidence":62,"predicted_score":"1-0","tips":[{"tip":"Under 2.5 Goals","confidence":"high","description":"Both teams average under 1.2 goals per game this season"},{"tip":"1X2: Home Win","confidence":"medium","description":"Home side unbeaten in last 8 home games"},{"tip":"BTTS: No","confidence":"high","description":"Away team failed to score in 4 of last 6 away matches"},{"tip":"Correct Score 1-0","confidence":"low","description":"Tight defensive battle expected based on recent form"},{"tip":"Draw No Bet: Home","confidence":"high","description":"Insurance pick given home dominance in this fixture"}],"analysis":"${homeName} should control possession at home but ${awayName}'s defensive resilience makes this a low-scoring affair. Home advantage tips the balance slightly."}
@@ -232,7 +237,7 @@ serve(async (req) => {
   }
 
   try {
-    const { home_name, away_name, competition, score, time } = await req.json();
+    const { home_name, away_name, competition, score, time, language } = await req.json();
 
     if (!home_name || !away_name) {
       return new Response(JSON.stringify({ error: "Missing team names" }), {
@@ -246,14 +251,15 @@ serve(async (req) => {
     const comp = (competition || "Unknown").trim();
     const matchScore = (score || "Not started").trim();
     const matchTime = (time || "Unknown").trim();
+    const lang = (language || "en").trim();
 
     // Determine if live for cache strategy
     const live = isLiveMatch(matchScore, matchTime);
     
-    // Cache key includes score for live matches (so new score = new prediction)
+    // Cache key includes score for live matches and language
     const cacheKey = live 
-      ? `live-${homeName}-${awayName}-${matchScore}` 
-      : `pre-${homeName}-${awayName}`;
+      ? `live-${lang}-${homeName}-${awayName}-${matchScore}` 
+      : `pre-${lang}-${homeName}-${awayName}`;
     
     const cached = await getCachedPrediction(cacheKey);
     if (cached) {
@@ -263,8 +269,8 @@ serve(async (req) => {
       });
     }
 
-    console.log("Cache miss:", cacheKey, live ? "(LIVE)" : "(PRE-MATCH)");
-    const prompt = buildPrompt(homeName, awayName, comp, matchScore, matchTime);
+    console.log("Cache miss:", cacheKey, live ? "(LIVE)" : "(PRE-MATCH)", `lang=${lang}`);
+    const prompt = buildPrompt(homeName, awayName, comp, matchScore, matchTime, lang);
     const content = await getAIResponse(prompt);
 
     // Robust JSON extraction
