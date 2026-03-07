@@ -98,6 +98,15 @@ const Header = ({ onSearch, searchQuery }: HeaderProps) => {
                 />
               </div>
 
+              {/* Accumulator button */}
+              <Link to="/accumulator">
+                <Button variant="ghost" size="sm" className="rounded-xl h-8 gap-1.5 text-xs font-bold bg-gradient-to-r from-yellow-500/15 to-orange-500/15 border border-yellow-500/30 text-yellow-500 hover:from-yellow-500/25 hover:to-orange-500/25 transition-all">
+                  <Zap className="w-3.5 h-3.5 fill-current" />
+                  <span className="hidden sm:inline">မောင်း</span>
+                </Button>
+              </Link>
+              </div>
+
               {/* Mobile search toggle */}
               <Button
                 variant="ghost"
