@@ -7,6 +7,7 @@ import { footballAPI } from '@/services/api';
 import { Author, Match } from '@/types';
 import { getMatchStatus } from '@/hooks/useMatches';
 import { usePrediction } from '@/hooks/usePrediction';
+import { useLanguage } from '@/contexts/LanguageContext';
 import StatusBadge from '@/components/matches/StatusBadge';
 import ElapsedTime from '@/components/matches/ElapsedTime';
 import CountdownTimer from '@/components/matches/CountdownTimer';
@@ -20,6 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 const MatchDetail = () => {
   const { matchId } = useParams<{ matchId: string }>();
   const [selectedStream, setSelectedStream] = useState<Author | null>(null);
+  const { language } = useLanguage();
   
   const { data: matches, isLoading } = useQuery({
     queryKey: ['matches'],
@@ -34,7 +36,8 @@ const MatchDetail = () => {
 
   const status = match ? getMatchStatus(match.score, match.time, match.match_status) : 'upcoming';
   const { data: prediction, isLoading: predLoading, error: predError, refetch: retryPrediction } = usePrediction(
-    match?.home_name || '', match?.away_name || '', match?.label || '', match?.score || '', match?.time || ''
+    match?.home_name || '', match?.away_name || '', match?.label || '', match?.score || '', match?.time || '',
+    true, language
   );
 
   if (isLoading) {

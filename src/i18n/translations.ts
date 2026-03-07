@@ -79,6 +79,20 @@ export const translations = {
     streams: 'streams',
     stream: 'stream',
 
+    // Prediction Panel
+    aiPrediction: 'AI Prediction',
+    aiPredictionBeta: 'Beta',
+    poweredByAI: 'Powered by AI analysis',
+    aiPredictionUnavailable: 'AI Prediction Unavailable',
+    couldNotAnalyze: 'Could not analyze this match',
+    tryAgain: 'Try Again',
+    predictedWinner: 'Predicted Winner',
+    predictedScore: 'Score',
+    confidenceLevel: 'Confidence Level',
+    analysis: 'Analysis',
+    bettingTips: 'Betting Tips',
+    predictionDisclaimer: '⚠️ AI predictions are for entertainment only. Not financial advice.',
+
     // Admin Panel
     adminPanel: 'Admin Panel',
     adminPanelDesc: 'Manage app settings and branding',
@@ -207,6 +221,20 @@ export const translations = {
     watchNow: 'ယခုကြည့်ရန်',
     streams: 'လိုင်းများ',
     stream: 'လိုင်း',
+
+    // Prediction Panel
+    aiPrediction: 'AI ခန့်မှန်းချက်',
+    aiPredictionBeta: 'Beta',
+    poweredByAI: 'AI ခွဲခြမ်းစိတ်ဖြာမှုဖြင့် ပံ့ပိုးထားသည်',
+    aiPredictionUnavailable: 'AI ခန့်မှန်းချက် မရရှိနိုင်ပါ',
+    couldNotAnalyze: 'ဤပွဲစဉ်ကို ခွဲခြမ်းစိတ်ဖြာ၍မရပါ',
+    tryAgain: 'ထပ်စမ်းပါ',
+    predictedWinner: 'ခန့်မှန်းအနိုင်ရအသင်း',
+    predictedScore: 'ရမှတ်',
+    confidenceLevel: 'ယုံကြည်မှုအဆင့်',
+    analysis: 'ခွဲခြမ်းစိတ်ဖြာချက်',
+    bettingTips: 'လောင်းကစားအကြံပြုချက်များ',
+    predictionDisclaimer: '⚠️ AI ခန့်မှန်းချက်များသည် ဖျော်ဖြေရေးအတွက်သာဖြစ်ပါသည်။ ငွေကြေးအကြံပေးချက် မဟုတ်ပါ။',
 
     // Admin Panel
     adminPanel: 'စီမံခန့်ခွဲမှု',

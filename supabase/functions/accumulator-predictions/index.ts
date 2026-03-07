@@ -35,10 +35,14 @@ async function setCachedPrediction(sb: any, cacheKey: string, prediction: unknow
   } catch {}
 }
 
-function buildBatchPrompt(matches: any[]): string {
+function buildBatchPrompt(matches: any[], language: string = 'en'): string {
   const matchList = matches.map((m: any, i: number) =>
     `${i + 1}. ${m.home_name} vs ${m.away_name} (${m.competition}) Score: ${m.score} Time: ${m.time}`
   ).join("\n");
+
+  const langInstruction = language === 'my' 
+    ? `\nCRITICAL: Write "analysis" and tip "description" fields in Burmese (Myanmar) language. Keep "tip" names, "winner" values in English.`
+    : '';
 
   return `You are an elite football betting analyst. Analyze these matches and provide predictions for EACH.
 
@@ -55,6 +59,7 @@ For EACH match provide:
 Betting formats: Handicap, Over/Under, BTTS, 1X2, Correct Score, Double Chance, HT/FT
 
 IMPORTANT: Include at least one "Correct Score" tip per match.
+${langInstruction}
 
 Respond with ONLY valid JSON array:
 [{"match_index":1,"winner":"home","confidence":72,"predicted_score":"2-1","tips":[...],"analysis":"..."},...]`;
@@ -119,7 +124,8 @@ serve(async (req) => {
   }
 
   try {
-    const { matches } = await req.json();
+    const { matches, language } = await req.json();
+    const lang = (language || 'en').trim();
     if (!matches || !Array.isArray(matches) || matches.length === 0) {
       return new Response(JSON.stringify({ error: "No matches provided" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -132,7 +138,7 @@ serve(async (req) => {
 
     // Check cache for each match
     for (const match of matches) {
-      const cacheKey = `${match.home_name.trim()}-${match.away_name.trim()}-${(match.score || "vs").trim()}`;
+      const cacheKey = `${lang}-${match.home_name.trim()}-${match.away_name.trim()}-${(match.score || "vs").trim()}`;
       const cached = await getCachedPrediction(sb, cacheKey);
       if (cached) {
         results.push({
@@ -151,7 +157,7 @@ serve(async (req) => {
       for (let i = 0; i < uncached.length; i += batchSize) {
         const batch = uncached.slice(i, i + batchSize);
         try {
-          const prompt = buildBatchPrompt(batch);
+          const prompt = buildBatchPrompt(batch, lang);
           const content = await getAIResponse(prompt);
           
           let cleaned = content.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();

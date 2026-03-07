@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { Match, MatchStatus } from '@/types';
 import { getMatchStatus } from '@/hooks/useMatches';
 import { usePrediction } from '@/hooks/usePrediction';
+import { useLanguage } from '@/contexts/LanguageContext';
 import StatusBadge from './StatusBadge';
 import PredictionBadge from '@/components/predictions/PredictionBadge';
 import CountdownTimer from './CountdownTimer';
@@ -21,6 +22,7 @@ interface MatchCardProps {
 }
 
 const MatchCard = memo(({ match, index = 0, isFavoriteHome, isFavoriteAway, onToggleFavorite }: MatchCardProps) => {
+  const { language } = useLanguage();
   const status = getMatchStatus(match.score, match.time, match.match_status);
   const prevStatusRef = useRef<MatchStatus>(status);
   const [justWentLive, setJustWentLive] = useState(false);
@@ -79,7 +81,8 @@ const MatchCard = memo(({ match, index = 0, isFavoriteHome, isFavoriteAway, onTo
     match.label || '',
     match.score || '',
     match.time || '',
-    enablePrediction
+    enablePrediction,
+    language
   );
 
   const scoreParts = match.score?.trim().match(/^(\d+)\s*-\s*(\d+)$/);

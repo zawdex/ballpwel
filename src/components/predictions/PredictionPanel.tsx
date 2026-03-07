@@ -1,6 +1,7 @@
 import { Brain, TrendingUp, Target, Loader2, Trophy, Sparkles, ChevronDown } from 'lucide-react';
 import { MatchPrediction } from '@/hooks/usePrediction';
 import { useState } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PredictionPanelProps {
   prediction: MatchPrediction | undefined;
@@ -19,6 +20,7 @@ const confidenceBadge = {
 
 const PredictionPanel = ({ prediction, isLoading, error, homeName, awayName, onRetry }: PredictionPanelProps) => {
   const [showTips, setShowTips] = useState(true);
+  const { t } = useLanguage();
 
   if (isLoading) {
     return (
@@ -51,8 +53,8 @@ const PredictionPanel = ({ prediction, isLoading, error, homeName, awayName, onR
             <Brain className="w-5 h-5 text-destructive" />
           </div>
           <div className="flex-1">
-            <h3 className="font-bold text-sm">AI Prediction Unavailable</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">Could not analyze this match</p>
+            <h3 className="font-bold text-sm">{t('aiPredictionUnavailable')}</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">{t('couldNotAnalyze')}</p>
           </div>
         </div>
         {onRetry && (
@@ -60,7 +62,7 @@ const PredictionPanel = ({ prediction, isLoading, error, homeName, awayName, onR
             onClick={onRetry}
             className="mt-3 w-full py-2 rounded-xl bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/20 transition-colors border border-primary/20"
           >
-            Try Again
+            {t('tryAgain')}
           </button>
         )}
       </div>
@@ -86,12 +88,12 @@ const PredictionPanel = ({ prediction, isLoading, error, homeName, awayName, onR
             </div>
             <div>
               <h3 className="font-bold text-sm flex items-center gap-1.5">
-                AI Prediction
+                {t('aiPrediction')}
                 <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30 uppercase tracking-wider">
-                  Beta
+                  {t('aiPredictionBeta')}
                 </span>
               </h3>
-              <p className="text-[11px] text-muted-foreground">Powered by AI analysis</p>
+              <p className="text-[11px] text-muted-foreground">{t('poweredByAI')}</p>
             </div>
           </div>
         </div>
@@ -102,14 +104,14 @@ const PredictionPanel = ({ prediction, isLoading, error, homeName, awayName, onR
         <div className="relative rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/15 p-4">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">Predicted Winner</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">{t('predictedWinner')}</p>
               <div className="flex items-center gap-2">
                 <Trophy className="w-4 h-4 text-primary" />
                 <p className="font-display font-bold text-lg">{winnerLabel}</p>
               </div>
             </div>
             <div className="text-right space-y-1">
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">Score</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">{t('predictedScore')}</p>
               <p className="font-display font-bold text-2xl text-primary">{prediction.predicted_score}</p>
             </div>
           </div>
@@ -117,7 +119,7 @@ const PredictionPanel = ({ prediction, isLoading, error, homeName, awayName, onR
           {/* Confidence */}
           <div className="mt-4 pt-3 border-t border-border/30">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] text-muted-foreground font-medium">Confidence Level</span>
+              <span className="text-[11px] text-muted-foreground font-medium">{t('confidenceLevel')}</span>
               <span className={`text-sm font-bold ${confidenceLevelColor}`}>{confidence}%</span>
             </div>
             <div className="h-2 rounded-full bg-muted/50 overflow-hidden">
@@ -133,7 +135,7 @@ const PredictionPanel = ({ prediction, isLoading, error, homeName, awayName, onR
 
         {/* Analysis */}
         <div className="rounded-xl bg-muted/20 border border-border/50 p-3.5">
-          <p className="text-[11px] uppercase tracking-widest text-muted-foreground font-medium mb-2">Analysis</p>
+          <p className="text-[11px] uppercase tracking-widest text-muted-foreground font-medium mb-2">{t('analysis')}</p>
           <p className="text-sm text-foreground/80 leading-relaxed">{prediction.analysis}</p>
         </div>
 
@@ -145,7 +147,7 @@ const PredictionPanel = ({ prediction, isLoading, error, homeName, awayName, onR
           >
             <div className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-primary" />
-              <h4 className="font-semibold text-sm">Betting Tips</h4>
+              <h4 className="font-semibold text-sm">{t('bettingTips')}</h4>
               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/15 text-primary">
                 {prediction.tips.length}
               </span>
@@ -181,7 +183,7 @@ const PredictionPanel = ({ prediction, isLoading, error, homeName, awayName, onR
 
         {/* Disclaimer */}
         <p className="text-[9px] text-muted-foreground/50 text-center pt-1">
-          ⚠️ AI predictions are for entertainment only. Not financial advice.
+          {t('predictionDisclaimer')}
         </p>
       </div>
     </div>
