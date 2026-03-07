@@ -116,6 +116,12 @@ const Header = ({ onSearch, searchQuery }: HeaderProps) => {
                 {mobileSearchOpen ? <X className="w-4 h-4" /> : <Search className="w-4 h-4" />}
               </Button>
 
+              {/* Mobile accumulator button */}
+              <Link to="/accumulator" className="sm:hidden">
+                <Button variant="ghost" size="icon" className="rounded-xl h-8 w-8 bg-gradient-to-r from-yellow-500/15 to-orange-500/15 border border-yellow-500/30 text-yellow-500">
+                  <Zap className="w-4 h-4 fill-current" />
+                </Button>
+              </Link>
               <div className="hidden sm:flex items-center gap-1">
                 {settings.developerLink && (
                   <a href={settings.developerLink} target="_blank" rel="noopener noreferrer">
