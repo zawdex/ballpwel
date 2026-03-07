@@ -70,6 +70,9 @@ const MatchDetail = () => {
   const homeScore = scoreParts ? scoreParts[1] : null;
   const awayScore = scoreParts ? scoreParts[2] : null;
   const hasStreams = match.authors && match.authors.length > 0;
+  const NBA_KEYWORDS = ['nba', 'kbl', 'vtbul', 'tpbl', 'basketball'];
+  const isBasketball = NBA_KEYWORDS.some(k => match.label.toLowerCase().includes(k));
+  const ballEmoji = isBasketball ? '🏀' : '⚽';
 
   return (
     <div className="space-y-5 animate-fade-in max-w-3xl mx-auto">
@@ -165,16 +168,29 @@ const MatchDetail = () => {
                   <span className={`font-display text-4xl md:text-5xl font-black tabular-nums ${status === 'live' ? 'text-live' : 'text-foreground'}`}>
                     {homeScore}
                   </span>
-                  <div className="flex flex-col items-center gap-0.5">
-                    <Swords className={`w-5 h-5 md:w-6 md:h-6 ${status === 'live' ? 'text-live/60' : 'text-muted-foreground/60'}`} />
-                  </div>
+                  <motion.span
+                    animate={{ rotate: [0, 360] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+                    className="text-xl md:text-2xl"
+                  >
+                    {ballEmoji}
+                  </motion.span>
                   <span className={`font-display text-4xl md:text-5xl font-black tabular-nums ${status === 'live' ? 'text-live' : 'text-foreground'}`}>
                     {awayScore}
                   </span>
                 </div>
               ) : (
                 <div className="relative flex flex-col items-center gap-1.5 px-6 py-4 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 border-2 border-primary/25 shadow-lg">
-                  <Swords className="w-6 h-6 md:w-8 md:h-8 text-primary/70" />
+                  <motion.span
+                    animate={{ 
+                      y: [0, -8, 0],
+                      rotate: [0, 180, 360],
+                    }}
+                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                    className="text-2xl md:text-3xl"
+                  >
+                    {ballEmoji}
+                  </motion.span>
                   <span className="font-display text-lg font-black text-primary/80 tracking-wider">VS</span>
                 </div>
               )}
