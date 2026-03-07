@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Zap } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const FloatingAccumulator = () => {
+  const navigate = useNavigate();
   const [position, setPosition] = useState({ top: 20, left: 20 });
   const [visible, setVisible] = useState(true);
 
@@ -28,7 +30,7 @@ const FloatingAccumulator = () => {
       style={{ top: `${position.top}%`, left: `${position.left}%` }}
     >
       <button
-        onClick={randomize}
+        onClick={() => navigate('/accumulator')}
         className="flex flex-col items-center gap-0.5 group"
       >
         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/30 border-2 border-yellow-300/50 group-hover:scale-110 transition-transform animate-bounce">
