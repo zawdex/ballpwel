@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Clock, Trophy, Radio, Sparkles } from 'lucide-react';
+import { ArrowLeft, Clock, Trophy, Radio, Sparkles, Swords } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { footballAPI } from '@/services/api';
 import { Author, Match } from '@/types';
 import { getMatchStatus } from '@/hooks/useMatches';
@@ -126,63 +127,83 @@ const MatchDetail = () => {
             <span className="text-[10px] text-primary/80 font-bold uppercase tracking-[0.15em] truncate">{match.label}</span>
           </div>
 
-          {/* Teams & Score — centered */}
-          <div className="flex items-center gap-3 animate-scale-in [animation-delay:250ms] [animation-fill-mode:backwards]">
+          {/* Teams & Score — head-to-head style */}
+          <div className="flex items-center gap-2 md:gap-4">
             {/* Home Team */}
-            <div className="flex-1 flex flex-col items-center text-center min-w-0 gap-2.5">
-              <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-secondary/60 border border-border/40 flex items-center justify-center overflow-hidden transition-transform duration-300 hover:scale-105">
-                <TeamLogo src={match.home_logo} name={match.home_name} size="md" />
+            <motion.div
+              initial={{ opacity: 0, x: -40 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="flex-1 flex flex-col items-center text-center min-w-0 gap-3"
+            >
+              <div className="relative">
+                <div className="w-20 h-20 md:w-28 md:h-28 rounded-3xl bg-gradient-to-br from-secondary/80 to-secondary/40 border-2 border-border/50 flex items-center justify-center overflow-hidden shadow-xl shadow-black/10 transition-transform duration-300 hover:scale-105">
+                  <TeamLogo src={match.home_logo} name={match.home_name} size="lg" />
+                </div>
+                {/* Glow ring */}
+                <div className={`absolute -inset-1 rounded-3xl opacity-30 blur-md -z-10 ${status === 'live' ? 'bg-live' : 'bg-primary/50'}`} />
               </div>
               <div>
-                <h2 className="font-display text-sm md:text-base font-bold truncate w-full leading-tight">{match.home_name}</h2>
-                <span className="text-[10px] text-primary/60 font-semibold uppercase tracking-wider">Home</span>
+                <h2 className="font-display text-sm md:text-lg font-black truncate w-full leading-tight">{match.home_name}</h2>
+                <span className="text-[10px] text-primary/60 font-bold uppercase tracking-widest">Home</span>
               </div>
-            </div>
+            </motion.div>
 
-            {/* Score Center */}
-            <div className="flex flex-col items-center flex-shrink-0 px-1">
+            {/* VS / Score Center */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.35, type: 'spring', stiffness: 200 }}
+              className="flex flex-col items-center flex-shrink-0"
+            >
               {homeScore !== null ? (
-                <div className={`flex items-center gap-2 px-5 py-3 rounded-2xl border ${
+                <div className={`relative flex items-center gap-2.5 px-5 py-3.5 rounded-2xl border-2 ${
                   status === 'live'
-                    ? 'bg-live/10 border-live/30 shadow-lg shadow-live/10'
-                    : 'bg-secondary/50 border-border/40'
+                    ? 'bg-live/10 border-live/40 shadow-xl shadow-live/15'
+                    : 'bg-secondary/60 border-border/50 shadow-lg'
                 }`}>
-                  <span className={`font-display text-3xl md:text-4xl font-black tabular-nums ${status === 'live' ? 'text-live' : 'text-foreground'}`}>
+                  <span className={`font-display text-4xl md:text-5xl font-black tabular-nums ${status === 'live' ? 'text-live' : 'text-foreground'}`}>
                     {homeScore}
                   </span>
-                  <div className="relative w-6 h-6 md:w-8 md:h-8">
-                    <span className="absolute inset-0 flex items-center justify-center text-lg md:text-2xl animate-spin-ball">⚽</span>
+                  <div className="flex flex-col items-center gap-0.5">
+                    <Swords className={`w-5 h-5 md:w-6 md:h-6 ${status === 'live' ? 'text-live/60' : 'text-muted-foreground/60'}`} />
                   </div>
-                  <span className={`font-display text-3xl md:text-4xl font-black tabular-nums ${status === 'live' ? 'text-live' : 'text-foreground'}`}>
+                  <span className={`font-display text-4xl md:text-5xl font-black tabular-nums ${status === 'live' ? 'text-live' : 'text-foreground'}`}>
                     {awayScore}
                   </span>
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-1 px-5 py-3 rounded-2xl bg-secondary/50 border border-border/40">
-                  <div className="relative w-8 h-8">
-                    <span className="absolute inset-0 flex items-center justify-center text-2xl animate-spin-ball">⚽</span>
-                  </div>
-                  <span className="font-display text-base font-bold text-muted-foreground">VS</span>
+                <div className="relative flex flex-col items-center gap-1.5 px-6 py-4 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 border-2 border-primary/25 shadow-lg">
+                  <Swords className="w-6 h-6 md:w-8 md:h-8 text-primary/70" />
+                  <span className="font-display text-lg font-black text-primary/80 tracking-wider">VS</span>
                 </div>
               )}
 
               {status === 'live' && (
-                <span className="mt-2.5 px-3 py-0.5 rounded-full bg-live/15 text-live text-[9px] font-bold animate-pulse tracking-widest border border-live/20">
+                <span className="mt-3 px-3.5 py-1 rounded-full bg-live/15 text-live text-[9px] font-black animate-pulse tracking-widest border border-live/25 shadow-sm shadow-live/10">
                   ● LIVE
                 </span>
               )}
-            </div>
+            </motion.div>
 
             {/* Away Team */}
-            <div className="flex-1 flex flex-col items-center text-center min-w-0 gap-2.5">
-              <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-secondary/60 border border-border/40 flex items-center justify-center overflow-hidden transition-transform duration-300 hover:scale-105">
-                <TeamLogo src={match.away_logo} name={match.away_name} size="md" />
+            <motion.div
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="flex-1 flex flex-col items-center text-center min-w-0 gap-3"
+            >
+              <div className="relative">
+                <div className="w-20 h-20 md:w-28 md:h-28 rounded-3xl bg-gradient-to-br from-secondary/80 to-secondary/40 border-2 border-border/50 flex items-center justify-center overflow-hidden shadow-xl shadow-black/10 transition-transform duration-300 hover:scale-105">
+                  <TeamLogo src={match.away_logo} name={match.away_name} size="lg" />
+                </div>
+                <div className={`absolute -inset-1 rounded-3xl opacity-30 blur-md -z-10 ${status === 'live' ? 'bg-live' : 'bg-primary/50'}`} />
               </div>
               <div>
-                <h2 className="font-display text-sm md:text-base font-bold truncate w-full leading-tight">{match.away_name}</h2>
-                <span className="text-[10px] text-live/60 font-semibold uppercase tracking-wider">Away</span>
+                <h2 className="font-display text-sm md:text-lg font-black truncate w-full leading-tight">{match.away_name}</h2>
+                <span className="text-[10px] text-live/60 font-bold uppercase tracking-widest">Away</span>
               </div>
-            </div>
+            </motion.div>
           </div>
 
           {/* Countdown for upcoming */}
