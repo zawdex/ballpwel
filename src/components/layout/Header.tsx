@@ -98,11 +98,10 @@ const Header = ({ onSearch, searchQuery }: HeaderProps) => {
                 />
               </div>
 
-              {/* Accumulator button */}
+              {/* Accumulator button - icon only */}
               <Link to="/accumulator">
-                <Button variant="ghost" size="sm" className="rounded-xl h-8 gap-1.5 text-xs font-bold bg-gradient-to-r from-yellow-500/15 to-orange-500/15 border border-yellow-500/30 text-yellow-500 hover:from-yellow-500/25 hover:to-orange-500/25 transition-all">
-                  <Zap className="w-3.5 h-3.5 fill-current" />
-                  <span className="hidden sm:inline">မောင်း</span>
+                <Button variant="ghost" size="icon" className="rounded-xl h-8 w-8 bg-gradient-to-r from-yellow-500/15 to-orange-500/15 border border-yellow-500/30 text-yellow-500 hover:from-yellow-500/25 hover:to-orange-500/25 transition-all">
+                  <Zap className="w-4 h-4 fill-current" />
                 </Button>
               </Link>
 
@@ -115,13 +114,6 @@ const Header = ({ onSearch, searchQuery }: HeaderProps) => {
               >
                 {mobileSearchOpen ? <X className="w-4 h-4" /> : <Search className="w-4 h-4" />}
               </Button>
-
-              {/* Mobile accumulator button */}
-              <Link to="/accumulator" className="sm:hidden">
-                <Button variant="ghost" size="icon" className="rounded-xl h-8 w-8 bg-gradient-to-r from-yellow-500/15 to-orange-500/15 border border-yellow-500/30 text-yellow-500">
-                  <Zap className="w-4 h-4 fill-current" />
-                </Button>
-              </Link>
               <div className="hidden sm:flex items-center gap-1">
                 {settings.developerLink && (
                   <a href={settings.developerLink} target="_blank" rel="noopener noreferrer">
