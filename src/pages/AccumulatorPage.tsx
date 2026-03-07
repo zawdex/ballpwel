@@ -39,6 +39,7 @@ const CONFIDENCE_LEVELS: { key: ConfidenceLevel; label: string; labelMy: string;
 ];
 
 const AccumulatorPage = () => {
+  const { language } = useLanguage();
   const [activeLeague, setActiveLeague] = useState('all');
   const [expandedLevels, setExpandedLevels] = useState<Record<string, boolean>>({
     very_high: true, high: true, normal: true, low: false,
@@ -81,7 +82,7 @@ const AccumulatorPage = () => {
           'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ matches: payload }),
+        body: JSON.stringify({ matches: payload, language }),
       });
       if (!res.ok) throw new Error('Failed to fetch predictions');
       return res.json();
