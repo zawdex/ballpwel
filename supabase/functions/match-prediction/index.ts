@@ -6,7 +6,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours for pre-match
+const LIVE_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes for live matches
 
 function getSupabase() {
   return createClient(
@@ -31,10 +32,11 @@ async function getCachedPrediction(cacheKey: string): Promise<unknown | null> {
   }
 }
 
-async function setCachedPrediction(cacheKey: string, prediction: unknown): Promise<void> {
+async function setCachedPrediction(cacheKey: string, prediction: unknown, isLive: boolean): Promise<void> {
   try {
     const sb = getSupabase();
-    const expiresAt = new Date(Date.now() + CACHE_TTL_MS).toISOString();
+    const ttl = isLive ? LIVE_CACHE_TTL_MS : CACHE_TTL_MS;
+    const expiresAt = new Date(Date.now() + ttl).toISOString();
     await sb.from("prediction_cache").upsert(
       { cache_key: cacheKey, prediction, expires_at: expiresAt },
       { onConflict: "cache_key" }
@@ -44,27 +46,67 @@ async function setCachedPrediction(cacheKey: string, prediction: unknown): Promi
   }
 }
 
+function isLiveMatch(matchScore: string, matchTime: string): boolean {
+  const timeLower = matchTime.toLowerCase();
+  const hasScore = /\d+\s*-\s*\d+/.test(matchScore) && matchScore.trim() !== 'vs';
+  return timeLower.includes('live') || timeLower.includes("'") || timeLower.includes('ht') || hasScore;
+}
+
 function buildPrompt(homeName: string, awayName: string, comp: string, matchScore: string, matchTime: string): string {
-  return `You are an elite football betting analyst. Analyze this match and provide 5 betting tips.
+  const live = isLiveMatch(matchScore, matchTime);
+  const scoreParts = matchScore.match(/(\d+)\s*-\s*(\d+)/);
+  
+  let liveContext = '';
+  if (live && scoreParts) {
+    const [, homeGoals, awayGoals] = scoreParts;
+    const hg = parseInt(homeGoals), ag = parseInt(awayGoals);
+    const totalGoals = hg + ag;
+    const timeMatch = matchTime.match(/(\d+)/);
+    const minute = timeMatch ? parseInt(timeMatch[0]) : 45;
+    
+    liveContext = `
+LIVE MATCH CONTEXT:
+- Current score: ${homeName} ${homeGoals} - ${awayGoals} ${awayName}
+- Approximate minute: ${minute}'
+- Total goals so far: ${totalGoals}
+- ${hg > ag ? homeName + ' is WINNING' : ag > hg ? awayName + ' is WINNING' : 'Match is DRAWN'}
+- Consider: remaining time, current momentum, goal rate (${(totalGoals / Math.max(minute, 1) * 90).toFixed(1)} projected goals/90min)
+- For live predictions: adjust Over/Under lines based on current score
+- If score is 0-0 late in game, Under tips become stronger
+- If score is high early, Over tips become stronger`;
+  }
+
+  return `You are the world's top football/sports betting analyst with 20+ years of experience. Your predictions are data-driven, realistic, and varied.
 
 Match: ${homeName} vs ${awayName}
 Competition: ${comp}
 Current Score: ${matchScore}
-Time: ${matchTime}
+Match Time: ${matchTime}
+${liveContext}
 
-RULES:
-1. predicted_score: "HomeGoals-AwayGoals" (home first)
-2. winner must match predicted_score logically
-3. If live, factor in current momentum
+CRITICAL ANALYSIS RULES:
+1. DO NOT default to "2-1 home win" — analyze each match individually
+2. predicted_score format: "HomeGoals-AwayGoals" (home team's goals first)
+3. winner MUST logically match predicted_score (more home goals = "home", more away goals = "away", equal = "draw")
+4. Confidence should REALISTICALLY vary: 35-55 for uncertain, 55-70 for moderate, 70-85 for strong, 85+ only for extreme favorites
+5. Consider: league quality, home/away form, competition context, historical patterns
+6. Draws are common in football (~25% of matches) — don't always pick a winner
+7. Low-scoring results (0-0, 1-0, 0-1) are very common — don't always predict high-scoring games
+${live ? '8. This is a LIVE match — factor in current score, remaining time, and match flow' : '8. This is a PRE-MATCH prediction — base on team strength and form'}
 
-Betting formats to use:
-- Handicap, Over/Under, BTTS, 1X2, Correct Score, First Half, Double Chance, HT/FT
+BETTING TIPS RULES:
+- Provide EXACTLY 5 tips using DIFFERENT bet types
+- Use realistic betting markets: Over/Under (0.5, 1.5, 2.5, 3.5), Asian Handicap (-0.5, -1, -1.5), BTTS Yes/No, 1X2, Correct Score, Double Chance, Draw No Bet, HT/FT, First/Last Goal
+- Each tip's confidence must be independently assessed (high/medium/low)
+- Include at least one Correct Score tip
+- Descriptions must explain WHY with specific reasoning (not generic)
 
-Respond with ONLY valid JSON:
-{"winner":"home or away or draw","confidence":65,"predicted_score":"2-1","tips":[{"tip":"Over 2.5 Goals","confidence":"high","description":"reasoning under 25 words"}],"analysis":"analysis under 60 words"}
+Respond with ONLY valid JSON, no markdown:
+{"winner":"home","confidence":62,"predicted_score":"1-0","tips":[{"tip":"Under 2.5 Goals","confidence":"high","description":"Both teams average under 1.2 goals per game this season"},{"tip":"1X2: Home Win","confidence":"medium","description":"Home side unbeaten in last 8 home games"},{"tip":"BTTS: No","confidence":"high","description":"Away team failed to score in 4 of last 6 away matches"},{"tip":"Correct Score 1-0","confidence":"low","description":"Tight defensive battle expected based on recent form"},{"tip":"Draw No Bet: Home","confidence":"high","description":"Insurance pick given home dominance in this fixture"}],"analysis":"${homeName} should control possession at home but ${awayName}'s defensive resilience makes this a low-scoring affair. Home advantage tips the balance slightly."}
 
-Exactly 5 tips, different bet types.`;
+IMPORTANT: Make the analysis specific to these teams and competition. Avoid generic phrases like "strong offense" or "home advantage". Be specific and insightful.`;
 }
+
 
 // Provider 1: Groq (free, generous limits)
 async function tryGroq(prompt: string): Promise<string> {
