@@ -122,11 +122,11 @@ async function tryGroq(prompt: string): Promise<string> {
     body: JSON.stringify({
       model: "llama-3.3-70b-versatile",
       messages: [
-        { role: "system", content: "You are a football betting analyst. You MUST respond with ONLY a single valid JSON object. No text before or after. No markdown code blocks." },
+        { role: "system", content: "You are the world's top football betting analyst. Respond with ONLY valid JSON. No markdown. Be specific, realistic, and varied in your predictions. Never default to generic results." },
         { role: "user", content: prompt },
       ],
-      temperature: 0.3,
-      max_tokens: 2048,
+      temperature: 0.5,
+      max_tokens: 3000,
       response_format: { type: "json_object" },
     }),
   });
