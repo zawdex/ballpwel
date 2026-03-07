@@ -6,6 +6,7 @@ import { getMatchStatus } from '@/hooks/useMatches';
 import { Brain, Trophy, Target, TrendingUp, Zap, ChevronDown, Loader2, ArrowLeft, Sparkles, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import TeamLogo from '@/components/ui/TeamLogo';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
