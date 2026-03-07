@@ -1,4 +1,5 @@
 import { memo, useRef, useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Play, Radio, ArrowRight, Star, Share2, MessageCircle, Send, Link2, Check } from 'lucide-react';
 import { toast } from 'sonner';
@@ -84,6 +85,12 @@ const MatchCard = memo(({ match, index = 0, isFavoriteHome, isFavoriteAway, onTo
   const scoreParts = match.score?.trim().match(/^(\d+)\s*-\s*(\d+)$/);
 
   return (
+    <motion.div
+      initial={{ opacity: 0, y: 24, scale: 0.97 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, margin: '-40px' }}
+      transition={{ duration: 0.4, delay: Math.min(index * 0.08, 0.4), ease: [0.25, 0.46, 0.45, 0.94] }}
+    >
     <Link to={`/matches/${encodedId}`} className="block group">
       <div
         className={`relative rounded-2xl border border-border/50 overflow-hidden transition-all duration-500 hover:border-primary/40 ${
@@ -237,7 +244,7 @@ const MatchCard = memo(({ match, index = 0, isFavoriteHome, isFavoriteAway, onTo
         <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
       </div>
     </Link>
-  );
+    </motion.div>
 });
 
 MatchCard.displayName = 'MatchCard';
