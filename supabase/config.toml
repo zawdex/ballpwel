@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.reminder-cron]
 verify_jwt = false
+
+[functions.accumulator-predictions]
+verify_jwt = false
