@@ -245,6 +245,7 @@ const MatchCard = memo(({ match, index = 0, isFavoriteHome, isFavoriteAway, onTo
       </div>
     </Link>
     </motion.div>
+  );
 });
 
 MatchCard.displayName = 'MatchCard';
