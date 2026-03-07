@@ -232,11 +232,11 @@ const AccumulatorPage = () => {
                   className="flex items-center gap-3 p-3 rounded-xl bg-card/60 border border-border/40 hover:border-primary/30 transition-all group"
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <TeamLogo src={item.home_logo} alt={item.home_name} size="sm" />
+                    <TeamLogo src={item.home_logo} name={item.home_name} size="sm" />
                     <span className="text-xs font-semibold truncate">{item.home_name}</span>
                     <span className="text-primary font-display font-black text-lg px-1">{item.prediction!.predicted_score}</span>
                     <span className="text-xs font-semibold truncate">{item.away_name}</span>
-                    <TeamLogo src={item.away_logo} alt={item.away_name} size="sm" />
+                    <TeamLogo src={item.away_logo} name={item.away_name} size="sm" />
                   </div>
                   <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
                     item.correctScoreTip.confidence === 'high' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
@@ -326,7 +326,7 @@ const MatchPredictionCard = ({ item }: { item: AccumulatorPrediction }) => {
         className="p-3 flex items-center gap-3 hover:bg-muted/10 transition-colors"
       >
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <TeamLogo src={item.home_logo} alt={item.home_name} size="sm" />
+          <TeamLogo src={item.home_logo} name={item.home_name} size="sm" />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-semibold truncate">{item.home_name}</span>
@@ -335,7 +335,7 @@ const MatchPredictionCard = ({ item }: { item: AccumulatorPrediction }) => {
             </div>
             <p className="text-[9px] text-muted-foreground truncate">{item.competition}</p>
           </div>
-          <TeamLogo src={item.away_logo} alt={item.away_name} size="sm" />
+          <TeamLogo src={item.away_logo} name={item.away_name} size="sm" />
         </div>
         <div className="text-right flex-shrink-0">
           <p className="text-xs font-bold">{winnerName}</p>
