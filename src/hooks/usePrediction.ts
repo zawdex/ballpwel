@@ -21,12 +21,13 @@ export const usePrediction = (
   competition: string,
   score: string,
   time: string,
-  enabled = true
+  enabled = true,
+  language: 'en' | 'my' = 'en'
 ) => {
   const isLive = score && score !== 'vs' && score !== '-' && /\d+\s*-\s*\d+/.test(score);
   
   return useQuery<MatchPrediction>({
-    queryKey: ['prediction', home_name, away_name, isLive ? score : 'pre'],
+    queryKey: ['prediction', home_name, away_name, isLive ? score : 'pre', language],
     queryFn: async () => {
       const response = await fetch(`${SUPABASE_URL}/functions/v1/match-prediction`, {
         method: 'POST',
@@ -34,7 +35,7 @@ export const usePrediction = (
           'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ home_name, away_name, competition, score, time }),
+        body: JSON.stringify({ home_name, away_name, competition, score, time, language }),
       });
 
       if (!response.ok) {
@@ -45,7 +46,7 @@ export const usePrediction = (
       return response.json();
     },
     enabled: enabled && !!home_name && !!away_name,
-    staleTime: isLive ? 10 * 60 * 1000 : 30 * 60 * 1000, // 10min live, 30min pre-match
+    staleTime: isLive ? 10 * 60 * 1000 : 30 * 60 * 1000,
     retry: 1,
     retryDelay: 15000,
     meta: { errorPolicy: 'ignore' },
