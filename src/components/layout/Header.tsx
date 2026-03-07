@@ -105,7 +105,6 @@ const Header = ({ onSearch, searchQuery }: HeaderProps) => {
                   <span className="hidden sm:inline">မောင်း</span>
                 </Button>
               </Link>
-              </div>
 
               {/* Mobile search toggle */}
               <Button
