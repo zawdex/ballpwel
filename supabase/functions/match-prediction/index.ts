@@ -153,9 +153,9 @@ async function tryLovableAI(prompt: string): Promise<string> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash-lite",
+      model: "google/gemini-2.5-flash",
       messages: [
-        { role: "system", content: "You are a football betting analyst. Always respond with valid JSON only, no markdown." },
+        { role: "system", content: "You are the world's top football betting analyst. Respond with ONLY valid JSON. Be specific, realistic, and varied." },
         { role: "user", content: prompt },
       ],
     }),
