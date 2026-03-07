@@ -27,6 +27,7 @@ const Layout = ({ onSearch, searchQuery }: LayoutProps) => {
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-x-hidden pitch-bg">
       <FootballBackground />
+      <FloatingAccumulator />
       <Header onSearch={onSearch} searchQuery={searchQuery} />
       <main className="container mx-auto px-4 py-4 md:py-8 flex-1 relative z-10 pb-24 md:pb-8">
         <Outlet />
