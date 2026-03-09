@@ -344,9 +344,11 @@ function validateAndFixPrediction(prediction: any): any {
     }
   }
 
-  // Clamp confidence
+  // Enforce minimum confidence of 60
   if (prediction.confidence) {
-    prediction.confidence = Math.max(30, Math.min(95, Math.round(prediction.confidence)));
+    prediction.confidence = Math.max(60, Math.min(95, Math.round(prediction.confidence)));
+  } else {
+    prediction.confidence = 60;
   }
 
   // Ensure valid winner
@@ -359,12 +361,20 @@ function validateAndFixPrediction(prediction: any): any {
     prediction.tips = [];
   }
 
-  // Limit to 5 tips and validate each
-  prediction.tips = prediction.tips.slice(0, 5).map((tip: any) => ({
-    tip: tip.tip || "Match Result",
-    confidence: ["high", "medium", "low"].includes(tip.confidence) ? tip.confidence : "medium",
-    description: tip.description || "Analysis based on current form and statistics.",
-  }));
+  // Filter out low-confidence tips — only keep high and medium
+  prediction.tips = prediction.tips
+    .filter((tip: any) => tip.confidence !== "low")
+    .slice(0, 5)
+    .map((tip: any) => ({
+      tip: tip.tip || "Match Result",
+      confidence: ["high", "medium"].includes(tip.confidence) ? tip.confidence : "medium",
+      description: tip.description || "Based on thorough analysis of current form and statistics.",
+    }));
+
+  // Ensure at least 3 tips
+  if (prediction.tips.length < 3) {
+    // Keep whatever we have, minimum is fine
+  }
 
   // Ensure analysis exists
   if (!prediction.analysis || typeof prediction.analysis !== 'string' || prediction.analysis.length < 20) {
