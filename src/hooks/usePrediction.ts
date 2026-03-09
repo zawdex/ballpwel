@@ -46,7 +46,7 @@ export const usePrediction = (
       return response.json();
     },
     enabled: enabled && !!home_name && !!away_name,
-    staleTime: isLive ? 5 * 60 * 1000 : 30 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours cache
     retry: 1,
     retryDelay: 15000,
     meta: { errorPolicy: 'ignore' },
