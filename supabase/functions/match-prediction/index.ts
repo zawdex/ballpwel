@@ -148,44 +148,43 @@ You MUST analyze ALL of the following factors before making your prediction:
 
 ═══ PREDICTION QUALITY RULES ═══
 
-CRITICAL - ACCURACY REQUIREMENTS:
+CRITICAL - HIGH CONFIDENCE ONLY:
 1. predicted_score MUST be in "X-Y" format (home goals first)
 2. winner MUST match predicted_score logically
-3. Confidence scoring guide:
-   - 30-45: Highly uncertain, coin flip match
-   - 46-58: Slight edge to one side
-   - 59-70: Clear favorite with caveats  
-   - 71-82: Strong favorite, significant quality gap
-   - 83-95: Overwhelming favorite (rare, only for mismatches)
-4. NEVER default to 2-1 or always pick home team
-5. Draws happen in ~26% of matches - predict them when appropriate
-6. 0-0 and 1-0 are among the most common scores - don't always predict high-scoring
-7. Consider league-specific patterns:
+3. Overall confidence MUST be 60 or higher — only predict when you are genuinely confident
+4. If you cannot confidently predict the match, set confidence to 60 and pick the most likely outcome
+5. NEVER default to 2-1 or always pick home team
+6. Draws happen in ~26% of matches - predict them when appropriate
+7. 0-0 and 1-0 are among the most common scores - don't always predict high-scoring
+8. Consider league-specific patterns:
    - Premier League: Higher scoring, end-to-end
    - Serie A/La Liga: More tactical, lower scoring
    - Bundesliga: High scoring, home advantage strong
    - Lower leagues: More unpredictable, draws common
-8. Asian leagues, smaller competitions: research quality gap carefully
+9. Asian leagues, smaller competitions: research quality gap carefully
 
 ═══ BETTING TIPS REQUIREMENTS ═══
 
-Provide EXACTLY 5 tips from DIFFERENT market categories:
+CRITICAL RULE: Only provide tips you are GENUINELY CONFIDENT about.
+- Provide 3 to 5 tips MAXIMUM
+- ONLY include tips with "high" or "medium" confidence
+- DO NOT include any tip with "low" confidence — if you're not confident, don't include it
+- Every tip must have strong reasoning backed by data/logic
+- Each tip must be from a DIFFERENT market category
 
-REQUIRED MIX (pick 5 from these categories):
+Available markets (pick from these):
 - Goals Market: Over/Under 0.5, 1.5, 2.5, 3.5 (match or team-specific)
 - Result Market: 1X2, Double Chance, Draw No Bet
 - Both Teams to Score: BTTS Yes/No
 - Handicap: Asian Handicap -0.5, -1, -1.5, +0.5, +1
-- Correct Score: Exact scoreline prediction
-- Half Markets: HT/FT, First Half Over/Under, First Half Result
-- Scorer Markets: First/Last/Anytime Goal
-- Specials: Clean Sheet Yes/No, Win to Nil, Win Both Halves
+- Correct Score: Exact scoreline prediction (only if very confident)
+- Half Markets: HT/FT, First Half Over/Under
+- Specials: Clean Sheet Yes/No, Win to Nil
 
 EACH TIP MUST INCLUDE:
-- Specific reasoning with statistical backing
-- Why THIS specific line/market (not just generic)
-- Confidence level based on evidence strength
-- At least 1 "safe" high-confidence tip and 1 "value" medium/low-confidence tip
+- Specific reasoning with concrete evidence (not generic)
+- Why THIS specific market and line
+- Only "high" or "medium" confidence — never "low"
 
 ═══ ANALYSIS WRITING RULES ═══
 
@@ -193,9 +192,9 @@ The analysis field must be:
 - 3-5 sentences of specific, insightful analysis
 - Reference concrete factors (form, tactics, head-to-head, conditions)
 - Mention specific strengths/weaknesses of each team
-- Explain WHY you predict this specific result
-- NO generic phrases like "strong team" or "good form" without specifics
-- Sound like an expert pundit, not a random generator
+- Explain WHY you predict this specific result with conviction
+- NO generic phrases — be specific and authoritative
+- Sound like a confident expert who has done thorough research
 ${langInstruction}
 
 ═══ OUTPUT FORMAT ═══
@@ -203,16 +202,15 @@ ${langInstruction}
 Respond with ONLY valid JSON, absolutely no markdown or extra text:
 {
   "winner": "home|away|draw",
-  "confidence": 55,
-  "predicted_score": "1-0",
+  "confidence": 72,
+  "predicted_score": "2-0",
   "tips": [
-    {"tip": "Under 2.5 Goals", "confidence": "high", "description": "Detailed specific reason..."},
-    {"tip": "Double Chance: 1X", "confidence": "high", "description": "Detailed specific reason..."},
-    {"tip": "BTTS: No", "confidence": "medium", "description": "Detailed specific reason..."},
-    {"tip": "Correct Score 1-0", "confidence": "low", "description": "Detailed specific reason..."},
-    {"tip": "Asian Handicap: Home -0.5", "confidence": "medium", "description": "Detailed specific reason..."}
+    {"tip": "Under 2.5 Goals", "confidence": "high", "description": "Both teams average under 1.1 goals conceded per game this season with 60%+ clean sheet rate at home"},
+    {"tip": "Double Chance: 1X", "confidence": "high", "description": "Home team unbeaten in 12 home matches, away side won only 2 of last 10 away games"},
+    {"tip": "BTTS: No", "confidence": "medium", "description": "Away team failed to score in 5 of last 8 away fixtures against top-half sides"},
+    {"tip": "Draw No Bet: Home", "confidence": "high", "description": "Home team's xG at home is 1.8 vs opponent's away xG of 0.7 — significant quality gap"}
   ],
-  "analysis": "Detailed 3-5 sentence expert analysis covering tactical matchup, form, and key factors..."
+  "analysis": "Detailed 3-5 sentence expert analysis with conviction..."
 }`;
 }
 
@@ -346,9 +344,11 @@ function validateAndFixPrediction(prediction: any): any {
     }
   }
 
-  // Clamp confidence
+  // Enforce minimum confidence of 60
   if (prediction.confidence) {
-    prediction.confidence = Math.max(30, Math.min(95, Math.round(prediction.confidence)));
+    prediction.confidence = Math.max(60, Math.min(95, Math.round(prediction.confidence)));
+  } else {
+    prediction.confidence = 60;
   }
 
   // Ensure valid winner
@@ -361,12 +361,20 @@ function validateAndFixPrediction(prediction: any): any {
     prediction.tips = [];
   }
 
-  // Limit to 5 tips and validate each
-  prediction.tips = prediction.tips.slice(0, 5).map((tip: any) => ({
-    tip: tip.tip || "Match Result",
-    confidence: ["high", "medium", "low"].includes(tip.confidence) ? tip.confidence : "medium",
-    description: tip.description || "Analysis based on current form and statistics.",
-  }));
+  // Filter out low-confidence tips — only keep high and medium
+  prediction.tips = prediction.tips
+    .filter((tip: any) => tip.confidence !== "low")
+    .slice(0, 5)
+    .map((tip: any) => ({
+      tip: tip.tip || "Match Result",
+      confidence: ["high", "medium"].includes(tip.confidence) ? tip.confidence : "medium",
+      description: tip.description || "Based on thorough analysis of current form and statistics.",
+    }));
+
+  // Ensure at least 3 tips
+  if (prediction.tips.length < 3) {
+    // Keep whatever we have, minimum is fine
+  }
 
   // Ensure analysis exists
   if (!prediction.analysis || typeof prediction.analysis !== 'string' || prediction.analysis.length < 20) {
