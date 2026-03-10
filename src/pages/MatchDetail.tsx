@@ -246,7 +246,7 @@ const MatchDetail = () => {
       </div>
 
       {/* Prediction Panel */}
-      <div className="animate-slide-up [animation-delay:250ms] [animation-fill-mode:backwards]">
+      <div className="animate-slide-up [animation-delay:200ms] [animation-fill-mode:backwards]">
         <PredictionPanel
           prediction={prediction}
           isLoading={predLoading}
