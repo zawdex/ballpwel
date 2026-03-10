@@ -234,23 +234,19 @@ const MatchDetail = () => {
         </div>
       </div>
 
-      {/* Video Player */}
+      {/* Video Player with inline stream switcher */}
       <div className="animate-slide-up [animation-delay:150ms] [animation-fill-mode:backwards]">
-        <VideoPlayer stream={selectedStream} matchTitle={`${match.home_name} vs ${match.away_name}`} isLive={status === 'live'} />
-      </div>
-
-      {/* Stream Selector - right below video for easy switching */}
-      <div className="animate-slide-up [animation-delay:200ms] [animation-fill-mode:backwards]">
-        <StreamSelector
-          streams={match.authors}
-          selectedStream={selectedStream}
-          onSelectStream={setSelectedStream}
+        <VideoPlayer
+          stream={selectedStream}
+          matchTitle={`${match.home_name} vs ${match.away_name}`}
           isLive={status === 'live'}
+          streams={match.authors}
+          onSelectStream={setSelectedStream}
         />
       </div>
 
       {/* Prediction Panel */}
-      <div className="animate-slide-up [animation-delay:250ms] [animation-fill-mode:backwards]">
+      <div className="animate-slide-up [animation-delay:200ms] [animation-fill-mode:backwards]">
         <PredictionPanel
           prediction={prediction}
           isLoading={predLoading}
