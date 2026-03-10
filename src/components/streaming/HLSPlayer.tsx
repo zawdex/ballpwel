@@ -669,6 +669,50 @@ const HLSPlayer = ({ src, poster, title, onError, streams = [], selectedStream, 
 
             {/* Right controls */}
             <div className="flex items-center gap-0.5 sm:gap-1">
+              {/* Stream/Channel Switcher */}
+              {streams.length > 1 && onSelectStream && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      onClick={(e) => e.stopPropagation()}
+                      className="p-1.5 sm:p-2 rounded-lg hover:bg-white/15 transition-colors relative"
+                    >
+                      <Radio className="w-4 h-4 sm:w-5 sm:h-5 text-white/80" />
+                      <span className="absolute -top-0.5 -right-0.5 text-[7px] bg-live text-white rounded-full w-3.5 h-3.5 flex items-center justify-center font-bold">
+                        {streams.length}
+                      </span>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" side="top" className="bg-card/95 backdrop-blur-xl border-border min-w-[180px] max-h-[280px] overflow-y-auto">
+                    <DropdownMenuLabel className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <Signal className="w-3 h-3" />
+                      Channels
+                    </DropdownMenuLabel>
+                    {streams.map((s, index) => {
+                      const isActive = selectedStream === s;
+                      return (
+                        <DropdownMenuItem
+                          key={index}
+                          onClick={() => onSelectStream(s)}
+                          className={`gap-2 text-sm cursor-pointer ${isActive ? 'bg-primary/15' : ''}`}
+                        >
+                          <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${
+                            isActive ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'
+                          }`}>
+                            {s.logo ? (
+                              <img src={s.logo} alt={s.name} className="w-4 h-4 object-contain rounded-sm" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                            ) : (
+                              <span className="text-[10px] font-bold">{index + 1}</span>
+                            )}
+                          </div>
+                          <span className="truncate flex-1">{s.name || `Stream ${index + 1}`}</span>
+                          {isActive && <Check className="w-3.5 h-3.5 text-primary flex-shrink-0" />}
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
               {/* Settings (Quality + Speed) */}
               {(qualityLevels.length > 0 || true) && (
                 <DropdownMenu>
