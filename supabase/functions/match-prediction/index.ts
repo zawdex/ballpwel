@@ -415,13 +415,40 @@ serve(async (req) => {
     const prompt = buildPrompt(homeName, awayName, comp, matchScore, matchTime, lang);
     const content = await getAIResponse(prompt);
 
-    // Robust JSON extraction
-    let cleaned = content.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
-    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("No JSON object found in response");
-    cleaned = jsonMatch[0];
+    // Robust JSON extraction with multiple strategies
+    let prediction: any = null;
+    const rawContent = content.trim();
     
-    let prediction = JSON.parse(cleaned);
+    // Strategy 1: Try direct parse
+    try {
+      prediction = JSON.parse(rawContent);
+    } catch {
+      // Strategy 2: Remove markdown fences
+      let cleaned = rawContent.replace(/```json\s*/gi, "").replace(/```\s*/gi, "").trim();
+      
+      // Strategy 3: Extract JSON object with greedy regex
+      const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          prediction = JSON.parse(jsonMatch[0]);
+        } catch {
+          // Strategy 4: Try fixing common issues (trailing commas, etc)
+          let fixed = jsonMatch[0]
+            .replace(/,\s*}/g, "}")
+            .replace(/,\s*]/g, "]")
+            .replace(/[\x00-\x1F\x7F]/g, " "); // Remove control chars
+          try {
+            prediction = JSON.parse(fixed);
+          } catch (e) {
+            console.error("All JSON parse strategies failed. Raw content:", rawContent.substring(0, 500));
+            throw new Error("Failed to parse AI response as JSON");
+          }
+        }
+      } else {
+        console.error("No JSON object found. Raw content:", rawContent.substring(0, 500));
+        throw new Error("No JSON object found in response");
+      }
+    }
     prediction = validateAndFixPrediction(prediction);
 
     // Save to cache (24 hours for all)
