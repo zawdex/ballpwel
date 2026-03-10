@@ -40,6 +40,9 @@ interface HLSPlayerProps {
   poster?: string;
   title?: string;
   onError?: (error: string) => void;
+  streams?: Author[];
+  selectedStream?: Author | null;
+  onSelectStream?: (stream: Author) => void;
 }
 
 interface QualityLevel {
