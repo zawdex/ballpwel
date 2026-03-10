@@ -235,8 +235,10 @@ const VideoPlayer = ({ stream, matchTitle, isLive = true, streams = [], onSelect
             src={stream.url}
             title={matchTitle || `${stream.name} Stream`}
             onError={handlePlayerError}
+            streams={streams}
+            selectedStream={stream}
+            onSelectStream={onSelectStream}
           />
-          <InlineStreamSwitcher />
         </div>
         <StreamInfo stream={stream} onExternalClick={handleExternalClick} />
       </div>
