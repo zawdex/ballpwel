@@ -234,8 +234,23 @@ const MatchDetail = () => {
         </div>
       </div>
 
-      {/* Prediction Panel */}
+      {/* Video Player */}
       <div className="animate-slide-up [animation-delay:150ms] [animation-fill-mode:backwards]">
+        <VideoPlayer stream={selectedStream} matchTitle={`${match.home_name} vs ${match.away_name}`} isLive={status === 'live'} />
+      </div>
+
+      {/* Stream Selector - right below video for easy switching */}
+      <div className="animate-slide-up [animation-delay:200ms] [animation-fill-mode:backwards]">
+        <StreamSelector
+          streams={match.authors}
+          selectedStream={selectedStream}
+          onSelectStream={setSelectedStream}
+          isLive={status === 'live'}
+        />
+      </div>
+
+      {/* Prediction Panel */}
+      <div className="animate-slide-up [animation-delay:250ms] [animation-fill-mode:backwards]">
         <PredictionPanel
           prediction={prediction}
           isLoading={predLoading}
@@ -243,21 +258,6 @@ const MatchDetail = () => {
           homeName={match.home_name}
           awayName={match.away_name}
           onRetry={() => retryPrediction()}
-        />
-      </div>
-
-      {/* Video Player */}
-      <div className="animate-slide-up [animation-delay:200ms] [animation-fill-mode:backwards]">
-        <VideoPlayer stream={selectedStream} matchTitle={`${match.home_name} vs ${match.away_name}`} isLive={status === 'live'} />
-      </div>
-
-      {/* Stream Selector */}
-      <div className="animate-slide-up [animation-delay:250ms] [animation-fill-mode:backwards]">
-        <StreamSelector
-          streams={match.authors}
-          selectedStream={selectedStream}
-          onSelectStream={setSelectedStream}
-          isLive={status === 'live'}
         />
       </div>
     </div>
