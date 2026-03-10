@@ -17,8 +17,10 @@ import {
   PictureInPicture2,
   SkipBack,
   SkipForward,
-  Signal
+  Signal,
+  Radio
 } from 'lucide-react';
+import { Author } from '@/types';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
