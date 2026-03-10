@@ -51,7 +51,7 @@ interface QualityLevel {
   index: number;
 }
 
-const HLSPlayer = ({ src, poster, title, onError }: HLSPlayerProps) => {
+const HLSPlayer = ({ src, poster, title, onError, streams = [], selectedStream, onSelectStream }: HLSPlayerProps) => {
   const { settings } = useAppSettings();
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
