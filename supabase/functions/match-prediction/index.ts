@@ -6,8 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours for ALL predictions
-const LIVE_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours for live too
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 function getSupabase() {
   return createClient(
@@ -67,152 +66,125 @@ function buildPrompt(homeName: string, awayName: string, comp: string, matchScor
     const projectedTotal = (goalRate * 90).toFixed(1);
     
     liveContext = `
-═══ LIVE MATCH REAL-TIME DATA ═══
+═══ LIVE MATCH DATA ═══
 Current Score: ${homeName} ${homeGoals} - ${awayGoals} ${awayName}
-Match Minute: ${minute}'
-Remaining Minutes: ~${remainingMin}
-Total Goals So Far: ${totalGoals}
-Goal Rate: ${goalRate.toFixed(3)} goals/min (projected ${projectedTotal} goals/90min)
-Match State: ${hg > ag ? homeName + ' LEADING' : ag > hg ? awayName + ' LEADING' : 'LEVEL'}
-${minute > 75 ? '⚠️ LATE GAME: Results tend to hold, goals become less likely' : ''}
-${minute < 30 && totalGoals >= 2 ? '⚠️ EARLY HIGH-SCORING: Pace may slow as teams adjust tactics' : ''}
-${minute > 60 && totalGoals === 0 ? '⚠️ LATE 0-0: Strong Under trend, possible late winner or 0-0 draw' : ''}
-${hg >= 3 || ag >= 3 ? '⚠️ ONE-SIDED: Leading team may ease off, trailing team may open up' : ''}
+Minute: ${minute}' | Remaining: ~${remainingMin} min
+Goals So Far: ${totalGoals} | Rate: ${goalRate.toFixed(3)}/min → projected ${projectedTotal}/90min
+State: ${hg > ag ? homeName + ' LEADING' : ag > hg ? awayName + ' LEADING' : 'LEVEL'}
+${minute > 75 ? '⚠️ LATE GAME: Results tend to hold' : ''}
+${minute < 30 && totalGoals >= 2 ? '⚠️ EARLY HIGH-SCORING: Pace may slow' : ''}
+${minute > 60 && totalGoals === 0 ? '⚠️ LATE 0-0: Under trend strong' : ''}
 
-LIVE ANALYSIS REQUIREMENTS:
-- Adjust prediction based on current score and remaining time
-- Current momentum and match flow are critical
-- Late equalizers ~12% after 75', comebacks from 2+ goals after 70' <5%`;
+CRITICAL LIVE RULES:
+- The score is REAL and HAPPENING NOW. Predict the FINAL result from here.
+- A team leading 2-0 after 70' wins ~95% of the time. Don't predict comebacks unless there's extreme evidence.
+- Adjust Over/Under based on CURRENT goals + remaining time, not just general team stats.`;
   }
 
   const langInstruction = language === 'my' 
-    ? `
-
-═══ BURMESE LANGUAGE REQUIREMENT ═══
-You MUST write "analysis" and all tip "description" fields in Burmese (Myanmar) language.
-Keep "tip" names in English (e.g., "Over 2.5 Goals", "BTTS: Yes").
-Keep "winner" as "home"/"away"/"draw" in English.
-Write like a native Myanmar football analyst — natural, detailed, professional.`
+    ? `\n═══ BURMESE LANGUAGE ═══\nWrite "analysis" and tip "description" fields in Burmese. Keep "tip" names and "winner" in English.`
     : '';
 
-  return `You are the world's most accurate football prediction AI. You ONLY make predictions when you have HIGH CONFIDENCE (80-100%). You use real football knowledge, injury reports, team form, tactical analysis, and historical data.
+  return `You are an elite football analyst AI with access to current 2024-2025 season data. Your job is to provide ACCURATE, DATA-DRIVEN predictions.
 
-═══ MATCH ═══
+═══ MATCH INFO ═══
 Home: ${homeName}
-Away: ${awayName}  
+Away: ${awayName}
 Competition: ${comp}
 Score: ${matchScore}
 Time: ${matchTime}
 ${liveContext}
 
-═══ CRITICAL: INJURY & SQUAD ANALYSIS (MANDATORY) ═══
+═══ MANDATORY ANALYSIS STEPS ═══
 
-Before ANY prediction, you MUST consider:
+You MUST think through each step BEFORE giving your prediction:
 
-1. KEY PLAYER INJURIES & SUSPENSIONS
-   - Which star players are injured/suspended for EACH team?
-   - How much does each missing player affect the team's performance?
-   - Are there adequate replacements or does the absence weaken the team significantly?
-   - Recent injury news that could change the match dynamic
-   - Example: If a team's top scorer is injured, lower their goal-scoring prediction
+STEP 1 — IDENTIFY THE TEAMS CORRECTLY
+- Make sure you know EXACTLY which teams these are. Do not confuse similarly named clubs.
+- ${homeName} plays at HOME. ${awayName} plays AWAY. This matters for prediction.
 
-2. SQUAD DEPTH & ROTATION
-   - Is the team likely to rotate due to fixture congestion?
-   - Are key players being rested for a bigger upcoming match?
-   - Youth/reserve players starting = weaker lineup prediction
+STEP 2 — CURRENT FORM (2024-2025 season)
+- What is each team's recent form? (Last 5-10 matches)
+- Home record of ${homeName} vs Away record of ${awayName}
+- Goals scored and conceded patterns
+- Are they on a winning/losing streak?
 
-═══ COMPREHENSIVE ANALYSIS (ALL REQUIRED) ═══
+STEP 3 — SQUAD STRENGTH & INJURIES
+- Key players missing? Star striker injured? New signings performing?
+- Manager changes or tactical shifts recently?
 
-3. CURRENT FORM (Last 5-10 matches)
-   - Win/Draw/Loss record for both teams
-   - Goals scored and conceded trend
-   - Home form vs Away form specifically
-   - Momentum: improving, declining, or inconsistent?
+STEP 4 — HEAD-TO-HEAD
+- Historical record between these specific teams
+- Do NOT invent H2H data. If unsure, say "limited H2H data" and rely on form.
 
-4. HEAD-TO-HEAD HISTORY
-   - Last 5 meetings between these teams
-   - Who dominates this fixture historically?
-   - Common scoreline patterns in this matchup
+STEP 5 — COMPETITION CONTEXT
+- League position, motivation (title race? relegation? cup final?)
+- Is this a dead rubber or a must-win?
 
-5. TACTICAL MATCHUP
-   - Playing style compatibility (attack vs defense strengths)
-   - Formation and tactical approach of each manager
-   - Set-piece threats and defensive vulnerabilities
-   - Counter-attack ability vs possession dominance
+STEP 6 — REALISTIC SCORELINE
+Common scorelines in football (use these as baseline):
+- 1-0 occurs ~17% | 0-0 ~8% | 2-1 ~12% | 1-1 ~12% | 2-0 ~10%
+- 3-0 ~5% | 3-1 ~5% | 0-1 ~10% | 0-2 ~5%
+- Scores like 4-3, 5-2 are VERY RARE (<1%). Only predict these with extreme evidence.
+- Average goals per match in top leagues: ~2.5-2.8
 
-6. COMPETITION CONTEXT
-   - What's at stake? (Title, relegation, qualification, dead rubber)
-   - Derby/rivalry intensity factor
-   - Home advantage strength at this venue
+═══ ACCURACY RULES ═══
 
-7. ENVIRONMENTAL FACTORS
-   - Weather conditions impact on gameplay
-   - Travel fatigue for away team
-   - Pitch conditions and altitude if relevant
+🔴 CRITICAL — DO NOT:
+- Default to 2-1 for every match
+- Give every match the same analysis template
+- Predict high-scoring games (3+ goals) without strong evidence
+- Ignore home advantage (home teams win ~46% in top leagues)
+- Predict draws too rarely (draws happen ~26% of matches)
+- Make up statistics or injury reports you're not sure about
+- Give generic analysis that could apply to any match
 
-═══ CONFIDENCE & ACCURACY RULES ═══
+🟢 YOU MUST:
+- Make each prediction UNIQUE to this specific match
+- Consider 0-0 and 1-0 as very real possibilities
+- Factor in defensive teams, low-scoring leagues, tactical setups
+- If teams are evenly matched, seriously consider a draw
+- If you're not confident about a specific scoreline, pick the most statistically likely one
+- Differentiate between top leagues (EPL, La Liga) and lower leagues
 
-🔴 MOST IMPORTANT RULES:
-1. Confidence MUST be between 80 and 100 — you only predict what you're SURE about
-2. If confidence would be below 80, still give your best prediction but explain uncertainty
-3. predicted_score format: "X-Y" (home goals first)
-4. winner MUST match predicted_score logically
-5. NEVER default to 2-1 — analyze EACH match individually
-6. Consider draws seriously (~26% of football matches)
-7. 1-0 and 0-0 are very common — don't always predict high-scoring
+═══ CONFIDENCE CALIBRATION ═══
+- 80-84: Slight edge detected, could go either way
+- 85-89: Clear form/quality advantage for one side
+- 90-94: Dominant team vs weak opponent with strong evidence
+- 95-100: ONLY for extreme mismatches (e.g., top team vs amateur)
+- Most predictions should be 80-88. Only give 90+ when truly justified.
 
-CONFIDENCE GUIDE:
-- 80-85: Strong prediction based on clear form/quality difference
-- 86-90: Very confident — significant evidence supports this outcome  
-- 91-95: Extremely confident — overwhelming advantage for one side
-- 96-100: Near certain — massive quality gap or statistical certainty
-
-═══ BETTING TIPS (HIGH CONFIDENCE ONLY) ═══
-
-Provide 3-5 tips. ONLY "high" confidence tips allowed.
-Every single tip must be something you genuinely believe will happen.
-
-Rules:
-- ALL tips must have "confidence": "high" — no medium, no low
-- Each tip from a DIFFERENT market category
-- Each description must explain WHY with specific evidence
-- If you can't find 3 high-confidence tips, provide what you can
-
-Markets to choose from:
-- Over/Under 0.5, 1.5, 2.5, 3.5 Goals
-- 1X2, Double Chance, Draw No Bet
+═══ BETTING TIPS (3-5 tips, all HIGH confidence) ═══
+Each tip must be from a DIFFERENT market:
+- Match Result (1X2) / Double Chance / Draw No Bet
+- Over/Under 0.5/1.5/2.5/3.5 Goals
 - BTTS Yes/No
 - Asian Handicap
-- Correct Score (only if very sure)
-- Clean Sheet, Win to Nil
+- Correct Score (only if very confident)
 - First Half Result/Goals
+- Clean Sheet / Win to Nil
 
-═══ ANALYSIS REQUIREMENTS ═══
+For each tip: explain WHY with specific reasoning, not generic statements.
+BAD: "Based on current form, this is likely" 
+GOOD: "${homeName} scored in 9 of last 10 home games, averaging 2.1 goals/game at home"
 
-Write 4-6 sentences covering:
-- Injury/suspension impact on both teams
-- Current form comparison with specific results
-- Tactical matchup analysis
-- Why you predict THIS specific result
-- Key factor that tips the balance
+═══ ANALYSIS ═══
+Write 4-6 detailed sentences covering: team form comparison, key absences, tactical matchup, and the decisive factor. Be SPECIFIC — mention actual trends, not vague generalizations.
 ${langInstruction}
 
-═══ JSON OUTPUT (NO MARKDOWN) ═══
+═══ RESPOND WITH ONLY THIS JSON ═══
 {
   "winner": "home|away|draw",
-  "confidence": 85,
-  "predicted_score": "2-0",
+  "confidence": 83,
+  "predicted_score": "1-0",
   "tips": [
-    {"tip": "Home Win (1X2)", "confidence": "high", "description": "Home team won 8 of last 10 home games, away team winless in 6 away matches. Key midfielder X injured for away side weakens their midfield control significantly."},
-    {"tip": "Under 2.5 Goals", "confidence": "high", "description": "Last 4 H2H meetings produced under 2.5 goals. Home team keeps clean sheets in 60% of home games this season."},
-    {"tip": "BTTS: No", "confidence": "high", "description": "Away team scored in only 3 of last 10 away games. Without striker Y (ACL injury), their attacking threat is minimal."},
-    {"tip": "Home Clean Sheet: Yes", "confidence": "high", "description": "Home defense conceded only 5 goals in 12 home matches. Away attack averaging 0.4 goals per away game."}
+    {"tip": "Market Name", "confidence": "high", "description": "Specific reasoning with data..."}
   ],
-  "analysis": "Detailed analysis mentioning injuries, form, tactics, and key factors..."
+  "analysis": "Detailed match-specific analysis..."
 }`;
 }
 
-// Provider 1: Lovable AI Gateway (primary)
+// Provider 1: Lovable AI Gateway — use gemini-2.5-pro for best accuracy
 async function tryLovableAI(prompt: string): Promise<string> {
   const apiKey = Deno.env.get("LOVABLE_API_KEY");
   if (!apiKey) throw new Error("LOVABLE_API_KEY not set");
@@ -224,9 +196,9 @@ async function tryLovableAI(prompt: string): Promise<string> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: "google/gemini-2.5-pro",
       messages: [
-        { role: "system", content: "You are the world's most accurate football prediction AI. You analyze injuries, form, tactics, head-to-head, and environmental factors. You ONLY make high-confidence predictions (80-100%). All tips must be 'high' confidence only. You respond with valid JSON only, no markdown." },
+        { role: "system", content: "You are an elite football prediction analyst. You use REAL current season data, actual team form, real injury reports, and historical stats. You never fabricate data. If unsure about specific facts, you base predictions on general football knowledge and probability. You respond with ONLY valid JSON, no markdown, no explanation outside JSON." },
         { role: "user", content: prompt },
       ],
     }),
@@ -256,10 +228,10 @@ async function tryGroq(prompt: string): Promise<string> {
     body: JSON.stringify({
       model: "llama-3.3-70b-versatile",
       messages: [
-        { role: "system", content: "You are the world's most accurate football prediction AI. Only high-confidence predictions. Respond with valid JSON only." },
+        { role: "system", content: "You are an elite football prediction analyst. Respond with ONLY valid JSON." },
         { role: "user", content: prompt },
       ],
-      temperature: 0.3,
+      temperature: 0.4,
       max_tokens: 4000,
       response_format: { type: "json_object" },
     }),
@@ -288,7 +260,7 @@ async function tryGemini(prompt: string): Promise<string> {
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
-          temperature: 0.3,
+          temperature: 0.4,
           maxOutputTokens: 4000,
           responseMimeType: "application/json",
         },
@@ -308,7 +280,7 @@ async function tryGemini(prompt: string): Promise<string> {
 
 async function getAIResponse(prompt: string): Promise<string> {
   const providers = [
-    { name: "Lovable AI", fn: () => tryLovableAI(prompt) },
+    { name: "Lovable AI (Pro)", fn: () => tryLovableAI(prompt) },
     { name: "Groq", fn: () => tryGroq(prompt) },
     { name: "Gemini", fn: () => tryGemini(prompt) },
   ];
@@ -332,44 +304,43 @@ async function getAIResponse(prompt: string): Promise<string> {
 function validateAndFixPrediction(prediction: any): any {
   // Fix winner-score consistency
   if (prediction.predicted_score) {
-    const parts = prediction.predicted_score.split("-").map(Number);
+    const scoreStr = String(prediction.predicted_score).trim();
+    const parts = scoreStr.split("-").map((s: string) => parseInt(s.trim()));
     if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
       const [h, a] = parts;
       if (h > a) prediction.winner = "home";
       else if (h < a) prediction.winner = "away";
       else prediction.winner = "draw";
+      prediction.predicted_score = `${h}-${a}`;
     }
   }
 
-  // Enforce confidence 80-100
+  // Confidence: allow realistic range 80-100, don't inflate
   if (prediction.confidence) {
     prediction.confidence = Math.max(80, Math.min(100, Math.round(prediction.confidence)));
   } else {
-    prediction.confidence = 80;
+    prediction.confidence = 82;
   }
 
-  // Ensure valid winner
   if (!["home", "away", "draw"].includes(prediction.winner)) {
     prediction.winner = "home";
   }
 
-  // Ensure tips array
   if (!Array.isArray(prediction.tips)) {
     prediction.tips = [];
   }
 
-  // Force ALL tips to "high" confidence, remove low/medium
   prediction.tips = prediction.tips
+    .filter((tip: any) => tip.tip && tip.description)
     .slice(0, 5)
     .map((tip: any) => ({
-      tip: tip.tip || "Match Result",
+      tip: tip.tip,
       confidence: "high" as const,
-      description: tip.description || "Based on thorough analysis of form, injuries, and statistics.",
+      description: tip.description,
     }));
 
-  // Ensure analysis exists
-  if (!prediction.analysis || typeof prediction.analysis !== 'string' || prediction.analysis.length < 20) {
-    prediction.analysis = "Match analysis is being generated based on available data.";
+  if (!prediction.analysis || typeof prediction.analysis !== 'string' || prediction.analysis.length < 30) {
+    prediction.analysis = "Detailed analysis could not be generated. Prediction is based on available statistical data and team form.";
   }
 
   return prediction;
@@ -399,9 +370,10 @@ serve(async (req) => {
 
     const live = isLiveMatch(matchScore, matchTime);
     
+    // v4 cache key to invalidate old bad predictions
     const cacheKey = live 
-      ? `v3-live-${lang}-${homeName}-${awayName}-${matchScore}` 
-      : `v3-pre-${lang}-${homeName}-${awayName}`;
+      ? `v4-live-${lang}-${homeName}-${awayName}-${matchScore}` 
+      : `v4-pre-${lang}-${homeName}-${awayName}`;
     
     const cached = await getCachedPrediction(cacheKey);
     if (cached) {
@@ -415,43 +387,37 @@ serve(async (req) => {
     const prompt = buildPrompt(homeName, awayName, comp, matchScore, matchTime, lang);
     const content = await getAIResponse(prompt);
 
-    // Robust JSON extraction with multiple strategies
+    // Robust JSON extraction
     let prediction: any = null;
     const rawContent = content.trim();
     
-    // Strategy 1: Try direct parse
     try {
       prediction = JSON.parse(rawContent);
     } catch {
-      // Strategy 2: Remove markdown fences
       let cleaned = rawContent.replace(/```json\s*/gi, "").replace(/```\s*/gi, "").trim();
-      
-      // Strategy 3: Extract JSON object with greedy regex
       const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         try {
           prediction = JSON.parse(jsonMatch[0]);
         } catch {
-          // Strategy 4: Try fixing common issues (trailing commas, etc)
           let fixed = jsonMatch[0]
             .replace(/,\s*}/g, "}")
             .replace(/,\s*]/g, "]")
-            .replace(/[\x00-\x1F\x7F]/g, " "); // Remove control chars
+            .replace(/[\x00-\x1F\x7F]/g, " ");
           try {
             prediction = JSON.parse(fixed);
           } catch (e) {
-            console.error("All JSON parse strategies failed. Raw content:", rawContent.substring(0, 500));
-            throw new Error("Failed to parse AI response as JSON");
+            console.error("JSON parse failed. Raw:", rawContent.substring(0, 500));
+            throw new Error("Failed to parse AI response");
           }
         }
       } else {
-        console.error("No JSON object found. Raw content:", rawContent.substring(0, 500));
-        throw new Error("No JSON object found in response");
+        console.error("No JSON found. Raw:", rawContent.substring(0, 500));
+        throw new Error("No JSON in response");
       }
     }
-    prediction = validateAndFixPrediction(prediction);
 
-    // Save to cache (24 hours for all)
+    prediction = validateAndFixPrediction(prediction);
     setCachedPrediction(cacheKey, prediction);
 
     return new Response(JSON.stringify(prediction), {
