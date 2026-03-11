@@ -56,8 +56,8 @@ const HLSPlayer = ({ src, poster, title, onError, streams = [], selectedStream, 
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hlsRef = useRef<Hls | null>(null);
-  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const doubleTapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const doubleTapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { t } = useLanguage();
 
   const [isPlaying, setIsPlaying] = useState(false);
