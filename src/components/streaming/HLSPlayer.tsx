@@ -79,7 +79,7 @@ const HLSPlayer = ({ src, poster, title, onError, streams = [], selectedStream, 
 
   const retryCountRef = useRef(0);
   const maxRetries = 5;
-  const stallCheckRef = useRef<NodeJS.Timeout | null>(null);
+  const stallCheckRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTimeRef = useRef(0);
 
   const initializePlayer = useCallback(() => {
