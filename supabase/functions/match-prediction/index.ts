@@ -77,15 +77,15 @@ ${minute > 60 && totalGoals === 0 ? '⚠️ LATE 0-0: Under trend strong' : ''}
 
 CRITICAL LIVE RULES:
 - The score is REAL and HAPPENING NOW. Predict the FINAL result from here.
-- A team leading 2-0 after 70' wins ~95% of the time. Don't predict comebacks unless there's extreme evidence.
-- Adjust Over/Under based on CURRENT goals + remaining time, not just general team stats.`;
+- A team leading 2-0 after 70' wins ~95% of the time.
+- Adjust Over/Under based on CURRENT goals + remaining time.`;
   }
 
   const langInstruction = language === 'my' 
     ? `\n═══ BURMESE LANGUAGE ═══\nWrite "analysis" and tip "description" fields in Burmese. Keep "tip" names and "winner" in English.`
     : '';
 
-  return `You are an elite football analyst AI with access to current 2024-2025 season data. Your job is to provide ACCURATE, DATA-DRIVEN predictions.
+  return `You are an elite football analyst AI. You MUST use Google Search to look up REAL-TIME data before making predictions. This is CRITICAL.
 
 ═══ MATCH INFO ═══
 Home: ${homeName}
@@ -95,81 +95,64 @@ Score: ${matchScore}
 Time: ${matchTime}
 ${liveContext}
 
-═══ MANDATORY ANALYSIS STEPS ═══
+═══ MANDATORY RESEARCH STEPS (USE GOOGLE SEARCH FOR EACH) ═══
 
-You MUST think through each step BEFORE giving your prediction:
+🔍 STEP 1 — SEARCH FOR CURRENT LINEUPS & SQUADS
+- Search: "${homeName} lineup today" OR "${homeName} squad 2025"
+- Search: "${awayName} lineup today" OR "${awayName} squad 2025"
+- Find out which players are currently in each team's squad
+- Identify key players, recent transfers IN and OUT
+- Note: Players transfer between clubs frequently. Make sure you have the CURRENT squad.
 
-STEP 1 — IDENTIFY THE TEAMS CORRECTLY
-- Make sure you know EXACTLY which teams these are. Do not confuse similarly named clubs.
-- ${homeName} plays at HOME. ${awayName} plays AWAY. This matters for prediction.
+🔍 STEP 2 — SEARCH FOR INJURIES & SUSPENSIONS
+- Search: "${homeName} injuries" and "${awayName} injuries"
+- Find currently injured/suspended players
+- Note which key players are MISSING from the lineup
 
-STEP 2 — CURRENT FORM (2024-2025 season)
-- What is each team's recent form? (Last 5-10 matches)
-- Home record of ${homeName} vs Away record of ${awayName}
-- Goals scored and conceded patterns
-- Are they on a winning/losing streak?
+🔍 STEP 3 — SEARCH FOR CURRENT FORM (Last 5-10 matches)
+- Search: "${homeName} recent results 2025" and "${awayName} recent results 2025"
+- Get actual recent match results, not guesses
+- Note home/away form specifically
 
-STEP 3 — SQUAD STRENGTH & INJURIES
-- Key players missing? Star striker injured? New signings performing?
-- Manager changes or tactical shifts recently?
+🔍 STEP 4 — SEARCH FOR HEAD-TO-HEAD
+- Search: "${homeName} vs ${awayName} head to head"
+- Get actual historical results between these teams
 
-STEP 4 — HEAD-TO-HEAD
-- Historical record between these specific teams
-- Do NOT invent H2H data. If unsure, say "limited H2H data" and rely on form.
+🔍 STEP 5 — SEARCH FOR LEAGUE TABLE POSITION
+- Search: "${comp} table standings 2025"
+- Find current league positions and motivation context
 
-STEP 5 — COMPETITION CONTEXT
-- League position, motivation (title race? relegation? cup final?)
-- Is this a dead rubber or a must-win?
+═══ AFTER RESEARCH, ANALYZE ═══
 
 STEP 6 — REALISTIC SCORELINE
-Common scorelines in football (use these as baseline):
-- 1-0 occurs ~17% | 0-0 ~8% | 2-1 ~12% | 1-1 ~12% | 2-0 ~10%
-- 3-0 ~5% | 3-1 ~5% | 0-1 ~10% | 0-2 ~5%
-- Scores like 4-3, 5-2 are VERY RARE (<1%). Only predict these with extreme evidence.
-- Average goals per match in top leagues: ~2.5-2.8
+Common scorelines: 1-0 ~17% | 0-0 ~8% | 2-1 ~12% | 1-1 ~12% | 2-0 ~10%
+Scores like 4-3, 5-2 are VERY RARE (<1%).
 
 ═══ ACCURACY RULES ═══
-
-🔴 CRITICAL — DO NOT:
+🔴 DO NOT:
+- Make up player names or injury reports — USE SEARCH
+- Claim a player is at a club without verifying — USE SEARCH
+- Give generic analysis without real data
 - Default to 2-1 for every match
-- Give every match the same analysis template
-- Predict high-scoring games (3+ goals) without strong evidence
-- Ignore home advantage (home teams win ~46% in top leagues)
-- Predict draws too rarely (draws happen ~26% of matches)
-- Make up statistics or injury reports you're not sure about
-- Give generic analysis that could apply to any match
 
 🟢 YOU MUST:
-- Make each prediction UNIQUE to this specific match
-- Consider 0-0 and 1-0 as very real possibilities
-- Factor in defensive teams, low-scoring leagues, tactical setups
-- If teams are evenly matched, seriously consider a draw
-- If you're not confident about a specific scoreline, pick the most statistically likely one
-- Differentiate between top leagues (EPL, La Liga) and lower leagues
+- Cite specific player names from your search results
+- Mention actual recent results you found
+- Name injured/suspended players specifically
+- Reference actual league positions
 
 ═══ CONFIDENCE CALIBRATION ═══
-- 80-84: Slight edge detected, could go either way
-- 85-89: Clear form/quality advantage for one side
-- 90-94: Dominant team vs weak opponent with strong evidence
-- 95-100: ONLY for extreme mismatches (e.g., top team vs amateur)
-- Most predictions should be 80-88. Only give 90+ when truly justified.
+- 80-84: Slight edge, could go either way
+- 85-89: Clear form/quality advantage
+- 90-94: Dominant vs weak with strong evidence
+- 95-100: ONLY extreme mismatches
 
 ═══ BETTING TIPS (3-5 tips, all HIGH confidence) ═══
-Each tip must be from a DIFFERENT market:
-- Match Result (1X2) / Double Chance / Draw No Bet
-- Over/Under 0.5/1.5/2.5/3.5 Goals
-- BTTS Yes/No
-- Asian Handicap
-- Correct Score (only if very confident)
-- First Half Result/Goals
-- Clean Sheet / Win to Nil
-
-For each tip: explain WHY with specific reasoning, not generic statements.
-BAD: "Based on current form, this is likely" 
-GOOD: "${homeName} scored in 9 of last 10 home games, averaging 2.1 goals/game at home"
+Different markets: 1X2, Over/Under, BTTS, Asian Handicap, Correct Score, etc.
+Each tip MUST have specific reasoning with real data from your search.
 
 ═══ ANALYSIS ═══
-Write 4-6 detailed sentences covering: team form comparison, key absences, tactical matchup, and the decisive factor. Be SPECIFIC — mention actual trends, not vague generalizations.
+Write 4-6 detailed sentences with SPECIFIC facts: player names, recent scores, injury names, league positions.
 ${langInstruction}
 
 ═══ RESPOND WITH ONLY THIS JSON ═══
@@ -178,13 +161,59 @@ ${langInstruction}
   "confidence": 83,
   "predicted_score": "1-0",
   "tips": [
-    {"tip": "Market Name", "confidence": "high", "description": "Specific reasoning with data..."}
+    {"tip": "Market Name", "confidence": "high", "description": "Specific reasoning with real data..."}
   ],
-  "analysis": "Detailed match-specific analysis..."
+  "analysis": "Detailed analysis with real player names, actual recent results, verified injuries..."
 }`;
 }
 
-// Provider 1: Lovable AI Gateway — use gemini-2.5-pro for best accuracy
+// Provider 1: Gemini with Google Search grounding (PRIMARY - has real-time data)
+async function tryGeminiGrounded(prompt: string): Promise<string> {
+  const apiKey = Deno.env.get("GEMINI_API_KEY");
+  if (!apiKey) throw new Error("GEMINI_API_KEY not set");
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ 
+          role: "user",
+          parts: [{ text: prompt }] 
+        }],
+        tools: [{ google_search: {} }],
+        generationConfig: {
+          temperature: 0.4,
+          maxOutputTokens: 8000,
+        },
+      }),
+    }
+  );
+
+  if (!res.ok) {
+    const err = await res.text();
+    console.error("Gemini grounded error:", res.status, err);
+    throw new Error(`Gemini grounded error: ${res.status}`);
+  }
+
+  const data = await res.json();
+  const parts = data.candidates?.[0]?.content?.parts;
+  if (!parts) throw new Error("No content in Gemini response");
+  
+  // Extract text from parts (may include grounding metadata)
+  let textContent = "";
+  for (const part of parts) {
+    if (part.text) textContent += part.text;
+  }
+  
+  console.log("Gemini grounded search used:", 
+    data.candidates?.[0]?.groundingMetadata ? "YES" : "NO");
+  
+  return textContent;
+}
+
+// Provider 2: Lovable AI Gateway (fallback - no real-time search but good reasoning)
 async function tryLovableAI(prompt: string): Promise<string> {
   const apiKey = Deno.env.get("LOVABLE_API_KEY");
   if (!apiKey) throw new Error("LOVABLE_API_KEY not set");
@@ -198,7 +227,7 @@ async function tryLovableAI(prompt: string): Promise<string> {
     body: JSON.stringify({
       model: "google/gemini-2.5-pro",
       messages: [
-        { role: "system", content: "You are an elite football prediction analyst. You use REAL current season data, actual team form, real injury reports, and historical stats. You never fabricate data. If unsure about specific facts, you base predictions on general football knowledge and probability. You respond with ONLY valid JSON, no markdown, no explanation outside JSON." },
+        { role: "system", content: "You are an elite football prediction analyst. Respond with ONLY valid JSON, no markdown." },
         { role: "user", content: prompt },
       ],
     }),
@@ -214,7 +243,7 @@ async function tryLovableAI(prompt: string): Promise<string> {
   return data.choices?.[0]?.message?.content || "";
 }
 
-// Provider 2: Groq (fallback)
+// Provider 3: Groq (last resort)
 async function tryGroq(prompt: string): Promise<string> {
   const apiKey = Deno.env.get("GROQ_API_KEY");
   if (!apiKey) throw new Error("GROQ_API_KEY not set");
@@ -247,42 +276,11 @@ async function tryGroq(prompt: string): Promise<string> {
   return data.choices?.[0]?.message?.content || "";
 }
 
-// Provider 3: Gemini direct (last resort)
-async function tryGemini(prompt: string): Promise<string> {
-  const apiKey = Deno.env.get("GEMINI_API_KEY");
-  if (!apiKey) throw new Error("GEMINI_API_KEY not set");
-
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.4,
-          maxOutputTokens: 4000,
-          responseMimeType: "application/json",
-        },
-      }),
-    }
-  );
-
-  if (!res.ok) {
-    const err = await res.text();
-    console.error("Gemini error:", res.status, err);
-    throw new Error(`Gemini error: ${res.status}`);
-  }
-
-  const data = await res.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-}
-
 async function getAIResponse(prompt: string): Promise<string> {
   const providers = [
+    { name: "Gemini Grounded (Search)", fn: () => tryGeminiGrounded(prompt) },
     { name: "Lovable AI (Pro)", fn: () => tryLovableAI(prompt) },
     { name: "Groq", fn: () => tryGroq(prompt) },
-    { name: "Gemini", fn: () => tryGemini(prompt) },
   ];
 
   for (const provider of providers) {
@@ -302,7 +300,6 @@ async function getAIResponse(prompt: string): Promise<string> {
 }
 
 function validateAndFixPrediction(prediction: any): any {
-  // Fix winner-score consistency
   if (prediction.predicted_score) {
     const scoreStr = String(prediction.predicted_score).trim();
     const parts = scoreStr.split("-").map((s: string) => parseInt(s.trim()));
@@ -315,7 +312,6 @@ function validateAndFixPrediction(prediction: any): any {
     }
   }
 
-  // Confidence: allow realistic range 80-100, don't inflate
   if (prediction.confidence) {
     prediction.confidence = Math.max(80, Math.min(100, Math.round(prediction.confidence)));
   } else {
@@ -370,10 +366,10 @@ serve(async (req) => {
 
     const live = isLiveMatch(matchScore, matchTime);
     
-    // v4 cache key to invalidate old bad predictions
+    // v5 cache key - grounded with real-time search
     const cacheKey = live 
-      ? `v4-live-${lang}-${homeName}-${awayName}-${matchScore}` 
-      : `v4-pre-${lang}-${homeName}-${awayName}`;
+      ? `v5-live-${lang}-${homeName}-${awayName}-${matchScore}` 
+      : `v5-pre-${lang}-${homeName}-${awayName}`;
     
     const cached = await getCachedPrediction(cacheKey);
     if (cached) {
