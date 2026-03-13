@@ -49,7 +49,7 @@ const AccumulatorPage = () => {
   const { data: matches, isLoading: matchesLoading } = useQuery({
     queryKey: ['matches'],
     queryFn: footballAPI.getMatches,
-    refetchInterval: 60000,
+    
   });
 
   // Get non-finished matches for predictions

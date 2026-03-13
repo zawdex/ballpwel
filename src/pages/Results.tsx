@@ -16,7 +16,7 @@ const Results = () => {
   const { data: apiMatches, isLoading: apiLoading } = useQuery({
     queryKey: ['matches'],
     queryFn: footballAPI.getMatches,
-    refetchInterval: 60 * 1000,
+    
   });
 
   // DB data for historical results

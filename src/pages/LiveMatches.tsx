@@ -10,7 +10,7 @@ const LiveMatches = () => {
   const { data: allMatches, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ['matches'],
     queryFn: footballAPI.getMatches,
-    refetchInterval: 30 * 1000, // Faster refresh for live matches
+    
   });
 
   const liveMatches = useMemo(() => {
