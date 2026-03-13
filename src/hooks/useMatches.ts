@@ -24,7 +24,7 @@ export const useMatches = (filters?: Partial<MatchFilters>) => {
   return useQuery({
     queryKey: ['matches'],
     queryFn: footballAPI.getMatches,
-    refetchInterval: 60 * 1000, // Auto-refresh every 60 seconds
+    
     select: (data: Match[]) => {
       let filtered = [...data];
       

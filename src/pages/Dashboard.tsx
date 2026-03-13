@@ -55,7 +55,7 @@ const Dashboard = ({ filters, onFilterChange }: DashboardProps) => {
   const { data: allMatches, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ['matches'],
     queryFn: footballAPI.getMatches,
-    refetchInterval: 60 * 1000,
+    
   });
 
   const filteredMatches = useMemo(() => {
