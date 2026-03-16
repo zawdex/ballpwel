@@ -22,6 +22,7 @@ const MatchDetail = () => {
   const { matchId } = useParams<{ matchId: string }>();
   const [selectedStream, setSelectedStream] = useState<Author | null>(null);
   const { language } = useLanguage();
+  const playerRef = useRef<HTMLDivElement>(null);
   
   const { data: matches, isLoading } = useQuery({
     queryKey: ['matches'],
