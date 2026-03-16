@@ -36,6 +36,15 @@ const MatchDetail = () => {
   }, [matches, matchId]);
 
   const status = match ? getMatchStatus(match.score, match.time, match.match_status) : 'upcoming';
+  // Auto-scroll to player when match is live
+  useEffect(() => {
+    if (status === 'live' && playerRef.current) {
+      setTimeout(() => {
+        playerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 500);
+    }
+  }, [status, match?.id]);
+
   const { data: prediction, isLoading: predLoading, error: predError, refetch: retryPrediction } = usePrediction(
     match?.home_name || '', match?.away_name || '', match?.label || '', match?.score || '', match?.time || '',
     true, language
