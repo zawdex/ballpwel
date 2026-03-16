@@ -421,6 +421,40 @@ const HLSPlayer = ({ src, poster, title, onError, streams = [], selectedStream, 
     }
   };
 
+  const jumpToLive = () => {
+    if (videoRef.current && duration) {
+      videoRef.current.currentTime = duration;
+      setCurrentTime(duration);
+      if (!isPlaying) videoRef.current.play();
+    }
+  };
+
+  const cycleAspectMode = () => {
+    const modes: Array<'contain' | 'cover' | '16:9' | '4:3'> = ['contain', 'cover', '16:9', '4:3'];
+    const idx = modes.indexOf(aspectMode);
+    setAspectMode(modes[(idx + 1) % modes.length]);
+  };
+
+  const getAspectLabel = () => {
+    switch (aspectMode) {
+      case 'contain': return 'Fit';
+      case 'cover': return 'Fill';
+      case '16:9': return '16:9';
+      case '4:3': return '4:3';
+    }
+  };
+
+  const getVideoStyle = (): React.CSSProperties => {
+    const base: React.CSSProperties = { filter: `brightness(${brightness}%)` };
+    switch (aspectMode) {
+      case 'contain': return { ...base, objectFit: 'contain' };
+      case 'cover': return { ...base, objectFit: 'cover' };
+      case '16:9': return { ...base, objectFit: 'fill', aspectRatio: '16/9' };
+      case '4:3': return { ...base, objectFit: 'fill', aspectRatio: '4/3' };
+      default: return { ...base, objectFit: 'contain' };
+    }
+  };
+
   // Touch handler: single tap toggles controls, double tap seeks
   const handleTouchEnd = (e: React.TouchEvent) => {
     const rect = containerRef.current?.getBoundingClientRect();
