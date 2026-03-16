@@ -80,6 +80,10 @@ const HLSPlayer = ({ src, poster, title, onError, streams = [], selectedStream, 
   const [seekIndicator, setSeekIndicator] = useState<{ side: 'left' | 'right'; seconds: number } | null>(null);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [bufferedPercent, setBufferedPercent] = useState(0);
+  const [isLocked, setIsLocked] = useState(false);
+  const [brightness, setBrightness] = useState(100);
+  const [aspectMode, setAspectMode] = useState<'contain' | 'cover' | '16:9' | '4:3'>('contain');
+  const [showBrightness, setShowBrightness] = useState(false);
 
   const retryCountRef = useRef(0);
   const maxRetries = 5;
