@@ -18,7 +18,11 @@ import {
   SkipBack,
   SkipForward,
   Signal,
-  Radio
+  Radio,
+  Lock,
+  Unlock,
+  Sun,
+  RectangleHorizontal,
 } from 'lucide-react';
 import { Author } from '@/types';
 import { Slider } from '@/components/ui/slider';
