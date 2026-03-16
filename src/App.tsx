@@ -57,6 +57,7 @@ const App = () => {
                 <Route element={<Layout onSearch={handleSearch} searchQuery={filters.searchQuery} />}>
                   <Route path="/" element={<Dashboard filters={filters} onFilterChange={handleFilterChange} />} />
                   <Route path="/matches/:matchId" element={<MatchDetail />} />
+                  <Route path="/watch/:matchId" element={<LiveStreamPage />} />
                   <Route path="/live" element={<LiveMatches />} />
                   <Route path="/upcoming" element={<UpcomingMatches />} />
                   <Route path="/basketball" element={<NBAMatches />} />
