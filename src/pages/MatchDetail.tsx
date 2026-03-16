@@ -245,7 +245,7 @@ const MatchDetail = () => {
       </div>
 
       {/* Video Player with inline stream switcher */}
-      <div className="animate-slide-up [animation-delay:150ms] [animation-fill-mode:backwards]">
+      <div ref={playerRef} className="animate-slide-up [animation-delay:150ms] [animation-fill-mode:backwards]">
         <VideoPlayer
           stream={selectedStream}
           matchTitle={`${match.home_name} vs ${match.away_name}`}
