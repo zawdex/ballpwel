@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Clock, Trophy, Radio, Sparkles } from 'lucide-react';
@@ -22,6 +22,7 @@ const MatchDetail = () => {
   const { matchId } = useParams<{ matchId: string }>();
   const [selectedStream, setSelectedStream] = useState<Author | null>(null);
   const { language } = useLanguage();
+  const playerRef = useRef<HTMLDivElement>(null);
   
   const { data: matches, isLoading } = useQuery({
     queryKey: ['matches'],
@@ -35,6 +36,15 @@ const MatchDetail = () => {
   }, [matches, matchId]);
 
   const status = match ? getMatchStatus(match.score, match.time, match.match_status) : 'upcoming';
+  // Auto-scroll to player when match is live
+  useEffect(() => {
+    if (status === 'live' && playerRef.current) {
+      setTimeout(() => {
+        playerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 500);
+    }
+  }, [status, match?.id]);
+
   const { data: prediction, isLoading: predLoading, error: predError, refetch: retryPrediction } = usePrediction(
     match?.home_name || '', match?.away_name || '', match?.label || '', match?.score || '', match?.time || '',
     true, language
@@ -235,7 +245,7 @@ const MatchDetail = () => {
       </div>
 
       {/* Video Player with inline stream switcher */}
-      <div className="animate-slide-up [animation-delay:150ms] [animation-fill-mode:backwards]">
+      <div ref={playerRef} className="animate-slide-up [animation-delay:150ms] [animation-fill-mode:backwards]">
         <VideoPlayer
           stream={selectedStream}
           matchTitle={`${match.home_name} vs ${match.away_name}`}
