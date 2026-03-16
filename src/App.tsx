@@ -10,6 +10,7 @@ import { AppSettingsProvider } from "@/contexts/AppSettingsContext";
 import Layout from "@/components/layout/Layout";
 import Dashboard from "@/pages/Dashboard";
 import MatchDetail from "@/pages/MatchDetail";
+import LiveStreamPage from "@/pages/LiveStreamPage";
 import LiveMatches from "@/pages/LiveMatches";
 import UpcomingMatches from "@/pages/UpcomingMatches";
 import NBAMatches from "@/pages/NBAMatches";
