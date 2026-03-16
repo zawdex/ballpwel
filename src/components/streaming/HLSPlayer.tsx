@@ -519,14 +519,14 @@ const HLSPlayer = ({ src, poster, title, onError, streams = [], selectedStream, 
     >
       <video
         ref={videoRef}
-        className="w-full h-full object-contain bg-black"
+        className="w-full h-full bg-black"
+        style={getVideoStyle()}
         poster={poster}
         playsInline
-        onTouchEnd={handleTouchEnd}
+        onTouchEnd={(e) => { if (!isLocked) handleTouchEnd(e); }}
         onClick={(e) => {
           e.preventDefault();
-          // Click only toggles controls, not play/pause
-          showControlsTemporarily();
+          if (!isLocked) showControlsTemporarily();
         }}
       />
 
