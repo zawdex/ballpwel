@@ -55,7 +55,10 @@ const MatchCard = memo(({ match, index = 0, isFavoriteHome, isFavoriteAway, onTo
   }, [showShare]);
 
   const hasStreams = match.authors && match.authors.length > 0;
+  const isLive = status === 'live';
   const encodedId = encodeURIComponent(match.id);
+  // Live matches with streams go directly to stream player
+  const cardLink = isLive && hasStreams ? `/watch/${encodedId}` : `/matches/${encodedId}`;
   const matchUrl = `${window.location.origin}/matches/${encodedId}`;
   const shareText = `${match.home_name} vs ${match.away_name}${match.score ? ' | ' + match.score : ''}`;
 
