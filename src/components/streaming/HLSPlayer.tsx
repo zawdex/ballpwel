@@ -609,15 +609,48 @@ const HLSPlayer = ({ src, poster, title, onError, streams = [], selectedStream, 
         </div>
       </div>
 
+      {/* Lock Screen Overlay */}
+      {isLocked && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center">
+          <button
+            onClick={(e) => { e.stopPropagation(); setIsLocked(false); }}
+            className="px-4 py-2 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center gap-2 text-white/80 hover:text-white transition-all opacity-0 hover:opacity-100 active:opacity-100"
+            style={{ opacity: showControls ? 0.7 : 0 }}
+          >
+            <Lock className="w-4 h-4" />
+            <span className="text-xs font-bold">Locked — Tap to unlock</span>
+          </button>
+        </div>
+      )}
+
+      {/* Brightness Slider Overlay */}
+      {showBrightness && !isLocked && (
+        <div className={`absolute top-14 left-3 z-40 bg-black/70 backdrop-blur-md rounded-xl p-3 border border-white/10 transition-all ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+          <div className="flex items-center gap-2 mb-2">
+            <Sun className="w-3.5 h-3.5 text-yellow-400" />
+            <span className="text-[10px] text-white/80 font-bold">{brightness}%</span>
+          </div>
+          <Slider
+            value={[brightness]}
+            min={30}
+            max={150}
+            step={5}
+            onValueChange={(v) => setBrightness(v[0])}
+            onClick={(e) => e.stopPropagation()}
+            className="w-28 cursor-pointer"
+          />
+        </div>
+      )}
+
       {/* Bottom Controls */}
+      {!isLocked && (
       <div
-        className={`absolute bottom-0 left-0 right-0 transition-all duration-300 ${
+        className={`absolute bottom-0 left-0 right-0 transition-all duration-300 z-30 ${
           showControls ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
         }`}
       >
         {/* Progress bar area */}
         <div className="px-3 sm:px-4">
-          {/* Custom progress bar */}
           <div className="relative group/progress h-6 flex items-end pb-2 cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
@@ -626,20 +659,16 @@ const HLSPlayer = ({ src, poster, title, onError, streams = [], selectedStream, 
               handleSeek([percent * (duration || 100)]);
             }}
           >
-            {/* Track background */}
             <div className="w-full h-1 group-hover/progress:h-1.5 rounded-full bg-white/20 transition-all relative overflow-hidden">
-              {/* Buffered */}
               <div
                 className="absolute inset-y-0 left-0 bg-white/30 rounded-full"
                 style={{ width: `${bufferedPercent}%` }}
               />
-              {/* Progress */}
               <div
                 className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
-            {/* Thumb */}
             <div
               className="absolute bottom-1.5 w-3 h-3 rounded-full bg-primary shadow-lg shadow-primary/50 opacity-0 group-hover/progress:opacity-100 transition-opacity -translate-x-1/2"
               style={{ left: `${progressPercent}%` }}
@@ -648,10 +677,10 @@ const HLSPlayer = ({ src, poster, title, onError, streams = [], selectedStream, 
         </div>
 
         {/* Controls bar */}
-        <div className="bg-gradient-to-t from-black/90 via-black/60 to-transparent px-3 sm:px-4 pb-3 pt-1">
-          <div className="flex items-center justify-between gap-2">
+        <div className="bg-gradient-to-t from-black/90 via-black/60 to-transparent px-2 sm:px-4 pb-3 pt-1">
+          <div className="flex items-center justify-between gap-1">
             {/* Left controls */}
-            <div className="flex items-center gap-1 sm:gap-1.5">
+            <div className="flex items-center gap-0.5 sm:gap-1.5">
               {/* Play/Pause */}
               <button
                 onClick={(e) => { e.stopPropagation(); togglePlay(); }}
@@ -667,7 +696,7 @@ const HLSPlayer = ({ src, poster, title, onError, streams = [], selectedStream, 
               {/* Skip Back */}
               <button
                 onClick={(e) => { e.stopPropagation(); seekBy(-10); }}
-                className="p-1.5 sm:p-2 rounded-lg hover:bg-white/15 transition-colors hidden sm:flex"
+                className="p-1 sm:p-2 rounded-lg hover:bg-white/15 transition-colors"
               >
                 <SkipBack className="w-4 h-4 sm:w-5 sm:h-5 text-white/80" />
               </button>
@@ -675,13 +704,22 @@ const HLSPlayer = ({ src, poster, title, onError, streams = [], selectedStream, 
               {/* Skip Forward */}
               <button
                 onClick={(e) => { e.stopPropagation(); seekBy(10); }}
-                className="p-1.5 sm:p-2 rounded-lg hover:bg-white/15 transition-colors hidden sm:flex"
+                className="p-1 sm:p-2 rounded-lg hover:bg-white/15 transition-colors"
               >
                 <SkipForward className="w-4 h-4 sm:w-5 sm:h-5 text-white/80" />
               </button>
 
+              {/* Live Edge Button */}
+              <button
+                onClick={(e) => { e.stopPropagation(); jumpToLive(); }}
+                className="px-2 py-1 rounded-md bg-live/20 hover:bg-live/40 border border-live/30 transition-colors flex items-center gap-1 ml-0.5"
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-live animate-pulse" />
+                <span className="text-[9px] font-black text-live tracking-wider">LIVE</span>
+              </button>
+
               {/* Volume */}
-              <div className="relative flex items-center"
+              <div className="relative flex items-center hidden sm:flex"
                 onMouseEnter={() => setShowVolumeSlider(true)}
                 onMouseLeave={() => setShowVolumeSlider(false)}
               >
@@ -704,22 +742,52 @@ const HLSPlayer = ({ src, poster, title, onError, streams = [], selectedStream, 
               </div>
 
               {/* Time */}
-              <div className="text-[10px] sm:text-xs text-white/60 font-mono ml-1 whitespace-nowrap">
+              <div className="text-[9px] sm:text-xs text-white/60 font-mono ml-0.5 whitespace-nowrap">
                 {formatTime(currentTime)} / {formatTime(duration)}
               </div>
             </div>
 
             {/* Right controls */}
             <div className="flex items-center gap-0.5 sm:gap-1">
+              {/* Lock */}
+              <button
+                onClick={(e) => { e.stopPropagation(); setIsLocked(true); }}
+                className="p-1 sm:p-2 rounded-lg hover:bg-white/15 transition-colors"
+                title="Lock Screen"
+              >
+                <Unlock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/70" />
+              </button>
+
+              {/* Brightness */}
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowBrightness(!showBrightness); }}
+                className={`p-1 sm:p-2 rounded-lg hover:bg-white/15 transition-colors ${showBrightness ? 'bg-white/15' : ''}`}
+                title="Brightness"
+              >
+                <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/70" />
+              </button>
+
+              {/* Aspect Ratio */}
+              <button
+                onClick={(e) => { e.stopPropagation(); cycleAspectMode(); }}
+                className="p-1 sm:p-2 rounded-lg hover:bg-white/15 transition-colors relative"
+                title={`Aspect: ${getAspectLabel()}`}
+              >
+                <RectangleHorizontal className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/70" />
+                <span className="absolute -top-1 -right-1 text-[7px] bg-white/20 text-white rounded px-0.5 font-bold leading-tight">
+                  {getAspectLabel()}
+                </span>
+              </button>
+
               {/* Stream/Channel Switcher */}
               {streams.length > 1 && onSelectStream && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
                       onClick={(e) => e.stopPropagation()}
-                      className="p-1.5 sm:p-2 rounded-lg hover:bg-white/15 transition-colors relative"
+                      className="p-1 sm:p-2 rounded-lg hover:bg-white/15 transition-colors relative"
                     >
-                      <Radio className="w-4 h-4 sm:w-5 sm:h-5 text-white/80" />
+                      <Radio className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-white/80" />
                       <span className="absolute -top-0.5 -right-0.5 text-[7px] bg-live text-white rounded-full w-3.5 h-3.5 flex items-center justify-center font-bold">
                         {streams.length}
                       </span>
@@ -755,64 +823,63 @@ const HLSPlayer = ({ src, poster, title, onError, streams = [], selectedStream, 
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
+
               {/* Settings (Quality + Speed) */}
-              {(qualityLevels.length > 0 || true) && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      onClick={(e) => e.stopPropagation()}
-                      className="p-1.5 sm:p-2 rounded-lg hover:bg-white/15 transition-colors relative"
-                    >
-                      <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-white/80" />
-                      {currentQuality !== -1 && qualityLevels[currentQuality] && (
-                        <span className="absolute -top-0.5 -right-0.5 text-[8px] bg-primary text-primary-foreground rounded px-0.5 font-bold">
-                          {getQualityShortLabel(qualityLevels[currentQuality])}
-                        </span>
-                      )}
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" side="top" className="bg-card/95 backdrop-blur-xl border-border min-w-[160px]">
-                    {qualityLevels.length > 0 && (
-                      <>
-                        <DropdownMenuLabel className="text-xs text-muted-foreground">Quality</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => setQuality(-1)} className="gap-2 text-sm">
-                          Auto
-                          {currentQuality === -1 && <Check className="w-3.5 h-3.5 text-primary ml-auto" />}
-                        </DropdownMenuItem>
-                        {qualityLevels.map((level) => (
-                          <DropdownMenuItem key={level.index} onClick={() => setQuality(level.index)} className="gap-2 text-sm">
-                            {getQualityLabel(level)}
-                            {currentQuality === level.index && <Check className="w-3.5 h-3.5 text-primary ml-auto" />}
-                          </DropdownMenuItem>
-                        ))}
-                        <DropdownMenuSeparator />
-                      </>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    onClick={(e) => e.stopPropagation()}
+                    className="p-1 sm:p-2 rounded-lg hover:bg-white/15 transition-colors relative"
+                  >
+                    <Settings className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-white/80" />
+                    {currentQuality !== -1 && qualityLevels[currentQuality] && (
+                      <span className="absolute -top-0.5 -right-0.5 text-[8px] bg-primary text-primary-foreground rounded px-0.5 font-bold">
+                        {getQualityShortLabel(qualityLevels[currentQuality])}
+                      </span>
                     )}
-                    <DropdownMenuLabel className="text-xs text-muted-foreground">Speed</DropdownMenuLabel>
-                    {[0.5, 0.75, 1, 1.25, 1.5, 2].map((rate) => (
-                      <DropdownMenuItem key={rate} onClick={() => changePlaybackRate(rate)} className="gap-2 text-sm">
-                        {rate}x{rate === 1 && ' (Normal)'}
-                        {playbackRate === rate && <Check className="w-3.5 h-3.5 text-primary ml-auto" />}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" side="top" className="bg-card/95 backdrop-blur-xl border-border min-w-[160px]">
+                  {qualityLevels.length > 0 && (
+                    <>
+                      <DropdownMenuLabel className="text-xs text-muted-foreground">Quality</DropdownMenuLabel>
+                      <DropdownMenuItem onClick={() => setQuality(-1)} className="gap-2 text-sm">
+                        Auto
+                        {currentQuality === -1 && <Check className="w-3.5 h-3.5 text-primary ml-auto" />}
                       </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
+                      {qualityLevels.map((level) => (
+                        <DropdownMenuItem key={level.index} onClick={() => setQuality(level.index)} className="gap-2 text-sm">
+                          {getQualityLabel(level)}
+                          {currentQuality === level.index && <Check className="w-3.5 h-3.5 text-primary ml-auto" />}
+                        </DropdownMenuItem>
+                      ))}
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">Speed</DropdownMenuLabel>
+                  {[0.5, 0.75, 1, 1.25, 1.5, 2].map((rate) => (
+                    <DropdownMenuItem key={rate} onClick={() => changePlaybackRate(rate)} className="gap-2 text-sm">
+                      {rate}x{rate === 1 && ' (Normal)'}
+                      {playbackRate === rate && <Check className="w-3.5 h-3.5 text-primary ml-auto" />}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
 
               {/* Picture-in-Picture */}
               {'pictureInPictureEnabled' in document && (
                 <button
                   onClick={(e) => { e.stopPropagation(); togglePiP(); }}
-                  className="p-1.5 sm:p-2 rounded-lg hover:bg-white/15 transition-colors hidden sm:flex"
+                  className="p-1 sm:p-2 rounded-lg hover:bg-white/15 transition-colors hidden sm:flex"
                 >
-                  <PictureInPicture2 className="w-4 h-4 sm:w-5 sm:h-5 text-white/80" />
+                  <PictureInPicture2 className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-white/80" />
                 </button>
               )}
 
               {/* Fullscreen */}
               <button
                 onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }}
-                className="p-1.5 sm:p-2 rounded-lg hover:bg-white/15 transition-colors"
+                className="p-1 sm:p-2 rounded-lg hover:bg-white/15 transition-colors"
               >
                 {isFullscreen ? (
                   <Minimize className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
@@ -824,6 +891,7 @@ const HLSPlayer = ({ src, poster, title, onError, streams = [], selectedStream, 
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 };
