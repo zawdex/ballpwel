@@ -55,7 +55,10 @@ const MatchCard = memo(({ match, index = 0, isFavoriteHome, isFavoriteAway, onTo
   }, [showShare]);
 
   const hasStreams = match.authors && match.authors.length > 0;
+  const isLive = status === 'live';
   const encodedId = encodeURIComponent(match.id);
+  // Live matches with streams go directly to stream player
+  const cardLink = isLive && hasStreams ? `/watch/${encodedId}` : `/matches/${encodedId}`;
   const matchUrl = `${window.location.origin}/matches/${encodedId}`;
   const shareText = `${match.home_name} vs ${match.away_name}${match.score ? ' | ' + match.score : ''}`;
 
@@ -94,7 +97,7 @@ const MatchCard = memo(({ match, index = 0, isFavoriteHome, isFavoriteAway, onTo
       viewport={{ once: true, margin: '-40px' }}
       transition={{ duration: 0.4, delay: Math.min(index * 0.08, 0.4), ease: [0.25, 0.46, 0.45, 0.94] }}
     >
-    <Link to={`/matches/${encodedId}`} className="block group">
+    <Link to={cardLink} className="block group">
       <div
         className={`relative rounded-2xl border border-border/50 overflow-hidden transition-all duration-500 hover:border-primary/40 ${
           justWentLive ? 'animate-scale-in ring-2 ring-live ring-offset-2 ring-offset-background' : ''

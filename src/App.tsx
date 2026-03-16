@@ -10,6 +10,7 @@ import { AppSettingsProvider } from "@/contexts/AppSettingsContext";
 import Layout from "@/components/layout/Layout";
 import Dashboard from "@/pages/Dashboard";
 import MatchDetail from "@/pages/MatchDetail";
+import LiveStreamPage from "@/pages/LiveStreamPage";
 import LiveMatches from "@/pages/LiveMatches";
 import UpcomingMatches from "@/pages/UpcomingMatches";
 import NBAMatches from "@/pages/NBAMatches";
@@ -56,6 +57,7 @@ const App = () => {
                 <Route element={<Layout onSearch={handleSearch} searchQuery={filters.searchQuery} />}>
                   <Route path="/" element={<Dashboard filters={filters} onFilterChange={handleFilterChange} />} />
                   <Route path="/matches/:matchId" element={<MatchDetail />} />
+                  <Route path="/watch/:matchId" element={<LiveStreamPage />} />
                   <Route path="/live" element={<LiveMatches />} />
                   <Route path="/upcoming" element={<UpcomingMatches />} />
                   <Route path="/basketball" element={<NBAMatches />} />
