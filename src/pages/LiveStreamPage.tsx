@@ -70,7 +70,7 @@ const LiveStreamPage = () => {
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card border border-border/50">
           <div className="flex items-center gap-1.5">
             <div className="w-5 h-5 rounded-md overflow-hidden bg-secondary/60 flex items-center justify-center">
-              <TeamLogo src={match.home_logo} name={match.home_name} size="xs" />
+              <TeamLogo src={match.home_logo} name={match.home_name} size="sm" />
             </div>
             <span className="text-[11px] font-bold truncate max-w-[60px]">{match.home_name}</span>
           </div>
