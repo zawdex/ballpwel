@@ -28,7 +28,6 @@ import { Author } from '@/types';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
-import PlayerTicker from './PlayerTicker';
 import { useAppSettings } from '@/contexts/AppSettingsContext';
 import {
   DropdownMenu,
@@ -85,10 +84,6 @@ const HLSPlayer = ({ src, poster, title, onError, streams = [], selectedStream, 
   const [aspectMode, setAspectMode] = useState<'contain' | 'cover' | '16:9' | '4:3'>('contain');
   const [showBrightness, setShowBrightness] = useState(false);
 
-  const retryCountRef = useRef(0);
-  const maxRetries = 5;
-  const stallCheckRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastTimeRef = useRef(0);
 
   const initializePlayer = useCallback(() => {
     if (!videoRef.current || !src) return;
@@ -100,10 +95,6 @@ const HLSPlayer = ({ src, poster, title, onError, streams = [], selectedStream, 
       hlsRef.current.destroy();
       hlsRef.current = null;
     }
-    if (stallCheckRef.current) {
-      clearInterval(stallCheckRef.current);
-    }
-
     if (src.includes('.m3u8')) {
       if (Hls.isSupported()) {
         const hls = new Hls({
@@ -131,7 +122,6 @@ const HLSPlayer = ({ src, poster, title, onError, streams = [], selectedStream, 
 
         hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
           setIsLoading(false);
-          retryCountRef.current = 0;
           const levels = data.levels.map((level, index) => ({
             height: level.height,
             bitrate: level.bitrate,
@@ -147,37 +137,20 @@ const HLSPlayer = ({ src, poster, title, onError, streams = [], selectedStream, 
           setCurrentQuality(data.level);
         });
 
-        hls.on(Hls.Events.FRAG_LOADED, () => {
-          // Reset retry count on successful fragment load
-          retryCountRef.current = 0;
-        });
-
         hls.on(Hls.Events.ERROR, (_, data) => {
           console.warn('HLS error:', data.type, data.details, data.fatal);
 
           if (data.fatal) {
             switch (data.type) {
               case Hls.ErrorTypes.NETWORK_ERROR:
-                if (retryCountRef.current < maxRetries) {
-                  retryCountRef.current++;
-                  console.log(`Network error recovery attempt ${retryCountRef.current}/${maxRetries}`);
-                  setTimeout(() => {
-                    hls.startLoad();
-                  }, 1000 * retryCountRef.current);
-                } else {
-                  setError(t('networkError'));
-                  onError?.('Network error after max retries');
-                }
+                setError(t('networkError'));
+                hls.destroy();
+                onError?.('Network error');
                 break;
               case Hls.ErrorTypes.MEDIA_ERROR:
-                if (retryCountRef.current < maxRetries) {
-                  retryCountRef.current++;
-                  console.log(`Media error recovery attempt ${retryCountRef.current}/${maxRetries}`);
-                  hls.recoverMediaError();
-                } else {
-                  setError(t('mediaError'));
-                  onError?.('Media error after max retries');
-                }
+                setError(t('mediaError'));
+                hls.destroy();
+                onError?.('Media error');
                 break;
               default:
                 setError(t('streamUnavailable'));
@@ -185,30 +158,8 @@ const HLSPlayer = ({ src, poster, title, onError, streams = [], selectedStream, 
                 onError?.('Fatal streaming error');
                 break;
             }
-          } else if (data.details === 'bufferStalledError') {
-            // Non-fatal buffer stall — try to nudge playback
-            const video = videoRef.current;
-            if (video && video.paused === false) {
-              video.currentTime = video.currentTime + 0.1;
-            }
           }
         });
-
-        // Stall detection: if currentTime hasn't changed for 8s while playing, reload
-        stallCheckRef.current = setInterval(() => {
-          const video = videoRef.current;
-          if (video && !video.paused && !video.ended) {
-            if (Math.abs(video.currentTime - lastTimeRef.current) < 0.1) {
-              console.log('Stall detected, attempting recovery...');
-              if (hlsRef.current) {
-                hlsRef.current.startLoad();
-                video.currentTime = video.currentTime + 0.1;
-                video.play().catch(() => {});
-              }
-            }
-            lastTimeRef.current = video.currentTime;
-          }
-        }, 8000);
 
       } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
         videoRef.current.src = src;
@@ -228,9 +179,6 @@ const HLSPlayer = ({ src, poster, title, onError, streams = [], selectedStream, 
     return () => {
       if (hlsRef.current) {
         hlsRef.current.destroy();
-      }
-      if (stallCheckRef.current) {
-        clearInterval(stallCheckRef.current);
       }
     };
   }, [initializePlayer]);
@@ -535,8 +483,6 @@ const HLSPlayer = ({ src, poster, title, onError, streams = [], selectedStream, 
         <img src={settings.appLogoUrl} alt="App" className="w-7 h-7 rounded-full object-cover" />
       </div>
 
-      {/* Ticker */}
-      <PlayerTicker />
 
       {/* Seek Indicator (double-tap feedback) */}
       {seekIndicator && (

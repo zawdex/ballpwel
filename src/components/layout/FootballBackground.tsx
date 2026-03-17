@@ -19,139 +19,151 @@ const FootballBackground = () => {
 
     let time = 0;
 
-    const drawStadium = () => {
+    const drawField = () => {
       const w = canvas.width;
       const h = canvas.height;
       ctx.clearRect(0, 0, w, h);
 
-      const alpha = 0.08;
+      // ── Grass stripe bands ──────────────────────────────────────────
+      const stripeCount = 12;
+      const stripeH = h / stripeCount;
+      for (let i = 0; i < stripeCount; i++) {
+        const even = i % 2 === 0;
+        ctx.fillStyle = even
+          ? 'rgba(20,80,20,0.07)'
+          : 'rgba(10,60,10,0.04)';
+        ctx.fillRect(0, i * stripeH, w, stripeH);
+      }
 
-      // --- Stadium oval / bowl outline ---
-      ctx.save();
+      // ── Pitch layout (top-down perspective, centered, occupying ~70% of viewport) ──
+      const pitchW = Math.min(w * 0.82, 900);
+      const pitchH = pitchW * 0.65;
+      const px = (w - pitchW) / 2;
+      const py = (h - pitchH) / 2;
       const cx = w / 2;
-      const cy = h * 0.45;
-      const rx = w * 0.42;
-      const ry = h * 0.32;
+      const cy = h / 2;
 
-      // Outer stadium ring
-      ctx.beginPath();
-      ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-      ctx.strokeStyle = `hsla(45, 100%, 50%, ${alpha})`;
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
+      const line = (alpha: number) => `rgba(180,230,160,${alpha})`;
 
-      // Inner stadium ring
-      ctx.beginPath();
-      ctx.ellipse(cx, cy, rx * 0.85, ry * 0.85, 0, 0, Math.PI * 2);
-      ctx.strokeStyle = `hsla(45, 100%, 50%, ${alpha * 0.7})`;
-      ctx.lineWidth = 1;
-      ctx.stroke();
+      ctx.save();
+      ctx.lineWidth = 1.2;
 
-      // --- Pitch rectangle inside ---
-      const pitchW = rx * 1.2;
-      const pitchH = ry * 0.9;
-      const px = cx - pitchW / 2;
-      const py = cy - pitchH / 2;
-
-      ctx.strokeStyle = `hsla(45, 100%, 50%, ${alpha * 0.8})`;
-      ctx.lineWidth = 1;
+      // Outer boundary
+      ctx.strokeStyle = line(0.18);
       ctx.strokeRect(px, py, pitchW, pitchH);
 
-      // Center line
+      // Halfway line
       ctx.beginPath();
       ctx.moveTo(cx, py);
       ctx.lineTo(cx, py + pitchH);
+      ctx.strokeStyle = line(0.14);
       ctx.stroke();
 
-      // Center circle
-      const centerR = Math.min(pitchW, pitchH) * 0.15;
+      // Centre circle
+      const centerR = pitchH * 0.18;
       ctx.beginPath();
       ctx.arc(cx, cy, centerR, 0, Math.PI * 2);
+      ctx.strokeStyle = line(0.14);
       ctx.stroke();
 
-      // Center dot
+      // Centre spot
       ctx.beginPath();
-      ctx.arc(cx, cy, 2, 0, Math.PI * 2);
-      ctx.fillStyle = `hsla(45, 100%, 50%, ${alpha})`;
+      ctx.arc(cx, cy, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = line(0.25);
       ctx.fill();
 
-      // Penalty areas
-      const penW = pitchW * 0.18;
-      const penH = pitchH * 0.4;
+      // ── Penalty areas ───────────────────────────────────────────────
+      const penW = pitchW * 0.16;
+      const penH = pitchH * 0.42;
       // Left
+      ctx.strokeStyle = line(0.15);
       ctx.strokeRect(px, cy - penH / 2, penW, penH);
       // Right
       ctx.strokeRect(px + pitchW - penW, cy - penH / 2, penW, penH);
 
-      // Goal areas
-      const goalW = pitchW * 0.07;
-      const goalH = pitchH * 0.2;
-      ctx.strokeRect(px, cy - goalH / 2, goalW, goalH);
-      ctx.strokeRect(px + pitchW - goalW, cy - goalH / 2, goalW, goalH);
+      // ── Six-yard boxes ──────────────────────────────────────────────
+      const sixW = pitchW * 0.065;
+      const sixH = pitchH * 0.2;
+      ctx.strokeStyle = line(0.12);
+      ctx.strokeRect(px, cy - sixH / 2, sixW, sixH);
+      ctx.strokeRect(px + pitchW - sixW, cy - sixH / 2, sixW, sixH);
 
-      ctx.restore();
+      // ── Penalty arcs ────────────────────────────────────────────────
+      const penSpotX = px + penW * 0.68;
+      const penSpotXR = px + pitchW - penW * 0.68;
+      const arcR = centerR;
+      ctx.strokeStyle = line(0.11);
+      ctx.beginPath();
+      ctx.arc(penSpotX, cy, arcR, -Math.PI * 0.48, Math.PI * 0.48);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(penSpotXR, cy, arcR, Math.PI * 0.52, Math.PI * 1.48);
+      ctx.stroke();
 
-      // --- Stadium lights (top) ---
-      const lightCount = 6;
-      for (let i = 0; i < lightCount; i++) {
-        const angle = (Math.PI / (lightCount + 1)) * (i + 1);
-        const lx = cx + Math.cos(Math.PI + angle) * (rx + 30);
-        const ly = cy + Math.sin(Math.PI + angle) * (ry + 30) - 20;
+      // Penalty spots
+      ctx.fillStyle = line(0.2);
+      ctx.beginPath();
+      ctx.arc(penSpotX, cy, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(penSpotXR, cy, 2.5, 0, Math.PI * 2);
+      ctx.fill();
 
-        // Light pole
+      // ── Corner arcs ─────────────────────────────────────────────────
+      const cornerR = pitchH * 0.04;
+      ctx.strokeStyle = line(0.12);
+      const corners = [
+        { x: px, y: py, a1: 0, a2: Math.PI / 2 },
+        { x: px + pitchW, y: py, a1: Math.PI / 2, a2: Math.PI },
+        { x: px + pitchW, y: py + pitchH, a1: Math.PI, a2: Math.PI * 1.5 },
+        { x: px, y: py + pitchH, a1: Math.PI * 1.5, a2: Math.PI * 2 },
+      ];
+      corners.forEach(({ x, y, a1, a2 }) => {
         ctx.beginPath();
-        ctx.moveTo(lx, ly);
-        ctx.lineTo(lx, ly - 40);
-        ctx.strokeStyle = `hsla(45, 100%, 50%, ${alpha * 0.5})`;
-        ctx.lineWidth = 1;
+        ctx.arc(x, y, cornerR, a1, a2);
         ctx.stroke();
+      });
 
-        // Light glow — animated flicker
-        const flicker = 0.7 + 0.3 * Math.sin(time * 0.02 + i * 1.2);
-        const grad = ctx.createRadialGradient(lx, ly - 40, 0, lx, ly - 40, 60);
-        grad.addColorStop(0, `hsla(45, 100%, 70%, ${alpha * 1.5 * flicker})`);
-        grad.addColorStop(1, 'transparent');
-        ctx.fillStyle = grad;
-        ctx.fillRect(lx - 60, ly - 100, 120, 120);
-      }
-
-      // --- Floating light particles (like stadium atmosphere) ---
-      for (let i = 0; i < 20; i++) {
-        const seed = i * 137.5;
-        const px2 = (seed * 7.3 + time * 0.15 * (0.3 + (i % 5) * 0.1)) % w;
-        const py2 = (seed * 3.7 + Math.sin(time * 0.008 + i) * 30) % h;
-        const size = 1 + (i % 3) * 0.5;
-        const particleAlpha = 0.04 + 0.025 * Math.sin(time * 0.015 + i * 0.8);
-
-        ctx.beginPath();
-        ctx.arc(px2, py2, size, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(45, 100%, 60%, ${particleAlpha})`;
-        ctx.fill();
-      }
-
-      // --- Subtle crowd silhouette arcs ---
-      ctx.save();
-      ctx.globalAlpha = alpha * 0.8;
-      const crowdSegments = 40;
-      for (let i = 0; i < crowdSegments; i++) {
-        const angle = (Math.PI * 2 / crowdSegments) * i;
-        const crowdRx = rx * (0.92 + 0.03 * Math.sin(time * 0.01 + i * 0.5));
-        const crowdRy = ry * (0.92 + 0.03 * Math.sin(time * 0.01 + i * 0.7));
-        const sx = cx + Math.cos(angle) * crowdRx;
-        const sy = cy + Math.sin(angle) * crowdRy;
-        const blobSize = 3 + 2 * Math.sin(time * 0.02 + i);
-
-        ctx.beginPath();
-        ctx.arc(sx, sy, blobSize, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(45, 80%, 50%, 1)`;
-        ctx.fill();
-      }
       ctx.restore();
+
+      // ── Stadium floodlights ─────────────────────────────────────────
+      const lightPositions = [
+        { x: px - 40, y: py - 50 },
+        { x: cx, y: py - 55 },
+        { x: px + pitchW + 40, y: py - 50 },
+        { x: px - 40, y: py + pitchH + 50 },
+        { x: cx, y: py + pitchH + 55 },
+        { x: px + pitchW + 40, y: py + pitchH + 50 },
+      ];
+      lightPositions.forEach((lp, i) => {
+        const flicker = 0.6 + 0.4 * Math.sin(time * 0.018 + i * 1.3);
+        const grd = ctx.createRadialGradient(lp.x, lp.y, 0, lp.x, lp.y, 90);
+        grd.addColorStop(0, `rgba(220,255,180,${0.06 * flicker})`);
+        grd.addColorStop(0.4, `rgba(150,220,100,${0.025 * flicker})`);
+        grd.addColorStop(1, 'transparent');
+        ctx.fillStyle = grd;
+        ctx.beginPath();
+        ctx.arc(lp.x, lp.y, 90, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // ── Floating atmosphere particles ───────────────────────────────
+      for (let i = 0; i < 28; i++) {
+        const seed = i * 137.5;
+        const fx = (seed * 6.1 + time * 0.12 * (0.4 + (i % 6) * 0.12)) % w;
+        const fy = (seed * 4.3 + Math.sin(time * 0.007 + i) * 35) % h;
+        const fSize = 1 + (i % 3) * 0.6;
+        const fAlpha = 0.03 + 0.02 * Math.sin(time * 0.013 + i * 0.9);
+        ctx.beginPath();
+        ctx.arc(fx, fy, fSize, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(180,255,120,${fAlpha})`;
+        ctx.fill();
+      }
     };
 
     const animate = () => {
       time++;
-      drawStadium();
+      drawField();
       animFrameRef.current = requestAnimationFrame(animate);
     };
 

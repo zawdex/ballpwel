@@ -6,32 +6,32 @@
 
 @layer base {
   :root {
-    --background: 30 10% 6%;
+    --background: 140 20% 4%;
     --foreground: 40 20% 95%;
 
-    --card: 30 10% 9%;
+    --card: 140 16% 7%;
     --card-foreground: 40 20% 95%;
 
-    --popover: 30 10% 10%;
+    --popover: 140 14% 9%;
     --popover-foreground: 40 20% 95%;
 
     --primary: 45 100% 50%;
-    --primary-foreground: 30 10% 6%;
+    --primary-foreground: 140 18% 5%;
 
-    --secondary: 30 8% 14%;
+    --secondary: 140 10% 12%;
     --secondary-foreground: 40 20% 95%;
 
-    --muted: 30 6% 12%;
+    --muted: 140 8% 10%;
     --muted-foreground: 40 10% 50%;
 
     --accent: 45 100% 50%;
-    --accent-foreground: 30 10% 6%;
+    --accent-foreground: 140 18% 5%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 40 20% 95%;
 
-    --border: 30 8% 16%;
-    --input: 30 8% 16%;
+    --border: 140 10% 14%;
+    --input: 140 10% 14%;
     --ring: 45 100% 50%;
 
     --radius: 1rem;
@@ -40,20 +40,22 @@
     --live: 0 72% 51%;
     --live-glow: 0 90% 60%;
     --upcoming: 200 80% 55%;
-    --finished: 30 8% 40%;
+    --finished: 140 6% 38%;
     --pitch: 45 100% 50%;
     --pitch-dark: 40 90% 35%;
-    --surface: 30 10% 8%;
-    --surface-elevated: 30 10% 12%;
+    --surface: 140 16% 6%;
+    --surface-elevated: 140 12% 11%;
     --glow: 45 100% 50%;
+    --grass: 130 55% 22%;
+    --grass-light: 130 50% 28%;
 
-    --sidebar-background: 30 10% 7%;
+    --sidebar-background: 140 16% 6%;
     --sidebar-foreground: 40 20% 95%;
     --sidebar-primary: 45 100% 50%;
-    --sidebar-primary-foreground: 30 10% 6%;
-    --sidebar-accent: 30 8% 14%;
+    --sidebar-primary-foreground: 140 18% 5%;
+    --sidebar-accent: 140 10% 12%;
     --sidebar-accent-foreground: 40 20% 95%;
-    --sidebar-border: 30 8% 16%;
+    --sidebar-border: 140 10% 14%;
     --sidebar-ring: 45 100% 50%;
   }
 
@@ -154,9 +156,10 @@
   }
 
   .glass-effect {
-    background: hsl(var(--background) / 0.85);
-    backdrop-filter: blur(24px) saturate(1.4);
-    border-bottom: 1px solid hsl(var(--border) / 0.5);
+    background: rgba(4, 16, 6, 0.75);
+    backdrop-filter: blur(28px) saturate(1.6) brightness(0.95);
+    border-bottom: 1px solid rgba(80, 180, 80, 0.15);
+    box-shadow: 0 1px 0 rgba(80,200,80,0.08);
   }
 
   .gradient-pitch {
@@ -248,70 +251,8 @@
     @apply text-muted-foreground hover:text-foreground;
   }
 
-  /* Football pitch background pattern */
-  .pitch-bg {
-    position: relative;
-  }
-  .pitch-bg::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    opacity: 0.04;
-    background:
-      /* Center circle */
-      radial-gradient(circle at 50% 40%, transparent 80px, hsl(var(--primary) / 0.4) 80px, hsl(var(--primary) / 0.4) 82px, transparent 82px),
-      /* Center line */
-      linear-gradient(to right, transparent calc(50% - 1px), hsl(var(--primary) / 0.5) calc(50% - 1px), hsl(var(--primary) / 0.5) calc(50% + 1px), transparent calc(50% + 1px)),
-      /* Top penalty box */
-      linear-gradient(to bottom, hsl(var(--primary) / 0.4) 1px, transparent 1px),
-      linear-gradient(to right, transparent 25%, hsl(var(--primary) / 0.4) 25%, hsl(var(--primary) / 0.4) calc(25% + 1px), transparent calc(25% + 1px)),
-      linear-gradient(to right, transparent 75%, hsl(var(--primary) / 0.4) 75%, hsl(var(--primary) / 0.4) calc(75% + 1px), transparent calc(75% + 1px)),
-      /* Border */
-      linear-gradient(to bottom, hsl(var(--primary) / 0.3) 1px, transparent 1px),
-      linear-gradient(to bottom, transparent calc(100% - 1px), hsl(var(--primary) / 0.3) calc(100% - 1px)),
-      linear-gradient(to right, hsl(var(--primary) / 0.3) 1px, transparent 1px),
-      linear-gradient(to right, transparent calc(100% - 1px), hsl(var(--primary) / 0.3) calc(100% - 1px));
-    background-size:
-      100% 100%,
-      100% 100%,
-      50% 20%,
-      100% 20%,
-      100% 20%,
-      100% 100%,
-      100% 100%,
-      100% 100%,
-      100% 100%;
-    background-position:
-      center,
-      center,
-      25% 0%,
-      0% 0%,
-      0% 0%,
-      0% 0%,
-      0% 100%,
-      0% 0%,
-      100% 0%;
-    background-repeat: no-repeat;
-  }
-
-  /* Pitch grass texture overlay */
-  .pitch-bg::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    opacity: 0.015;
-    background-image: repeating-linear-gradient(
-      0deg,
-      hsl(var(--primary)),
-      hsl(var(--primary)) 1px,
-      transparent 1px,
-      transparent 4px
-    );
-  }
+  /* pitch-bg — no-op, background handled by Layout image layers */
+  .pitch-bg { position: relative; }
 }
 
 @layer utilities {

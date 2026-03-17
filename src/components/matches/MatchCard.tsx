@@ -99,10 +99,10 @@ const MatchCard = memo(({ match, index = 0, isFavoriteHome, isFavoriteAway, onTo
     >
     <Link to={cardLink} className="block group">
       <div
-        className={`relative rounded-2xl border border-border/50 overflow-hidden transition-all duration-500 hover:border-primary/40 ${
+        className={`relative rounded-2xl border overflow-hidden transition-all duration-500 ${
           justWentLive ? 'animate-scale-in ring-2 ring-live ring-offset-2 ring-offset-background' : ''
-        } ${status === 'live' ? 'border-live/30' : ''}`}
-        style={{ background: 'hsl(var(--card))' }}
+        } ${status === 'live' ? 'border-live/30 hover:border-live/50' : 'border-[rgba(80,160,80,0.18)] hover:border-[rgba(80,160,80,0.38)]'}`}
+        style={{ background: 'linear-gradient(160deg, rgba(8,28,10,0.82) 0%, rgba(5,18,7,0.88) 100%)', backdropFilter: 'blur(12px) saturate(1.3)' }}
       >
         {/* Ambient glow for live */}
         {status === 'live' && (
@@ -110,10 +110,10 @@ const MatchCard = memo(({ match, index = 0, isFavoriteHome, isFavoriteAway, onTo
         )}
 
         {/* Top accent line */}
-        <div className={`h-0.5 w-full ${
+        <div className={`h-[1.5px] w-full ${
           status === 'live' ? 'bg-gradient-to-r from-transparent via-live to-transparent' :
-          status === 'upcoming' ? 'bg-gradient-to-r from-transparent via-upcoming/60 to-transparent' :
-          'bg-gradient-to-r from-transparent via-border to-transparent'
+          status === 'upcoming' ? 'bg-gradient-to-r from-transparent via-sky-400/50 to-transparent' :
+          'bg-gradient-to-r from-transparent via-[rgba(80,180,80,0.3)] to-transparent'
         }`} />
 
         <div className="relative z-10 p-4">
@@ -187,24 +187,47 @@ const MatchCard = memo(({ match, index = 0, isFavoriteHome, isFavoriteAway, onTo
               <span className="text-xs font-semibold text-center truncate w-full leading-tight">{match.home_name}</span>
             </div>
 
-            {/* Score / VS */}
+            {/* Score / VS — stadium scoreboard style */}
             <div className="flex-shrink-0 flex flex-col items-center gap-1">
               {scoreParts ? (
-                <div className={`flex items-center gap-1.5 px-4 py-2 rounded-2xl border ${
+                <div className={`relative flex items-center gap-0 rounded-xl overflow-hidden border ${
                   status === 'live'
-                    ? 'bg-live/10 border-live/30 shadow-lg shadow-live/10'
-                    : 'bg-secondary/50 border-border/40'
+                    ? 'border-live/40 shadow-lg shadow-live/15'
+                    : 'border-border/50'
                 }`}>
-                  <span className={`font-display text-2xl font-black tabular-nums ${status === 'live' ? 'text-live' : 'text-foreground'}`}>
-                    {scoreParts[1]}
-                  </span>
-                  <span className="text-muted-foreground text-xs font-bold mx-0.5">:</span>
-                  <span className={`font-display text-2xl font-black tabular-nums ${status === 'live' ? 'text-live' : 'text-foreground'}`}>
-                    {scoreParts[2]}
-                  </span>
+                  {/* Home score cell */}
+                  <div className={`flex items-center justify-center w-11 h-11 ${
+                    status === 'live'
+                      ? 'bg-live/15'
+                      : 'bg-[rgba(20,72,20,0.25)]'
+                  }`}>
+                    <span className={`font-display text-2xl font-black tabular-nums leading-none ${status === 'live' ? 'text-live' : 'text-foreground'}`}>
+                      {scoreParts[1]}
+                    </span>
+                  </div>
+                  {/* Divider */}
+                  <div className={`flex items-center justify-center w-5 h-11 ${
+                    status === 'live' ? 'bg-live/10' : 'bg-[rgba(80,160,80,0.12)]'
+                  } border-x border-border/30`}>
+                    <span className="text-muted-foreground text-[10px] font-black">:</span>
+                  </div>
+                  {/* Away score cell */}
+                  <div className={`flex items-center justify-center w-11 h-11 ${
+                    status === 'live'
+                      ? 'bg-live/15'
+                      : 'bg-[rgba(20,72,20,0.25)]'
+                  }`}>
+                    <span className={`font-display text-2xl font-black tabular-nums leading-none ${status === 'live' ? 'text-live' : 'text-foreground'}`}>
+                      {scoreParts[2]}
+                    </span>
+                  </div>
+                  {/* Live pulse bar */}
+                  {status === 'live' && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-live to-transparent animate-pulse" />
+                  )}
                 </div>
               ) : (
-                <div className="px-4 py-2 rounded-2xl bg-secondary/50 border border-border/40">
+                <div className="px-4 py-2.5 rounded-xl bg-[rgba(20,72,20,0.2)] border border-[rgba(80,160,80,0.2)]">
                   <span className="font-display text-lg font-bold text-muted-foreground">VS</span>
                 </div>
               )}
@@ -234,7 +257,7 @@ const MatchCard = memo(({ match, index = 0, isFavoriteHome, isFavoriteAway, onTo
 
           {/* Action row */}
           {hasStreams && (
-            <div className="mt-4 flex items-center justify-between px-3 py-2 rounded-xl bg-primary/8 border border-primary/15 transition-all duration-300 group-hover:bg-primary/15 group-hover:border-primary/30 group-hover:shadow-md group-hover:shadow-primary/5">
+            <div className="mt-4 flex items-center justify-between px-3 py-2 rounded-xl bg-[rgba(20,90,20,0.25)] border border-[rgba(80,200,80,0.2)] transition-all duration-300 group-hover:bg-[rgba(20,90,20,0.4)] group-hover:border-[rgba(80,200,80,0.35)] group-hover:shadow-md group-hover:shadow-green-900/20">
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 rounded-lg bg-primary/20 flex items-center justify-center">
                   <Play className="w-3 h-3 text-primary fill-primary" />

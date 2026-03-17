@@ -1,6 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import Header from './Header';
-import FootballBackground from './FootballBackground';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Send, Zap, Calendar, Trophy, CheckCircle } from 'lucide-react';
 
@@ -24,8 +23,25 @@ const Layout = ({ onSearch, searchQuery }: LayoutProps) => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col relative overflow-x-hidden pitch-bg">
-      <FootballBackground />
+    <div className="min-h-screen flex flex-col relative overflow-x-hidden">
+      {/* Stadium photo background */}
+      <div
+        className="fixed inset-0 z-0 pointer-events-none"
+        style={{
+          backgroundImage: 'url(/stadium-bg.jpeg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center 30%',
+          backgroundRepeat: 'no-repeat',
+        }}
+      />
+      {/* Dark overlay — deep green tinted, keeps text readable */}
+      <div className="fixed inset-0 z-0 pointer-events-none"
+        style={{ background: 'linear-gradient(180deg, rgba(5,20,8,0.82) 0%, rgba(3,14,5,0.90) 40%, rgba(2,10,3,0.96) 100%)' }}
+      />
+      {/* Subtle grass stripe overlay */}
+      <div className="fixed inset-0 z-0 pointer-events-none" style={{
+        backgroundImage: 'repeating-linear-gradient(180deg, rgba(30,100,30,0.06) 0px, rgba(30,100,30,0.06) 60px, rgba(10,60,10,0.03) 60px, rgba(10,60,10,0.03) 120px)',
+      }} />
       <Header onSearch={onSearch} searchQuery={searchQuery} />
       <main className="container mx-auto px-4 py-4 md:py-8 flex-1 relative z-10 pb-24 md:pb-8">
         <Outlet />

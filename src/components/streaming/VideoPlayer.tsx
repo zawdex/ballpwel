@@ -5,6 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAppSettings } from '@/contexts/AppSettingsContext';
 import { isValidStreamUrl } from '@/lib/urlValidation';
 import HLSPlayer from './HLSPlayer';
+import PlayerTicker from './PlayerTicker';
 import StreamQualityBadge from './StreamQualityBadge';
 import { Button } from '@/components/ui/button';
 
@@ -230,7 +231,7 @@ const VideoPlayer = ({ stream, matchTitle, isLive = true, streams = [], onSelect
   if (isHLSStream && useEmbedded && !playerError) {
     return (
       <div className="space-y-4">
-        <div className="relative rounded-2xl overflow-hidden border border-border shadow-2xl shadow-primary/5">
+        <div className="rounded-2xl overflow-hidden border border-border shadow-2xl shadow-primary/5">
           <HLSPlayer
             src={stream.url}
             title={matchTitle || `${stream.name} Stream`}
@@ -239,6 +240,7 @@ const VideoPlayer = ({ stream, matchTitle, isLive = true, streams = [], onSelect
             selectedStream={stream}
             onSelectStream={onSelectStream}
           />
+          <PlayerTicker />
         </div>
         <StreamInfo stream={stream} onExternalClick={handleExternalClick} />
       </div>
