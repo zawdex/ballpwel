@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  file-host:
+    build: .
+    container_name: advanced-file-host
+    ports:
+      - "8000:8000"
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_OWNER_ID=${TELEGRAM_OWNER_ID}
+      - API_BASE_URL=${API_BASE_URL:-http://localhost:8000}
+    volumes:
+      - ./storage:/app/storage
+    restart: unless-stopped
